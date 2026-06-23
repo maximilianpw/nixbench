@@ -304,4 +304,4 @@ Good next steps:
 - [Authoring Tasks](docs/authoring.md)
 - [Scoring](docs/scoring.md)
 - [Reproducibility](docs/reproducibility.md)
-
+- [2026-06-23 Agent Baseline Runs](docs/runs/2026-06-23-agent-baseline.md)
