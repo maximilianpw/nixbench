@@ -83,11 +83,12 @@
             [width * 0.44, height * 0.78 - drift, "#f4f6f9", "score 500"],
           ]
         : [
-            [width * 0.54, height * 0.18 + drift, "#f4f6f9", "starter"],
-            [width * 0.76, height * 0.34 - drift, "#3f82cc", "agent diff"],
-            [width * 0.58, height * 0.56, "#3f9d63", "evaluator"],
-            [width * 0.84, height * 0.73 + drift, "#c47a35", "result.json"],
-            [width * 0.42, height * 0.82 - drift, "#d24a3a", "trap"],
+            [width * 0.48, height * 0.17 + drift, "#f4f6f9", "starter tree"],
+            [width * 0.72, height * 0.28 - drift, "#3f82cc", "agent diff"],
+            [width * 0.83, height * 0.48 + drift, "#c47a35", "fake lib"],
+            [width * 0.58, height * 0.61, "#3f9d63", "hidden eval"],
+            [width * 0.76, height * 0.78 + drift, "#f4f6f9", "score.json"],
+            [width * 0.39, height * 0.82 - drift, "#d24a3a", "false lead"],
           ];
 
       context.globalAlpha = 0.72;
@@ -106,7 +107,7 @@
       if (width >= 560) {
         context.font = "700 12px SFMono-Regular, ui-monospace, monospace";
         context.fillStyle = "rgba(244, 246, 249, 0.34)";
-        context.fillText("hidden evaluator trace", width - 230, height - 34);
+        context.fillText(scene === "results" ? "hidden evaluator trace" : "17-task evaluator trace", width - 230, height - 34);
       }
     }
 

@@ -7,7 +7,12 @@ trap 'rm -rf "$tmpdir"' EXIT
 
 cat > "$tmpdir/test.nix" <<EOF
 let
-  lib.licenses.asl20 = "Apache-2.0";
+  lib.licenses = {
+    asl20 = "Apache-2.0";
+    mit = "MIT";
+    bsd3 = "BSD-3-Clause";
+    gpl3Only = "GPL-3.0-only";
+  };
   python3Packages = rec {
     buildPythonApplication = attrs: attrs // { __builder = "buildPythonApplication"; };
     hatchling = "hatchling";
@@ -28,7 +33,11 @@ assert pkg.propagatedBuildInputs == [ "click" "rich" ];
 assert pkg.nativeCheckInputs == [ "pytest" ];
 assert pkg.pythonImportsCheck == [ "nixbench_report" ];
 assert pkg.pytestFlagsArray == [ "tests" ];
-assert pkg.meta.license == "Apache-2.0";
+assert pkg.meta ? description;
+assert pkg.meta.description != "";
+assert pkg.meta ? homepage;
+assert pkg.meta.homepage != "";
+assert pkg.meta ? license;
 assert pkg.meta.mainProgram == "nixbench-report";
 "ok"
 EOF

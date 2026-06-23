@@ -1,0 +1,8 @@
+id = "fhs-binary-wrapper"
+name = "Wrap FHS-Oriented Binaries"
+category = "packages"
+difficulty = "medium"
+timeout_seconds = 60
+max_score = 100
+systems = ["any"]
+evaluator = "tests/check.sh"

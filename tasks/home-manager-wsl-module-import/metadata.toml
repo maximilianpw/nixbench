@@ -1,0 +1,8 @@
+id = "home-manager-wsl-module-import"
+name = "Import Home Manager As A NixOS Module On WSL"
+category = "modules"
+difficulty = "medium"
+timeout_seconds = 60
+max_score = 100
+systems = ["any"]
+evaluator = "tests/check.sh"

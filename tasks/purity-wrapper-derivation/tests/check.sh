@@ -8,7 +8,10 @@ trap 'rm -rf "$tmpdir"' EXIT
 cat > "$tmpdir/test.nix" <<EOF
 let
   stdenv.mkDerivation = attrs: attrs // { __mkDerivation = true; };
-  lib.makeBinPath = paths: builtins.concatStringsSep ":" (map (path: path + "/bin") paths);
+  lib = {
+    makeBinPath = paths: builtins.concatStringsSep ":" (map (path: path + "/bin") paths);
+    getExe = package: package + "/bin/" + builtins.baseNameOf package;
+  };
   makeWrapper = "makeWrapper";
   coreutils = "/nix/store/coreutils";
   bash = "/nix/store/bash";
