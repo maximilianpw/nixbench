@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="NixBench is an objective benchmark for evaluating how AI coding agents write, repair, and reason about Nix code."
+    >
+    <title>NixBench | Agentic Nix Benchmark</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="NixBench home">
+        <span class="brand-mark">λ</span>
+        <span>NixBench</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#corpus">Corpus</a>
+        <a href="results.html">Results</a>
+        <a href="../docs/benchmark-design.md">Design</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero landing-hero">
+        <canvas class="trace-canvas" data-scene="landing" aria-hidden="true"></canvas>
+        <div class="hero-copy">
+          <p class="eyebrow">Agentic Nix benchmark</p>
+          <h1>NixBench</h1>
+          <p class="hero-lede">
+            A benchmark for measuring whether AI coding agents can edit real Nix projects, satisfy hidden evaluators, and avoid plausible code that only looks right.
+          </p>
+          <div class="hero-meta" aria-label="Benchmark qualities">
+            <span>Hidden evaluators</span>
+            <span>Copied worktrees</span>
+            <span>Objective scoring</span>
+          </div>
+          <div class="hero-actions" aria-label="Page actions">
+            <a class="button primary" href="results.html">View baseline results</a>
+            <a class="button ghost" href="../README.md">Read repository guide</a>
+          </div>
+        </div>
+        <div class="hero-instrument" aria-label="Current benchmark shape">
+          <div>
+            <span class="instrument-value">10</span>
+            <span class="instrument-label">tasks</span>
+          </div>
+          <div>
+            <span class="instrument-value">1000</span>
+            <span class="instrument-label">points</span>
+          </div>
+          <div>
+            <span class="instrument-value">0</span>
+            <span class="instrument-label">LLM judges</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="summary-strip" aria-label="Benchmark summary">
+        <p>
+          The agent receives a copied starter worktree, edits local files, exits, and then NixBench runs a hidden shell evaluator. Passing means the Nix expression survived evaluation, not just review.
+        </p>
+      </section>
+
+      <section class="section-grid" aria-labelledby="measure-heading">
+        <div>
+          <p class="eyebrow">What it measures</p>
+          <h2 id="measure-heading">Nix mistakes that hide in plain sight.</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-code">eval</span>
+            <h3>Semantic correctness</h3>
+            <p>Tasks inspect flakes, modules, overlays, derivations, shells, fetchers, and attrsets with objective checks.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-code">fake lib</span>
+            <h3>Restricted environments</h3>
+            <p>Evaluators use small fake builders and package sets so unavailable helpers, host paths, and overfit assumptions fail quickly.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-code">diff</span>
+            <h3>Agent behavior</h3>
+            <p>Every run records logs, timing, diffs, task scores, and timeout state for reproducible comparisons.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="process-section" aria-labelledby="process-heading">
+        <div class="process-copy">
+          <p class="eyebrow">Run model</p>
+          <h2 id="process-heading">A benchmark task is a small repository repair.</h2>
+          <p>
+            NixBench avoids isolated snippet prompts. The harness creates a temporary workdir, copies the starter files, runs the agent command there, and evaluates the resulting worktree after the agent exits.
+          </p>
+        </div>
+        <ol class="run-steps">
+          <li><span>copy</span> Starter files and prompt enter a clean temporary workdir.</li>
+          <li><span>edit</span> The agent reads <code>NIXBENCH_PROMPT.md</code> and changes local files.</li>
+          <li><span>check</span> Hidden evaluators score the final worktree.</li>
+          <li><span>record</span> Logs, diffs, JSON summaries, and timings are written under <code>results/</code>.</li>
+        </ol>
+      </section>
+
+      <section class="corpus-section" id="corpus" aria-labelledby="corpus-heading">
+        <div class="section-heading">
+          <p class="eyebrow">Initial corpus</p>
+          <h2 id="corpus-heading">Ten focused Nix failure surfaces.</h2>
+        </div>
+        <div class="corpus-table-wrap">
+          <table class="corpus-table">
+            <thead>
+              <tr>
+                <th scope="col">Task</th>
+                <th scope="col">Area</th>
+                <th scope="col">Difficulty</th>
+                <th scope="col">Primary pressure</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="difficulty-row easy">
+                <th scope="rowgroup" colspan="4">Easy tasks</th>
+              </tr>
+              <tr>
+                <td><code>debug-infinite-recursion</code></td>
+                <td>Debugging</td>
+                <td><span class="badge easy">Easy</span></td>
+                <td>Recursive attrsets without changing intended output</td>
+              </tr>
+              <tr>
+                <td><code>devshell-tooling-contract</code></td>
+                <td>Dev shells</td>
+                <td><span class="badge easy">Easy</span></td>
+                <td><code>mkShell</code>, optional inputs, and shell environment setup</td>
+              </tr>
+              <tr>
+                <td><code>fetcher-source-pin</code></td>
+                <td>Fetchers</td>
+                <td><span class="badge easy">Easy</span></td>
+                <td>Commit pinning, SRI hashes, and fetcher shape</td>
+              </tr>
+              <tr>
+                <td><code>lang-attrsets-normalize</code></td>
+                <td>Nix language</td>
+                <td><span class="badge easy">Easy</span></td>
+                <td>Attrset traversal, filtering, defaulting, and system support</td>
+              </tr>
+              <tr class="difficulty-row medium">
+                <th scope="rowgroup" colspan="4">Medium tasks</th>
+              </tr>
+              <tr>
+                <td><code>flake-per-system-outputs</code></td>
+                <td>Flakes</td>
+                <td><span class="badge medium">Medium</span></td>
+                <td>Per-system apps, checks, dev shells, and metadata</td>
+              </tr>
+              <tr>
+                <td><code>package-python-application</code></td>
+                <td>Packaging</td>
+                <td><span class="badge medium">Medium</span></td>
+                <td>Python application packaging contracts</td>
+              </tr>
+              <tr>
+                <td><code>package-stdenv-cli</code></td>
+                <td>Packaging</td>
+                <td><span class="badge medium">Medium</span></td>
+                <td><code>stdenv.mkDerivation</code>, phases, native tools, and metadata</td>
+              </tr>
+              <tr>
+                <td><code>purity-wrapper-derivation</code></td>
+                <td>Purity</td>
+                <td><span class="badge medium">Medium</span></td>
+                <td>Avoiding host paths and environment impurities</td>
+              </tr>
+              <tr class="difficulty-row hard">
+                <th scope="rowgroup" colspan="4">Hard tasks</th>
+              </tr>
+              <tr>
+                <td><code>module-service-options</code></td>
+                <td>Modules</td>
+                <td><span class="badge hard">Hard</span></td>
+                <td>Options, types, <code>mkIf</code>, service config, and firewall config</td>
+              </tr>
+              <tr>
+                <td><code>overlay-override-package</code></td>
+                <td>Overlays</td>
+                <td><span class="badge hard">Hard</span></td>
+                <td><code>overrideAttrs</code>, metadata preservation, and final vs prev</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>NixBench records objective agent runs under <code>results/&lt;run-id&gt;/</code>.</p>
+      <a href="results.html">Compare the GPT 5.5 extra high and Claude 4.8 xhigh baseline</a>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
