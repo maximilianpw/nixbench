@@ -1,0 +1,8 @@
+id = "lang-attrsets-normalize"
+name = "Normalize Package Attribute Sets"
+category = "nix-language"
+difficulty = "easy"
+timeout_seconds = 60
+max_score = 100
+systems = ["any"]
+evaluator = "tests/check.sh"

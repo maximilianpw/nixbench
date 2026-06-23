@@ -1,0 +1,8 @@
+id = "module-service-options"
+name = "NixOS Service Module Options"
+category = "modules"
+difficulty = "hard"
+timeout_seconds = 60
+max_score = 100
+systems = ["any"]
+evaluator = "tests/check.sh"

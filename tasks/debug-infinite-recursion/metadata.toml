@@ -1,0 +1,8 @@
+id = "debug-infinite-recursion"
+name = "Debug Infinite Recursion"
+category = "debugging"
+difficulty = "easy"
+timeout_seconds = 60
+max_score = 100
+systems = ["any"]
+evaluator = "tests/check.sh"

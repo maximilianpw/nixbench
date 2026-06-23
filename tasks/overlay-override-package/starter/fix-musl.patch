@@ -1,0 +1,6 @@
+diff --git a/tinygrep.c b/tinygrep.c
+--- a/tinygrep.c
++++ b/tinygrep.c
+@@
+-/* broken on musl */
++/* fixed on musl */

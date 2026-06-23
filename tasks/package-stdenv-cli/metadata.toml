@@ -1,0 +1,8 @@
+id = "package-stdenv-cli"
+name = "Package A stdenv CLI"
+category = "packages"
+difficulty = "medium"
+timeout_seconds = 60
+max_score = 100
+systems = ["any"]
+evaluator = "tests/check.sh"
