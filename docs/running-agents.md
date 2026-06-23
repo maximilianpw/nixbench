@@ -4,6 +4,8 @@ NixBench accepts any agent that can be invoked as a shell command.
 
 The harness copies a task starter into a temporary directory and runs the agent command with that temporary directory as the current working directory. The agent should read `NIXBENCH_PROMPT.md`, edit local files, and exit.
 
+The agent environment includes `NIXBENCH_TASK_ID`, `NIXBENCH_WORKDIR`, and `NIXBENCH_PROMPT`. It intentionally does not include the original task directory, hidden evaluator path, reference solution path, or score file path.
+
 ## Generic Pattern
 
 ```sh
@@ -99,4 +101,3 @@ Then inspect failed tasks:
 sed -n '1,160p' results/<run-id>/<task-id>/check.log
 sed -n '1,220p' results/<run-id>/<task-id>/diff.patch
 ```
-

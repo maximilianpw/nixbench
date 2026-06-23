@@ -20,4 +20,4 @@ The result must include:
 - `bySystem`: an attrset mapping every system in `allSystems` to the package names supported on that system.
 - `defaultPackages`: package names supported on `defaultSystem`.
 
-A package supports all systems when it has no `systems` field. Ignore packages where `disabled = true`.
+A package supports all systems when it has no `systems` field. Disabled packages should still appear in `names` and `versions`, but should be ignored when computing `bySystem` and `defaultPackages`.

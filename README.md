@@ -18,22 +18,37 @@ NixBench is built to catch those issues with objective tests.
 
 ## What It Measures
 
-The initial corpus covers ten self-contained tasks:
+The corpus covers twenty-three self-contained tasks:
 
 | Task | Area | Difficulty | What It Tests |
 |---|---|---:|---|
+| `container-native-vs-oci` | NixOS modules | Medium | Distinguishing native NixOS containers from Docker/Podman-style OCI containers |
 | `debug-infinite-recursion` | Debugging | Easy | Repairing recursive attrsets without changing the intended output |
+| `debug-network-false-lead` | Debugging | Medium | Diagnosing from observed evidence without chasing plausible false leads |
 | `devshell-tooling-contract` | Dev shells | Easy | `mkShell`, optional inputs, shell environment setup |
 | `fetcher-source-pin` | Fetchers | Easy | Commit pinning, SRI hashes, source fetcher shape |
+| `fhs-binary-wrapper` | Packaging | Medium | Wrapping FHS-oriented binaries without mutating global filesystem paths |
+| `flake-input-package-selection` | Flakes | Medium | Selecting actual flake package outputs instead of assuming `.default` |
 | `flake-per-system-outputs` | Flakes | Medium | Per-system outputs, apps, checks, devShells, and shared helpers |
+| `home-manager-wsl-module-import` | NixOS modules | Medium | Importing Home Manager as a NixOS module in a WSL configuration |
+| `home-manager-xdg-files` | NixOS modules | Easy | Using Home Manager XDG/file options instead of imperative home-directory setup |
+| `issue-report-quality` | Debugging | Medium | Producing verifiable, low-noise Nixpkgs issue reports |
 | `lang-attrsets-normalize` | Nix language | Easy | Attrset traversal, filtering, defaulting, system support |
 | `module-service-options` | NixOS modules | Hard | Options, types, `mkIf`, service config, firewall config |
+| `module-stale-option-migration` | NixOS modules | Easy | Migrating stale NixOS option paths to current options |
+| `module-system-boundaries` | NixOS modules | Hard | Keeping NixOS, Home Manager, and nix-darwin module outputs separate |
+| `mutable-config-home-manager` | NixOS modules | Medium | Separating mutable GUI app state from Home Manager-managed defaults |
 | `overlay-override-package` | Overlays | Hard | `overrideAttrs`, metadata preservation, final vs prev |
+| `package-name-lookup-contract` | Packaging | Easy | Avoiding hallucinated package names when a package set is constrained |
 | `package-python-application` | Packaging | Medium | Python application packaging contracts |
 | `package-stdenv-cli` | Packaging | Medium | `stdenv.mkDerivation`, phases, native tools, metadata |
 | `purity-wrapper-derivation` | Purity | Medium | Avoiding host paths and environment impurities |
+| `python-cuda-uv2nix-patch` | Packaging | Hard | Python/CUDA packaging inputs, `autoPatchelf`, and avoiding generic Linux fixes |
+| `string-escaping-systemd` | Nix language | Medium | Preserving literal shell variables inside Nix strings |
 
 Most tasks use fake `lib`, fake builders, or fake package sets in the evaluator. That keeps the benchmark fast, deterministic, and focused on Nix structure rather than network access or large builds.
+
+Several tasks are derived from documented community complaints about LLM behavior on Nix/NixOS problems. See [Research-Derived Tasks](docs/research-derived-tasks.md) for the source mapping.
 
 ## Repository Layout
 
@@ -118,17 +133,24 @@ For each task, the harness:
 
 The agent never needs to know where the hidden tests are. It only needs to satisfy the public prompt.
 
-## Agent Environment
+## Runtime Environment
 
-The harness sets these environment variables for both the agent command and evaluator:
+The harness sets these environment variables for the agent command:
 
 | Variable | Meaning |
 |---|---|
 | `NIXBENCH_TASK_ID` | Task id |
-| `NIXBENCH_TASK_DIR` | Original task directory |
 | `NIXBENCH_WORKDIR` | Temporary editable work directory |
 | `NIXBENCH_PROMPT` | Copied prompt path inside the work directory |
-| `NIXBENCH_SCORE_FILE` | Optional score file path for partial-credit evaluators |
+
+The evaluator also receives:
+
+| Variable | Meaning |
+|---|---|
+| `NIXBENCH_TASK_DIR` | Original task directory |
+| `NIXBENCH_SCORE_FILE` | Absolute score file path for partial-credit evaluators |
+
+The original task directory, hidden tests, reference solution, and score file path are not exposed to the agent command.
 
 ## Results
 
@@ -169,7 +191,9 @@ The default scoring model is strict:
 
 - evaluator exits `0`: full task score
 - evaluator exits non-zero: zero
-- agent timeout: zero unless the evaluator supplies partial credit
+- agent timeout: run is marked failed and receives zero unless the evaluator supplies partial credit
+
+Scores written by evaluators are clamped to the task's `[0, max_score]` range.
 
 Evaluators can write partial-credit JSON to `$NIXBENCH_SCORE_FILE`:
 

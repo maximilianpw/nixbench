@@ -66,6 +66,8 @@ It should exit `0` for pass and non-zero for fail. It may write a JSON score to 
 
 If no score file is written, the harness awards full score on pass and zero on fail.
 
+`NIXBENCH_SCORE_FILE` is only provided to the evaluator, not to the agent command.
+
 ## Authoring Checklist
 
 Before adding a task to the corpus:

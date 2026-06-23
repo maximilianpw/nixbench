@@ -104,34 +104,46 @@ def run_task(
     if solution_mode == "reference":
         _copy_overlay(task.reference_dir, workdir)
 
-    score_file = result_dir / "score.json"
+    score_file = (result_dir / "score.json").resolve()
     env = os.environ.copy()
+    if extra_env:
+        env.update(extra_env)
     env.update(
         {
             "NIXBENCH_TASK_ID": task.id,
-            "NIXBENCH_TASK_DIR": str(task.root),
             "NIXBENCH_WORKDIR": str(workdir),
             "NIXBENCH_PROMPT": str(workdir / "NIXBENCH_PROMPT.md"),
+        }
+    )
+
+    agent_env = env.copy()
+    agent_env.pop("NIXBENCH_TASK_DIR", None)
+    agent_env.pop("NIXBENCH_SCORE_FILE", None)
+
+    evaluator_env = env.copy()
+    evaluator_env.update(
+        {
+            "NIXBENCH_TASK_DIR": str(task.root),
             "NIXBENCH_SCORE_FILE": str(score_file),
         }
     )
-    if extra_env:
-        env.update(extra_env)
 
     agent_result: CommandResult | None = None
     if solution_mode == "agent":
         agent_result = _run_shell_command(
             agent_cmd or "",
             cwd=workdir,
-            env=env,
+            env=agent_env,
             timeout_seconds=agent_timeout_seconds,
             log_path=result_dir / "agent.log",
         )
 
+    score_file.unlink(missing_ok=True)
+
     check_result = _run_exec_command(
         ["/bin/sh", str(task.evaluator_path), str(workdir)],
         cwd=workdir,
-        env=env,
+        env=evaluator_env,
         timeout_seconds=task.timeout_seconds,
         log_path=result_dir / "check.log",
     )
@@ -139,8 +151,13 @@ def run_task(
     diff_path = result_dir / "diff.patch"
     _write_unified_dir_diff(original_dir, workdir, diff_path)
 
-    passed = check_result.returncode == 0 and not check_result.timed_out
-    score, score_detail = _read_score(score_file, default_score=task.max_score if passed else 0.0)
+    agent_timed_out = agent_result.timed_out if agent_result else False
+    passed = check_result.returncode == 0 and not check_result.timed_out and not agent_timed_out
+    score, score_detail = _read_score(
+        score_file,
+        default_score=task.max_score if passed else 0.0,
+        max_score=task.max_score,
+    )
 
     result = TaskRunResult(
         task_id=task.id,
@@ -283,32 +300,41 @@ def _run_subprocess(
     )
 
 
-def _read_score(score_file: Path, *, default_score: float) -> tuple[float, dict[str, Any] | None]:
+def _read_score(
+    score_file: Path,
+    *,
+    default_score: float,
+    max_score: float,
+) -> tuple[float, dict[str, Any] | None]:
     if not score_file.exists():
-        return default_score, None
+        return _clamp_score(default_score, max_score), None
 
     text = score_file.read_text().strip()
     if not text:
-        return default_score, None
+        return _clamp_score(default_score, max_score), None
 
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:
         try:
-            return float(text), {"format": "plain"}
+            return _clamp_score(float(text), max_score), {"format": "plain"}
         except ValueError:
-            return default_score, {"format": "invalid", "raw": text}
+            return _clamp_score(default_score, max_score), {"format": "invalid", "raw": text}
 
     if isinstance(parsed, dict) and "score" in parsed:
         try:
-            return float(parsed["score"]), parsed
+            return _clamp_score(float(parsed["score"]), max_score), parsed
         except (TypeError, ValueError):
-            return default_score, parsed
+            return _clamp_score(default_score, max_score), parsed
 
     if isinstance(parsed, int | float):
-        return float(parsed), {"format": "json-number"}
+        return _clamp_score(float(parsed), max_score), {"format": "json-number"}
 
-    return default_score, {"format": "unsupported", "raw": parsed}
+    return _clamp_score(default_score, max_score), {"format": "unsupported", "raw": parsed}
+
+
+def _clamp_score(score: float, max_score: float) -> float:
+    return max(0.0, min(score, max_score))
 
 
 def _write_unified_dir_diff(original: Path, changed: Path, output_path: Path) -> None:

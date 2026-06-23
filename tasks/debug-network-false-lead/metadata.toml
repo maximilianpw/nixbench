@@ -1,0 +1,8 @@
+id = "debug-network-false-lead"
+name = "Debug Network Symptoms Without Chasing False Leads"
+category = "debugging"
+difficulty = "medium"
+timeout_seconds = 60
+max_score = 100
+systems = ["any"]
+evaluator = "tests/check.sh"

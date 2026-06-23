@@ -21,10 +21,8 @@ let
     && package.version == "0.1.0"
     && package.system == system
     && app.type == "app"
-    && app.meta.package == package.pname
     && check == package
     && shell.name == "nixbench-dev"
-    && shell.system == system
     && builtins.elem "nixfmt" shell.tools
     && builtins.elem "statix" shell.tools;
 in

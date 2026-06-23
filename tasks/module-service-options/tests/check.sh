@@ -18,6 +18,9 @@ let
       __mkIf = condition;
       inherit content;
     };
+    concatStringsSep = builtins.concatStringsSep;
+    escapeShellArg = arg: arg;
+    escapeShellArgs = args: builtins.concatStringsSep " " args;
     types = rec {
       package = "package";
       port = "port";

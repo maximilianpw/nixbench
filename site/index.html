@@ -28,29 +28,55 @@
       <section class="hero landing-hero">
         <canvas class="trace-canvas" data-scene="landing" aria-hidden="true"></canvas>
         <div class="hero-copy">
-          <p class="eyebrow">Agentic Nix benchmark</p>
+          <p class="eyebrow">Objective Nix agent benchmark</p>
           <h1>NixBench</h1>
           <p class="hero-lede">
-            A benchmark for measuring whether AI coding agents can edit real Nix projects, satisfy hidden evaluators, and avoid plausible code that only looks right.
+            Seventeen repository-repair tasks that test whether AI coding agents can edit real Nix projects, satisfy hidden evaluators, and avoid plausible code that only looks right.
           </p>
           <div class="hero-meta" aria-label="Benchmark qualities">
-            <span>Hidden evaluators</span>
-            <span>Copied worktrees</span>
-            <span>Objective scoring</span>
+            <span>17 hidden evaluators</span>
+            <span>Fake libs and builders</span>
+            <span>Diff-backed runs</span>
           </div>
           <div class="hero-actions" aria-label="Page actions">
             <a class="button primary" href="results.html">View baseline results</a>
-            <a class="button ghost" href="../README.md">Read repository guide</a>
+            <a class="button ghost" href="#corpus">Inspect task corpus</a>
           </div>
         </div>
-        <div class="hero-instrument" aria-label="Current benchmark shape">
+        <div class="hero-instrument landing-instrument" aria-label="Current benchmark shape">
+          <aside class="instrument-rack" role="img" aria-label="Corpus pressure map with six easy, eight medium, and three hard tasks">
+            <span class="rack-label">corpus pressure map</span>
+            <ol class="rack-grid" aria-hidden="true">
+              <li class="easy" style="--level: 28%;"></li>
+              <li class="medium" style="--level: 58%;"></li>
+              <li class="easy" style="--level: 35%;"></li>
+              <li class="medium" style="--level: 62%;"></li>
+              <li class="easy" style="--level: 30%;"></li>
+              <li class="medium" style="--level: 66%;"></li>
+              <li class="medium" style="--level: 54%;"></li>
+              <li class="easy" style="--level: 34%;"></li>
+              <li class="hard" style="--level: 92%;"></li>
+              <li class="easy" style="--level: 38%;"></li>
+              <li class="hard" style="--level: 86%;"></li>
+              <li class="easy" style="--level: 32%;"></li>
+              <li class="medium" style="--level: 60%;"></li>
+              <li class="medium" style="--level: 56%;"></li>
+              <li class="medium" style="--level: 64%;"></li>
+              <li class="hard" style="--level: 94%;"></li>
+              <li class="medium" style="--level: 52%;"></li>
+            </ol>
+          </aside>
           <div>
-            <span class="instrument-value">10</span>
+            <span class="instrument-value">17</span>
             <span class="instrument-label">tasks</span>
           </div>
           <div>
-            <span class="instrument-value">1000</span>
+            <span class="instrument-value">1700</span>
             <span class="instrument-label">points</span>
+          </div>
+          <div>
+            <span class="instrument-value">9</span>
+            <span class="instrument-label">Nix areas</span>
           </div>
           <div>
             <span class="instrument-value">0</span>
@@ -61,20 +87,20 @@
 
       <section class="summary-strip" aria-label="Benchmark summary">
         <p>
-          The agent receives a copied starter worktree, edits local files, exits, and then NixBench runs a hidden shell evaluator. Passing means the Nix expression survived evaluation, not just review.
+          NixBench is not a snippet prompt set. The agent receives a copied starter worktree, edits local files, exits, and then a hidden shell evaluator scores the final tree.
         </p>
       </section>
 
       <section class="section-grid" aria-labelledby="measure-heading">
         <div>
           <p class="eyebrow">What it measures</p>
-          <h2 id="measure-heading">Nix mistakes that hide in plain sight.</h2>
+          <h2 id="measure-heading">Nix mistakes that survive review but fail evaluation.</h2>
         </div>
         <div class="feature-grid">
           <article class="feature-card">
             <span class="feature-code">eval</span>
             <h3>Semantic correctness</h3>
-            <p>Tasks inspect flakes, modules, overlays, derivations, shells, fetchers, and attrsets with objective checks.</p>
+            <p>Tasks inspect flakes, modules, overlays, derivations, shells, fetchers, attrsets, and issue reports with objective checks.</p>
           </article>
           <article class="feature-card">
             <span class="feature-code">fake lib</span>
@@ -107,8 +133,22 @@
 
       <section class="corpus-section" id="corpus" aria-labelledby="corpus-heading">
         <div class="section-heading">
-          <p class="eyebrow">Initial corpus</p>
-          <h2 id="corpus-heading">Ten focused Nix failure surfaces.</h2>
+          <p class="eyebrow">Expanded corpus</p>
+          <h2 id="corpus-heading">Seventeen focused Nix failure surfaces.</h2>
+        </div>
+        <div class="corpus-metrics" aria-label="Corpus summary">
+          <article>
+            <span>6</span>
+            <p>easy checks for syntax, lookup, stale options, and simple contracts</p>
+          </article>
+          <article>
+            <span>8</span>
+            <p>medium repairs across flakes, containers, issue diagnosis, packaging, and escaping</p>
+          </article>
+          <article>
+            <span>3</span>
+            <p>hard traps for modules, overlays, and Python/CUDA package inputs</p>
+          </article>
         </div>
         <div class="corpus-table-wrap">
           <table class="corpus-table">
@@ -148,14 +188,44 @@
                 <td><span class="badge easy">Easy</span></td>
                 <td>Attrset traversal, filtering, defaulting, and system support</td>
               </tr>
+              <tr>
+                <td><code>module-stale-option-migration</code></td>
+                <td>NixOS modules</td>
+                <td><span class="badge easy">Easy</span></td>
+                <td>Migrating stale option paths to current NixOS options</td>
+              </tr>
+              <tr>
+                <td><code>package-name-lookup-contract</code></td>
+                <td>Packaging</td>
+                <td><span class="badge easy">Easy</span></td>
+                <td>Using only package attributes present in a constrained package set</td>
+              </tr>
               <tr class="difficulty-row medium">
                 <th scope="rowgroup" colspan="4">Medium tasks</th>
+              </tr>
+              <tr>
+                <td><code>container-native-vs-oci</code></td>
+                <td>NixOS modules</td>
+                <td><span class="badge medium">Medium</span></td>
+                <td>Distinguishing native NixOS containers from OCI container assumptions</td>
+              </tr>
+              <tr>
+                <td><code>debug-network-false-lead</code></td>
+                <td>Debugging</td>
+                <td><span class="badge medium">Medium</span></td>
+                <td>Diagnosing from observed evidence without chasing plausible false leads</td>
               </tr>
               <tr>
                 <td><code>flake-per-system-outputs</code></td>
                 <td>Flakes</td>
                 <td><span class="badge medium">Medium</span></td>
                 <td>Per-system apps, checks, dev shells, and metadata</td>
+              </tr>
+              <tr>
+                <td><code>issue-report-quality</code></td>
+                <td>Debugging</td>
+                <td><span class="badge medium">Medium</span></td>
+                <td>Producing verifiable, low-noise Nixpkgs issue reports</td>
               </tr>
               <tr>
                 <td><code>package-python-application</code></td>
@@ -175,12 +245,18 @@
                 <td><span class="badge medium">Medium</span></td>
                 <td>Avoiding host paths and environment impurities</td>
               </tr>
+              <tr>
+                <td><code>string-escaping-systemd</code></td>
+                <td>Nix language</td>
+                <td><span class="badge medium">Medium</span></td>
+                <td>Preserving literal shell variables inside Nix strings</td>
+              </tr>
               <tr class="difficulty-row hard">
                 <th scope="rowgroup" colspan="4">Hard tasks</th>
               </tr>
               <tr>
                 <td><code>module-service-options</code></td>
-                <td>Modules</td>
+                <td>NixOS modules</td>
                 <td><span class="badge hard">Hard</span></td>
                 <td>Options, types, <code>mkIf</code>, service config, and firewall config</td>
               </tr>
@@ -190,6 +266,12 @@
                 <td><span class="badge hard">Hard</span></td>
                 <td><code>overrideAttrs</code>, metadata preservation, and final vs prev</td>
               </tr>
+              <tr>
+                <td><code>python-cuda-uv2nix-patch</code></td>
+                <td>Packaging</td>
+                <td><span class="badge hard">Hard</span></td>
+                <td>Python/CUDA inputs, <code>autoPatchelf</code>, and avoiding generic Linux fixes</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -198,7 +280,7 @@
 
     <footer class="site-footer">
       <p>NixBench records objective agent runs under <code>results/&lt;run-id&gt;/</code>.</p>
-      <a href="results.html">Compare the GPT 5.5 extra high and Claude 4.8 xhigh baseline</a>
+      <a href="results.html">Compare the initial 10-task GPT 5.5 and Claude 4.8 baseline</a>
     </footer>
 
     <script src="app.js"></script>

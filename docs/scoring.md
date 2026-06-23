@@ -6,8 +6,9 @@ Default scoring:
 
 - Evaluator exits `0`: full `max_score`.
 - Evaluator exits non-zero or times out: `0`.
+- Agent times out: the run is marked failed and receives `0` by default.
 
-Evaluators can provide partial credit by writing JSON to `$NIXBENCH_SCORE_FILE`:
+Evaluators can provide partial credit by writing JSON to `$NIXBENCH_SCORE_FILE`, which is an evaluator-only absolute path:
 
 ```json
 {
@@ -21,6 +22,8 @@ Evaluators can provide partial credit by writing JSON to `$NIXBENCH_SCORE_FILE`:
 ```
 
 The harness records this detail in `result.json`.
+
+Evaluator-provided scores are clamped to the task's `[0, max_score]` range. Partial credit can be recorded even when the evaluator exits non-zero or the agent timed out, but `passed` remains false unless the agent completed and the evaluator exited `0`.
 
 ## Recommended Rubric
 
