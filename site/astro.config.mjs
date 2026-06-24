@@ -1,11 +1,8 @@
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 
-const isGitHubPagesBuild = process.env.GITHUB_ACTIONS === "true";
-
 export default defineConfig({
-  site: "https://maximilianpw.github.io",
-  base: isGitHubPagesBuild ? "/nixbench" : "/",
+  site: "https://nixbench.maximilian.pw",
   build: {
     format: "file",
   },
