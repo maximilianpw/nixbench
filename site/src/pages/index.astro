@@ -1,0 +1,31 @@
+---
+import SiteLayout from "@/layouts/SiteLayout.astro";
+import {
+  ExplainerSection,
+  LeaderboardPanel,
+  Masthead,
+  MethodSection,
+  TasksSection,
+  UpdatesSection,
+} from "@/components/sections/LandingSections";
+---
+
+<SiteLayout
+  title="NixBench | Agentic Nix Benchmark"
+  description="NixBench measures AI coding agents on objective, hidden-evaluator Nix repair tasks."
+  activePage="home"
+  footer={{
+    text: "NixBench records objective agent runs under <code>results/&lt;run-id&gt;/</code>.",
+    href: "docs/scoring.md",
+    label: "Scoring model",
+  }}
+>
+  <main>
+    <Masthead />
+    <LeaderboardPanel client:visible />
+    <ExplainerSection />
+    <TasksSection />
+    <MethodSection />
+    <UpdatesSection />
+  </main>
+</SiteLayout>

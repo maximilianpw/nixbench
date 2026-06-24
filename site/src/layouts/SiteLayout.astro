@@ -1,0 +1,40 @@
+---
+import { AppHeader } from "@/components/AppHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import "@/styles/global.css";
+
+type Props = {
+  title: string;
+  description: string;
+  activePage: "home" | "results";
+  footer: {
+    text: string;
+    href: string;
+    label: string;
+  };
+};
+
+const { title, description, activePage, footer } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" href="data:," />
+    <script is:inline>
+      (() => {
+        const storedTheme = window.localStorage.getItem("nixbench-theme");
+        document.documentElement.dataset.theme = storedTheme || "light";
+      })();
+    </script>
+  </head>
+  <body>
+    <AppHeader activePage={activePage} client:load />
+    <slot />
+    <SiteFooter {...footer} />
+  </body>
+</html>

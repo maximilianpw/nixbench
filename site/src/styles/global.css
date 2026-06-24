@@ -372,6 +372,30 @@ html[data-theme="dark"] .theme-icon {
   background: var(--panel);
 }
 
+.button.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.button-sm {
+  min-height: 32px;
+  padding: 0.42rem 0.75rem;
+  font-size: 0.82rem;
+}
+
+.icon-button {
+  width: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0;
+}
+
+.button [data-icon] {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
 .button:hover {
   transform: translateY(-1px);
 }
@@ -384,6 +408,20 @@ html[data-theme="dark"] .theme-icon {
 .button.secondary:hover {
   color: var(--ink);
   background: var(--panel-muted);
+}
+
+.button.ghost:hover {
+  color: var(--ink);
+  background: var(--panel-muted);
+}
+
+.theme-toggle.button {
+  width: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 0;
 }
 
 .inline-jump {
@@ -514,6 +552,11 @@ html[data-theme="dark"] .theme-icon {
   color: var(--background);
 }
 
+.segmented [data-state="on"] {
+  background: var(--ink);
+  color: var(--background);
+}
+
 .leaderboard-meta {
   flex-wrap: wrap;
   justify-content: end;
@@ -549,6 +592,14 @@ html[data-theme="dark"] .theme-icon {
   border: 1px solid var(--border);
   background: var(--panel);
   box-shadow: var(--shadow);
+}
+
+.react-chart-frame {
+  min-height: 460px;
+}
+
+.react-chart-frame::before {
+  display: none;
 }
 
 .score-plot::before {
@@ -622,6 +673,101 @@ html[data-theme="dark"] .theme-icon {
   right: 4.4rem;
   color: var(--subtle);
   font-style: italic;
+}
+
+.chart-shell {
+  position: absolute;
+  inset: 0.95rem 0.75rem 3.15rem 0.75rem;
+}
+
+.react-chart-frame .recharts-cartesian-axis-line,
+.react-chart-frame .recharts-cartesian-axis-tick-line,
+.react-timing-chart .recharts-cartesian-axis-line,
+.react-timing-chart .recharts-cartesian-axis-tick-line {
+  stroke: var(--border-strong);
+}
+
+.react-chart-frame .recharts-label,
+.react-timing-chart .recharts-label {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+}
+
+.chart-legend {
+  position: absolute;
+  right: 4.4rem;
+  bottom: 0.85rem;
+  left: 4.4rem;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.chart-legend i {
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 1px solid var(--panel);
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--swatch) 70%, var(--ink));
+}
+
+.chart-tooltip {
+  min-width: 180px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 0.7rem 0.8rem;
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+}
+
+.chart-tooltip strong,
+.chart-tooltip span {
+  display: block;
+}
+
+.chart-tooltip strong {
+  color: var(--ink);
+}
+
+.chart-tooltip span {
+  margin-top: 0.18rem;
+  color: var(--muted);
+}
+
+.chart-tooltip dl {
+  display: grid;
+  gap: 0.24rem;
+  margin: 0.62rem 0 0;
+}
+
+.chart-tooltip div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.chart-tooltip dt {
+  color: var(--muted);
+}
+
+.chart-tooltip dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 800;
 }
 
 .chart-point {
@@ -1187,6 +1333,29 @@ tbody tr:hover {
   padding: 0.2rem 0.48rem;
 }
 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-default,
+.badge-muted {
+  border: 1px solid var(--border);
+  background: var(--panel-muted);
+  color: var(--muted);
+}
+
+.badge-codex {
+  background: color-mix(in srgb, var(--codex) 14%, transparent);
+  color: var(--codex);
+}
+
+.badge-claude {
+  background: color-mix(in srgb, var(--claude) 14%, transparent);
+  color: var(--claude);
+}
+
 .status.pass {
   background: color-mix(in srgb, var(--pass) 16%, transparent);
   color: var(--pass);
@@ -1202,6 +1371,14 @@ tbody tr:hover {
   background: var(--panel);
   padding: 0.85rem 1.1rem;
   box-shadow: var(--shadow);
+}
+
+.react-timing-chart {
+  min-height: 470px;
+}
+
+.react-timing-chart .recharts-legend-item-text {
+  color: var(--muted) !important;
 }
 
 .timing-row {

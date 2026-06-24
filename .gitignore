@@ -7,3 +7,6 @@ results/
 result/
 .direnv/
 .envrc
+site/node_modules/
+site/dist/
+site/.astro/

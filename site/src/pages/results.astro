@@ -1,0 +1,37 @@
+---
+import SiteLayout from "@/layouts/SiteLayout.astro";
+import {
+  FailureSection,
+  ResultsHero,
+  ResultsSummary,
+  TaskResultsSection,
+  TimingChart,
+} from "@/components/sections/ResultsSections";
+---
+
+<SiteLayout
+  title="NixBench Results | Codex CLI vs Claude CLI"
+  description="NixBench baseline results comparing Codex CLI and Claude CLI on the initial ten-task corpus."
+  activePage="results"
+  footer={{
+    text: "Raw run artifacts are local under <code>results/</code>; durable comparison notes are tracked under <code>docs/runs/</code>.",
+    href: "index.html",
+    label: "Back to benchmark landing page",
+  }}
+>
+  <main>
+    <ResultsHero />
+    <ResultsSummary />
+    <TaskResultsSection />
+    <section class="section timing-section" aria-labelledby="timing-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Agent duration</p>
+          <h2 id="timing-heading">Claude used 319.7 fewer seconds.</h2>
+        </div>
+      </div>
+      <TimingChart client:visible />
+    </section>
+    <FailureSection />
+  </main>
+</SiteLayout>

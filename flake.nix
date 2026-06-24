@@ -59,6 +59,7 @@
         packages = [
           pkgs.python3
           pkgs.nix
+          pkgs.nodejs_24
           pkgs.nixfmt-rfc-style
           pkgs.statix
           pkgs.deadnix
