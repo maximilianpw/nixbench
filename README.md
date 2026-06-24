@@ -2,6 +2,8 @@
 
 NixBench is a benchmark for measuring how well AI coding agents write, repair, and reason about Nix code.
 
+Website: <https://nixbench.maximilian.pw>
+
 The benchmark is intentionally agentic. A model is not asked to produce a single snippet in isolation. Instead, it receives a small broken or incomplete Nix project, edits files in a temporary working directory, and is judged by hidden evaluators. This better matches how people use coding agents in real repositories: inspect the prompt, edit the code, run checks, recover from errors, and leave behind a concrete diff.
 
 ## Why This Exists
