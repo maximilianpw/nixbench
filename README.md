@@ -18,7 +18,7 @@ NixBench is built to catch those issues with objective tests.
 
 ## What It Measures
 
-The initial corpus covers ten self-contained tasks:
+The corpus covers eleven self-contained tasks:
 
 | Task | Area | Difficulty | What It Tests |
 |---|---|---:|---|
@@ -27,6 +27,7 @@ The initial corpus covers ten self-contained tasks:
 | `fetcher-source-pin` | Fetchers | Easy | Commit pinning, SRI hashes, source fetcher shape |
 | `flake-per-system-outputs` | Flakes | Medium | Per-system outputs, apps, checks, devShells, and shared helpers |
 | `lang-attrsets-normalize` | Nix language | Easy | Attrset traversal, filtering, defaulting, system support |
+| `module-path-composition` | Nix language | Medium | Path composition from module arguments without string/path syntax mistakes |
 | `module-service-options` | NixOS modules | Hard | Options, types, `mkIf`, service config, firewall config |
 | `overlay-override-package` | Overlays | Hard | `overrideAttrs`, metadata preservation, final vs prev |
 | `package-python-application` | Packaging | Medium | Python application packaging contracts |
@@ -118,16 +119,21 @@ For each task, the harness:
 
 The agent never needs to know where the hidden tests are. It only needs to satisfy the public prompt.
 
-## Agent Environment
+## Command Environment
 
-The harness sets these environment variables for both the agent command and evaluator:
+The harness sets these public environment variables for both the agent command and evaluator:
 
 | Variable | Meaning |
 |---|---|
 | `NIXBENCH_TASK_ID` | Task id |
-| `NIXBENCH_TASK_DIR` | Original task directory |
 | `NIXBENCH_WORKDIR` | Temporary editable work directory |
 | `NIXBENCH_PROMPT` | Copied prompt path inside the work directory |
+
+The evaluator additionally receives hidden harness paths:
+
+| Variable | Meaning |
+|---|---|
+| `NIXBENCH_TASK_DIR` | Original task directory |
 | `NIXBENCH_SCORE_FILE` | Optional score file path for partial-credit evaluators |
 
 ## Results

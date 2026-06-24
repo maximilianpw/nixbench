@@ -14,3 +14,4 @@ Requirements:
 - `ExecStart` must run `${cfg.package}/bin/nixbench-agent --port ${toString cfg.port}` plus any `extraArgs`.
 - Add the selected port to `networking.firewall.allowedTCPPorts`.
 - Use `lib.mkIf cfg.enable` for conditional config.
+- Do not assume additional `lib` helpers beyond the option/type helpers named above; use builtins when needed.

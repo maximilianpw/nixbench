@@ -39,9 +39,14 @@
     in {
       unit =
         pkgs.runCommand "nixbench-unit-tests" {
-          nativeBuildInputs = [pkgs.python3];
+          nativeBuildInputs = [
+            pkgs.python3
+            pkgs.nix
+          ];
         } ''
           cd ${self}
+          export NIX_CONFIG="experimental-features = nix-command flakes"
+          export PYTHONDONTWRITEBYTECODE=1
           python -m unittest discover -s tests
           touch $out
         '';

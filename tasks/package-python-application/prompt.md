@@ -14,4 +14,4 @@ Requirements:
 - Test dependency: `pytest`.
 - Set `pythonImportsCheck = [ "nixbench_report" ]`.
 - Set `pytestFlagsArray = [ "tests" ]`.
-- Set useful `meta`, including `mainProgram = "nixbench-report"`.
+- Set useful `meta`, including `license = lib.licenses.asl20` and `mainProgram = "nixbench-report"`.

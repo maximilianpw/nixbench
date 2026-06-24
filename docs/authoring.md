@@ -24,4 +24,5 @@ Good NixBench tasks should test Nix skill directly, not incidental knowledge of 
 - Add `overrideAttrs` without dropping existing patches or metadata.
 - Replace impure host paths with package inputs.
 - Repair infinite recursion from self-referential attrsets.
+- Compose module paths passed through arguments without confusing path addition, string interpolation, and list syntax.
 - Package a Python, Rust, or Go app using fake builders first, then add real-build variants later.
