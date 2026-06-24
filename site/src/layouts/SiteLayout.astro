@@ -16,7 +16,7 @@ type Props = {
 };
 
 const { title, description, activePage, canonicalPath, footer } = Astro.props;
-const siteUrl = Astro.site ?? new URL("https://nixbench.maximilian.pw");
+const siteUrl = Astro.site ?? new URL("https://nixbench.com");
 const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl);
 ---
 

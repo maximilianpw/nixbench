@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 
-const siteUrl = "https://nixbench.maximilian.pw";
+const siteUrl = "https://nixbench.com";
 const lastmod = "2026-06-24";
 
 const urls = [
