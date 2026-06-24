@@ -13,7 +13,7 @@ const urls = [
   { path: "/docs/scoring.md", priority: "0.6" },
   { path: "/docs/reproducibility.md", priority: "0.6" },
   { path: "/docs/research-derived-tasks.md", priority: "0.6" },
-  { path: "/docs/runs/2026-06-23-agent-baseline.md", priority: "0.5" },
+  { path: "/docs/runs/2026-06-24-model-comparison.md", priority: "0.5" },
 ];
 
 function escapeXml(value: string) {

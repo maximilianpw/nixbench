@@ -822,21 +822,17 @@ html[data-theme="dark"] .theme-icon {
   text-shadow: 0 1px 0 var(--panel);
 }
 
-.codex-current {
+.gpt-55 {
   --point-color: var(--pass);
 }
 
-.codex-baseline {
+.gpt-54,
+.gpt-54-mini {
   --point-color: var(--codex);
 }
 
-.claude-baseline {
+.claude-opus-48-partial {
   --point-color: var(--claude);
-}
-
-.codex-baseline .point-label {
-  position: absolute;
-  right: 1.1rem;
 }
 
 .leaderboard-table-wrap,
@@ -929,6 +925,16 @@ tbody tr:hover {
   font-family: var(--mono);
   font-size: 1.12rem;
   font-weight: 800;
+}
+
+.partial-note {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .mini-bar {
@@ -1220,7 +1226,7 @@ tbody tr:hover {
 }
 
 .run-card-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .run-card {
@@ -1320,6 +1326,14 @@ tbody tr:hover {
   border-left-color: var(--claude);
 }
 
+.result-table .outcome-split td:first-child {
+  border-left-color: var(--amber);
+}
+
+.result-table .outcome-partial td:first-child {
+  border-left-color: var(--muted);
+}
+
 .status {
   display: inline-flex;
   min-width: 3.55rem;
@@ -1356,6 +1370,16 @@ tbody tr:hover {
   color: var(--claude);
 }
 
+.badge-pass {
+  background: color-mix(in srgb, var(--pass) 16%, transparent);
+  color: var(--pass);
+}
+
+.badge-fail {
+  background: color-mix(in srgb, var(--fail) 16%, transparent);
+  color: var(--fail);
+}
+
 .status.pass {
   background: color-mix(in srgb, var(--pass) 16%, transparent);
   color: var(--pass);
@@ -1364,6 +1388,11 @@ tbody tr:hover {
 .status.fail {
   background: color-mix(in srgb, var(--fail) 16%, transparent);
   color: var(--fail);
+}
+
+.status.not-run {
+  background: var(--panel-muted);
+  color: var(--muted);
 }
 
 .timing-chart {

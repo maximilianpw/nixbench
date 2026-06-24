@@ -43,9 +43,9 @@ const chartModes: Record<
     yKey: "passRate",
     xLabel: "Agent minutes",
     yLabel: "Pass rate",
-    xDomain: [0, 20],
+    xDomain: [0, 40],
     yDomain: [0, 100],
-    xTicks: [0, 5, 10, 15, 20],
+    xTicks: [0, 10, 20, 30, 40],
     yTicks: [25, 50, 75, 100],
     xFormatter: (value) => `${value}m`,
     yFormatter: (value) => `${value}%`,
@@ -57,9 +57,9 @@ const chartModes: Record<
     xLabel: "Pass rate",
     yLabel: "Agent minutes",
     xDomain: [0, 100],
-    yDomain: [0, 20],
+    yDomain: [0, 40],
     xTicks: [0, 25, 50, 75, 100],
-    yTicks: [0, 5, 10, 15, 20],
+    yTicks: [0, 10, 20, 30, 40],
     xFormatter: (value) => `${value}%`,
     yFormatter: (value) => `${value}m`,
   },
@@ -69,9 +69,9 @@ const chartModes: Record<
     yKey: "passRate",
     xLabel: "Failed tasks",
     yLabel: "Pass rate",
-    xDomain: [0, 5],
+    xDomain: [0, 8],
     yDomain: [0, 100],
-    xTicks: [0, 1, 2, 3, 5],
+    xTicks: [0, 2, 4, 6, 8],
     yTicks: [25, 50, 75, 100],
     xFormatter: (value) => String(value),
     yFormatter: (value) => `${value}%`,
@@ -79,11 +79,18 @@ const chartModes: Record<
 };
 
 function buildChartPoint(run: LeaderboardRun): ChartPoint {
+  const colors: Record<string, string> = {
+    "gpt-55": "var(--pass)",
+    "gpt-54": "var(--codex)",
+    "gpt-54-mini": "var(--cyan)",
+    "claude-opus-48-partial": "var(--claude)",
+  };
+
   return {
     ...run,
     agentMinutes: formatMinutes(run.agentTimeSeconds),
-    label: `${run.agent} · ${run.passRate}%`,
-    color: run.current ? "var(--pass)" : `var(--${run.kind})`,
+    label: `${run.agent} · ${run.passRate}%${run.status === "partial" ? " partial" : ""}`,
+    color: colors[run.id] ?? (run.current ? "var(--pass)" : `var(--${run.kind})`),
   };
 }
 
@@ -101,7 +108,9 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
       <dl>
         <div>
           <dt>Pass@1</dt>
-          <dd>{run.passRate}%</dd>
+          <dd>
+            {run.passRate}%{run.status === "partial" ? " partial" : ""}
+          </dd>
         </div>
         <div>
           <dt>Agent time</dt>
@@ -110,6 +119,12 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
         <div>
           <dt>Failed</dt>
           <dd>{run.failed}</dd>
+        </div>
+        <div>
+          <dt>Tasks</dt>
+          <dd>
+            {run.completedTasks}/{run.totalTasks}
+          </dd>
         </div>
       </dl>
     </div>
@@ -162,14 +177,14 @@ export function LeaderboardPanel() {
               <strong>24 tasks</strong> · updated <strong>June 24, 2026</strong>
             </span>
             <button className="filter-button" type="button">
-              Runs <span>(3/3)</span>
+              Runs <span>(3 full, 1 partial)</span>
             </button>
           </div>
         </div>
 
         <div className="score-plot react-chart-frame" role="img" aria-label={config.label}>
           <div className="plot-title">NixBench score</div>
-          <span className="plot-note">highest current run ↗</span>
+          <span className="plot-note">partial run shown separately</span>
           <div className="chart-shell">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 48, right: 56, bottom: 42, left: 34 }}>
@@ -254,9 +269,15 @@ export function LeaderboardPanel() {
                   </td>
                   <td>
                     {run.score} / {run.maxScore}
+                    {run.status === "partial" ? <small className="partial-note">partial</small> : null}
                   </td>
                   <td>{run.agentTimeLabel}</td>
-                  <td>{run.failed}</td>
+                  <td>
+                    {run.failed}
+                    <small className="partial-note">
+                      {run.completedTasks}/{run.totalTasks}
+                    </small>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -264,8 +285,8 @@ export function LeaderboardPanel() {
         </div>
 
         <p className="source-note">
-          Current rows are local artifacts from <code>results/</code>. The ten-task comparison is summarized in{" "}
-          <a href="docs/runs/2026-06-23-agent-baseline.md">run notes</a>.
+          Current rows are local artifacts from <code>results/</code>. The model comparison is summarized in{" "}
+          <a href="docs/runs/2026-06-24-model-comparison.md">run notes</a>.
         </p>
       </div>
     </section>

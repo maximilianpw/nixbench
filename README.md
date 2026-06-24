@@ -309,7 +309,7 @@ alejandra flake.nix tasks/*/starter/*.nix tasks/*/reference/*.nix
 
 Current limitations:
 
-- The initial corpus is small.
+- The corpus is still small enough that repeated runs are needed before treating a score as stable.
 - Scoring is mostly pass/fail.
 - No leaderboard service exists yet.
 - The harness does not isolate agents with containers or VMs.
@@ -331,4 +331,4 @@ Good next steps:
 - [Authoring Tasks](docs/authoring.md)
 - [Scoring](docs/scoring.md)
 - [Reproducibility](docs/reproducibility.md)
-- [2026-06-23 Agent Baseline Runs](docs/runs/2026-06-23-agent-baseline.md)
+- [2026-06-24 Model Comparison Runs](docs/runs/2026-06-24-model-comparison.md)
