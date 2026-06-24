@@ -5,112 +5,126 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
       name="description"
-      content="NixBench baseline results comparing GPT 5.5 extra high and Claude 4.8 xhigh on the initial ten-task corpus."
+      content="NixBench baseline results comparing Codex CLI and Claude CLI on the initial ten-task corpus."
     >
-    <title>NixBench Results | GPT 5.5 extra high vs Claude 4.8 xhigh</title>
+    <title>NixBench Results | Codex CLI vs Claude CLI</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="index.html" aria-label="NixBench home">
-        <span class="brand-mark">λ</span>
-        <span>NixBench</span>
-      </a>
-      <nav class="nav-links" aria-label="Primary">
-        <a href="index.html#corpus">Corpus</a>
-        <a aria-current="page" href="results.html">Results</a>
-        <a href="../docs/runs/2026-06-23-agent-baseline.md">Run notes</a>
-      </nav>
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="NixBench home">
+          <span class="brand-mark" aria-hidden="true">λ</span>
+          <span>NixBench</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="index.html#leaderboard">Leaderboard</a>
+          <a href="index.html#tasks">Tasks</a>
+          <a aria-current="page" href="results.html">Results</a>
+          <a href="../docs/runs/2026-06-23-agent-baseline.md">Run notes</a>
+          <a href="https://github.com/maximilianpw/nixbench">GitHub</a>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme">
+            <span class="theme-icon" aria-hidden="true"></span>
+          </button>
+        </nav>
+      </div>
     </header>
 
     <main>
-      <section class="hero results-hero">
-        <canvas class="trace-canvas" data-scene="results" aria-hidden="true"></canvas>
-        <div class="hero-copy">
-          <p class="eyebrow">Baseline run · June 23, 2026</p>
-          <h1>GPT 5.5 extra high vs Claude 4.8 xhigh</h1>
-          <p class="hero-lede">
-            The first ten-task NixBench corpus produced a score tie. Claude finished faster overall; each model solved one task the other missed.
-          </p>
-          <div class="hero-meta" aria-label="Run constraints">
-            <span>240s timeout</span>
-            <span>10 tasks</span>
-            <span>Same prompt contract</span>
-          </div>
-        </div>
-        <div class="hero-instrument results-instrument" aria-label="Headline result">
+      <section class="detail-hero">
+        <div class="detail-hero-inner">
           <div>
-            <span class="instrument-value">500</span>
-            <span class="instrument-label">GPT score</span>
+            <p class="eyebrow">Baseline run · June 23, 2026</p>
+            <h1>Codex CLI vs Claude CLI on the initial ten-task corpus.</h1>
+            <p>
+              The first comparable NixBench runs tied at 500/1000. Claude used less agent time overall; each agent solved one task the other missed.
+            </p>
           </div>
-          <div>
-            <span class="instrument-value">500</span>
-            <span class="instrument-label">Claude score</span>
-          </div>
-          <div>
-            <span class="instrument-value">5-5</span>
-            <span class="instrument-label">pass split</span>
-          </div>
+          <dl class="result-stats" aria-label="Baseline summary">
+            <div>
+              <dt>Codex score</dt>
+              <dd>500</dd>
+            </div>
+            <div>
+              <dt>Claude score</dt>
+              <dd>500</dd>
+            </div>
+            <div>
+              <dt>Pass split</dt>
+              <dd>5-5</dd>
+            </div>
+            <div>
+              <dt>Timeouts</dt>
+              <dd>1-0</dd>
+            </div>
+          </dl>
         </div>
       </section>
 
-      <section class="results-summary" aria-labelledby="summary-heading">
+      <section class="section results-summary" aria-labelledby="summary-heading">
         <div class="section-heading">
-          <p class="eyebrow">Scoreboard</p>
-          <h2 id="summary-heading">Same score, different failure shape.</h2>
+          <div>
+            <p class="eyebrow">Scoreboard</p>
+            <h2 id="summary-heading">Same score, different failure shape.</h2>
+          </div>
+          <a class="text-link" href="../docs/runs/2026-06-23-agent-baseline.md">Source notes</a>
         </div>
+
         <div class="verdict-strip" aria-label="Comparison verdict">
           <article>
             <span>Score</span>
-            <strong>Exact tie</strong>
+            <strong>exact tie</strong>
             <p>Both runs landed at 500/1000 with five passes and five failures.</p>
           </article>
           <article>
             <span>Time</span>
             <strong>Claude -319.7s</strong>
-            <p>Claude completed the corpus in 13m 49s versus GPT's 19m 08s.</p>
+            <p>Claude completed the corpus in 13m 49s versus Codex at 19m 08s.</p>
           </article>
           <article>
             <span>Split tasks</span>
             <strong>1 each</strong>
-            <p>GPT alone passed <code>package-stdenv-cli</code>; Claude alone passed <code>purity-wrapper-derivation</code>.</p>
+            <p>Codex alone passed <code>package-stdenv-cli</code>; Claude alone passed <code>purity-wrapper-derivation</code>.</p>
           </article>
         </div>
-        <div class="score-grid">
-          <article class="score-card gpt-card">
-            <div class="score-card-head">
-              <h3>GPT 5.5 extra high</h3>
-              <span class="run-id">20260623T082404Z</span>
+
+        <div class="run-card-grid">
+          <article class="run-card codex-card">
+            <div class="run-card-head">
+              <h3>Codex CLI</h3>
+              <span>20260623T082404Z</span>
             </div>
-            <p class="score-number">500<span>/1000</span></p>
+            <p class="run-score">500<span>/1000</span></p>
             <dl class="metric-list">
               <div><dt>Passed</dt><dd>5</dd></div>
               <div><dt>Failed</dt><dd>5</dd></div>
               <div><dt>Timeouts</dt><dd>1</dd></div>
-              <div><dt>Total agent time</dt><dd>19m 08s</dd></div>
+              <div><dt>Agent time</dt><dd>19m 08s</dd></div>
             </dl>
           </article>
-          <article class="score-card claude-card">
-            <div class="score-card-head">
-              <h3>Claude 4.8 xhigh</h3>
-              <span class="run-id">20260623T093109Z-b488de64</span>
+          <article class="run-card claude-card">
+            <div class="run-card-head">
+              <h3>Claude CLI</h3>
+              <span>20260623T093109Z-b488de64</span>
             </div>
-            <p class="score-number">500<span>/1000</span></p>
+            <p class="run-score">500<span>/1000</span></p>
             <dl class="metric-list">
               <div><dt>Passed</dt><dd>5</dd></div>
               <div><dt>Failed</dt><dd>5</dd></div>
               <div><dt>Timeouts</dt><dd>0</dd></div>
-              <div><dt>Total agent time</dt><dd>13m 49s</dd></div>
+              <div><dt>Agent time</dt><dd>13m 49s</dd></div>
             </dl>
           </article>
         </div>
       </section>
 
-      <section class="task-results" aria-labelledby="task-results-heading">
+      <section class="section task-results" aria-labelledby="task-results-heading">
         <div class="section-heading">
-          <p class="eyebrow">Per-task outcomes</p>
-          <h2 id="task-results-heading">The tie was not identical.</h2>
+          <div>
+            <p class="eyebrow">Per-task outcomes</p>
+            <h2 id="task-results-heading">The tie was not identical.</h2>
+          </div>
         </div>
         <div class="result-table-wrap">
           <table class="result-table">
@@ -118,7 +132,7 @@
               <tr>
                 <th scope="col">Task</th>
                 <th scope="col">Area</th>
-                <th scope="col">GPT</th>
+                <th scope="col">Codex</th>
                 <th scope="col">Claude</th>
                 <th scope="col">Readout</th>
               </tr>
@@ -150,7 +164,7 @@
                 <td>Flakes</td>
                 <td><span class="status fail">Fail</span> 240.0s</td>
                 <td><span class="status fail">Fail</span> 119.6s</td>
-                <td>Both missed app metadata; GPT also hit the 240s timeout.</td>
+                <td>Both missed app metadata; Codex also hit the 240s timeout.</td>
               </tr>
               <tr class="outcome-mutual-fail">
                 <td><code>lang-attrsets-normalize</code></td>
@@ -180,96 +194,99 @@
                 <td><span class="status fail">Fail</span> 169.0s</td>
                 <td>Both selected <code>mit</code> where the evaluator expected <code>asl20</code>.</td>
               </tr>
-              <tr class="outcome-gpt-only">
+              <tr class="outcome-codex-only">
                 <td><code>package-stdenv-cli</code></td>
                 <td>Packaging</td>
                 <td><span class="status pass">Pass</span> 176.6s</td>
                 <td><span class="status fail">Fail</span> 43.5s</td>
-                <td>GPT solved it; Claude returned a function where a set was expected.</td>
+                <td>Codex solved it; Claude returned a function where a set was expected.</td>
               </tr>
               <tr class="outcome-claude-only">
                 <td><code>purity-wrapper-derivation</code></td>
                 <td>Purity</td>
                 <td><span class="status fail">Fail</span> 180.3s</td>
                 <td><span class="status pass">Pass</span> 68.1s</td>
-                <td>Claude solved it; GPT used unavailable <code>lib.getExe</code>.</td>
+                <td>Claude solved it; Codex used unavailable <code>lib.getExe</code>.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <section class="timing-section" aria-labelledby="timing-heading">
+      <section class="section timing-section" aria-labelledby="timing-heading">
         <div class="section-heading">
-          <p class="eyebrow">Agent duration</p>
-          <h2 id="timing-heading">Claude used 319.7 fewer seconds.</h2>
+          <div>
+            <p class="eyebrow">Agent duration</p>
+            <h2 id="timing-heading">Claude used 319.7 fewer seconds.</h2>
+          </div>
         </div>
-        <div class="timing-chart" role="img" aria-label="Task duration bars for GPT and Claude">
-          <div class="timing-row" style="--gpt: 28%; --claude: 24%;">
-            <span>debug recursion</span><i class="bar gpt"></i><i class="bar claude"></i>
+        <div class="timing-chart" role="img" aria-label="Task duration bars for Codex and Claude">
+          <div class="timing-row" style="--codex: 28%; --claude: 24%;">
+            <span>debug recursion</span><i class="bar codex"></i><i class="bar claude"></i>
           </div>
-          <div class="timing-row" style="--gpt: 33%; --claude: 30%;">
-            <span>dev shell</span><i class="bar gpt"></i><i class="bar claude"></i>
+          <div class="timing-row" style="--codex: 33%; --claude: 30%;">
+            <span>dev shell</span><i class="bar codex"></i><i class="bar claude"></i>
           </div>
-          <div class="timing-row" style="--gpt: 39%; --claude: 18%;">
-            <span>fetcher pin</span><i class="bar gpt"></i><i class="bar claude"></i>
+          <div class="timing-row" style="--codex: 39%; --claude: 18%;">
+            <span>fetcher pin</span><i class="bar codex"></i><i class="bar claude"></i>
           </div>
-          <div class="timing-row" style="--gpt: 100%; --claude: 50%;">
-            <span>flake outputs</span><i class="bar gpt timeout"></i><i class="bar claude"></i>
+          <div class="timing-row" style="--codex: 100%; --claude: 50%;">
+            <span>flake outputs</span><i class="bar codex timeout"></i><i class="bar claude"></i>
           </div>
-          <div class="timing-row" style="--gpt: 27%; --claude: 39%;">
-            <span>attrsets</span><i class="bar gpt"></i><i class="bar claude"></i>
+          <div class="timing-row" style="--codex: 27%; --claude: 39%;">
+            <span>attrsets</span><i class="bar codex"></i><i class="bar claude"></i>
           </div>
-          <div class="timing-row" style="--gpt: 52%; --claude: 51%;">
-            <span>module options</span><i class="bar gpt"></i><i class="bar claude"></i>
+          <div class="timing-row" style="--codex: 52%; --claude: 51%;">
+            <span>module options</span><i class="bar codex"></i><i class="bar claude"></i>
           </div>
-          <div class="timing-row" style="--gpt: 20%; --claude: 16%;">
-            <span>overlay</span><i class="bar gpt"></i><i class="bar claude"></i>
+          <div class="timing-row" style="--codex: 20%; --claude: 16%;">
+            <span>overlay</span><i class="bar codex"></i><i class="bar claude"></i>
           </div>
-          <div class="timing-row" style="--gpt: 31%; --claude: 70%;">
-            <span>python app</span><i class="bar gpt"></i><i class="bar claude"></i>
+          <div class="timing-row" style="--codex: 31%; --claude: 70%;">
+            <span>python app</span><i class="bar codex"></i><i class="bar claude"></i>
           </div>
-          <div class="timing-row" style="--gpt: 74%; --claude: 18%;">
-            <span>stdenv cli</span><i class="bar gpt"></i><i class="bar claude"></i>
+          <div class="timing-row" style="--codex: 74%; --claude: 18%;">
+            <span>stdenv cli</span><i class="bar codex"></i><i class="bar claude"></i>
           </div>
-          <div class="timing-row" style="--gpt: 75%; --claude: 28%;">
-            <span>purity wrapper</span><i class="bar gpt"></i><i class="bar claude"></i>
+          <div class="timing-row" style="--codex: 75%; --claude: 28%;">
+            <span>purity wrapper</span><i class="bar codex"></i><i class="bar claude"></i>
           </div>
           <div class="legend" aria-hidden="true">
-            <span><i class="legend-swatch gpt"></i>GPT 5.5 extra high</span>
-            <span><i class="legend-swatch claude"></i>Claude 4.8 xhigh</span>
+            <span><i class="legend-swatch codex"></i>Codex CLI</span>
+            <span><i class="legend-swatch claude"></i>Claude CLI</span>
           </div>
         </div>
       </section>
 
-      <section class="failure-section" aria-labelledby="failure-heading">
+      <section class="section failure-section" aria-labelledby="failure-heading">
         <div class="section-heading">
-          <p class="eyebrow">Failure notes</p>
-          <h2 id="failure-heading">The hard cases were fake-lib and hidden-shape traps.</h2>
+          <div>
+            <p class="eyebrow">Failure notes</p>
+            <h2 id="failure-heading">The hard cases were fake-lib and hidden-shape traps.</h2>
+          </div>
         </div>
-        <div class="failure-grid">
-          <article class="feature-card">
-            <span class="feature-code">flake</span>
+        <div class="advances-grid">
+          <article>
+            <span class="kicker">flake</span>
             <h3>Metadata shape</h3>
-            <p>Both runs missed required app metadata on the flake task, showing how easy it is to satisfy visible structure while losing hidden attributes.</p>
+            <p>Both runs missed required app metadata on the flake task while satisfying the visible structure.</p>
           </article>
-          <article class="feature-card">
-            <span class="feature-code">lib</span>
+          <article>
+            <span class="kicker">lib</span>
             <h3>Unavailable helpers</h3>
-            <p>GPT used <code>escapeShellArgs</code> and <code>getExe</code>; Claude used <code>concatStringsSep</code>. The evaluator fake <code>lib</code> intentionally rejected those assumptions.</p>
+            <p>Codex used <code>escapeShellArgs</code> and <code>getExe</code>; Claude used <code>concatStringsSep</code>. The fake evaluator library intentionally rejected them.</p>
           </article>
-          <article class="feature-card">
-            <span class="feature-code">license</span>
-            <h3>Wrong-but-plausible values</h3>
-            <p>Both models chose <code>mit</code> for the Python packaging task, while the hidden evaluator expected <code>asl20</code>.</p>
+          <article>
+            <span class="kicker">license</span>
+            <h3>Wrong plausible values</h3>
+            <p>Both models chose <code>mit</code> for the Python package where the hidden evaluator expected <code>asl20</code>.</p>
+          </article>
+          <article>
+            <span class="kicker">shape</span>
+            <h3>Function versus set</h3>
+            <p>Claude's <code>package-stdenv-cli</code> output returned a function where the evaluator expected a package set.</p>
           </article>
         </div>
-      </section>
-
-      <section class="method-note" aria-label="Method note">
-        <p>
-          Source data is copied from <a href="../docs/runs/2026-06-23-agent-baseline.md">docs/runs/2026-06-23-agent-baseline.md</a>. Both runs used the same ten-task corpus, the same prompt contract, and a 240 second per-task agent timeout.
-        </p>
       </section>
     </main>
 

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
       name="description"
-      content="NixBench is an objective benchmark for evaluating how AI coding agents write, repair, and reason about Nix code."
+      content="NixBench measures AI coding agents on objective, hidden-evaluator Nix repair tasks."
     >
     <title>NixBench | Agentic Nix Benchmark</title>
     <link rel="icon" href="data:,">
@@ -13,323 +13,342 @@
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="index.html" aria-label="NixBench home">
-        <span class="brand-mark">λ</span>
-        <span>NixBench</span>
-      </a>
-      <nav class="nav-links" aria-label="Primary">
-        <a href="#corpus">Corpus</a>
-        <a href="results.html">Results</a>
-        <a href="../docs/benchmark-design.md">Design</a>
-      </nav>
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="NixBench home">
+          <span class="brand-mark" aria-hidden="true">λ</span>
+          <span>NixBench</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="#leaderboard">Leaderboard</a>
+          <a href="#tasks">Tasks</a>
+          <a href="results.html">Results</a>
+          <a href="../docs/benchmark-design.md">Design</a>
+          <a href="https://github.com/maximilianpw/nixbench">GitHub</a>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme">
+            <span class="theme-icon" aria-hidden="true"></span>
+          </button>
+        </nav>
+      </div>
     </header>
 
     <main>
-      <section class="hero landing-hero">
-        <canvas class="trace-canvas" data-scene="landing" aria-hidden="true"></canvas>
-        <div class="hero-copy">
-          <p class="eyebrow">Objective Nix agent benchmark</p>
-          <h1>NixBench</h1>
-          <p class="hero-lede">
-            Twenty-four repository-repair tasks that test whether AI coding agents can edit real Nix projects, satisfy hidden evaluators, and avoid plausible code that only looks right.
+      <section class="masthead">
+        <div class="masthead-inner">
+          <div class="masthead-top">
+            <div class="title-block">
+              <div class="title-row">
+                <span class="title-mark" aria-hidden="true">λ</span>
+                <h1>NixBench</h1>
+              </div>
+              <p class="byline">agentic Nix benchmark</p>
+            </div>
+            <dl class="hero-stats" aria-label="Benchmark summary">
+              <div>
+                <dt>tasks</dt>
+                <dd>24</dd>
+              </div>
+              <div>
+                <dt>areas</dt>
+                <dd>9</dd>
+              </div>
+              <div>
+                <dt>evaluators</dt>
+                <dd>24</dd>
+              </div>
+              <div>
+                <dt>scored runs</dt>
+                <dd>3</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="masthead-bottom">
+            <p>
+              Measuring AI coding agents on long-horizon Nix repository repair tasks with hidden shell evaluators and concrete worktree diffs.
+            </p>
+            <div class="actions" aria-label="Page actions">
+              <a class="button primary" href="results.html">Compare results <span aria-hidden="true">-&gt;</span></a>
+              <a class="button secondary" href="../README.md#quick-start">Run locally</a>
+            </div>
+          </div>
+          <a class="inline-jump" href="#tasks">Inspect the task corpus <span aria-hidden="true">v</span></a>
+        </div>
+      </section>
+
+      <section class="section leaderboard-section" id="leaderboard" aria-labelledby="leaderboard-heading">
+        <div class="section-heading compact">
+          <h2 id="leaderboard-heading">Leaderboard</h2>
+        </div>
+
+        <div class="leaderboard-panel">
+          <div class="control-bar" aria-label="Leaderboard controls">
+            <div class="control-groups">
+              <div class="segmented" aria-label="Corpus version">
+                <button type="button" aria-pressed="true">v0.2</button>
+                <button type="button" aria-pressed="false">v0.1</button>
+              </div>
+              <div class="segmented" aria-label="Chart metric">
+                <button type="button" aria-pressed="true" data-chart-mode="score">Score</button>
+                <button type="button" aria-pressed="false" data-chart-mode="time">Agent time</button>
+                <button type="button" aria-pressed="false" data-chart-mode="failures">Failures</button>
+              </div>
+            </div>
+            <div class="leaderboard-meta">
+              <span><strong>24 tasks</strong> · updated <strong>June 24, 2026</strong></span>
+              <button class="filter-button" type="button">Runs <span>(3/3)</span></button>
+            </div>
+          </div>
+
+          <div
+            class="score-plot"
+            data-score-plot
+            data-metric="score"
+            role="img"
+            aria-label="NixBench pass rate plotted against agent time"
+          >
+            <div class="plot-title">NixBench score</div>
+            <div class="plot-axis y y0">100%</div>
+            <div class="plot-axis y y1">75%</div>
+            <div class="plot-axis y y2">50%</div>
+            <div class="plot-axis y y3">25%</div>
+            <div class="plot-axis x x0">0m</div>
+            <div class="plot-axis x x1">5m</div>
+            <div class="plot-axis x x2">10m</div>
+            <div class="plot-axis x x3">15m</div>
+            <div class="plot-axis x x4">20m</div>
+            <div class="axis-name x-name" data-axis-x>Agent minutes</div>
+            <div class="axis-name y-name" data-axis-y>Pass rate</div>
+            <span class="plot-note">highest current run ↗</span>
+
+            <article
+              class="chart-point codex-current"
+              style="--score-x: 78.5%; --score-y: 9%; --time-x: 91%; --time-y: 21%; --fail-x: 20%; --fail-y: 9%;"
+            >
+              <span class="point-dot"></span>
+              <span class="point-label">Codex CLI · 91%</span>
+            </article>
+            <article
+              class="chart-point codex-baseline"
+              style="--score-x: 95.7%; --score-y: 50%; --time-x: 50%; --time-y: 7%; --fail-x: 100%; --fail-y: 50%;"
+            >
+              <span class="point-dot"></span>
+              <span class="point-label">Codex baseline · 50%</span>
+            </article>
+            <article
+              class="chart-point claude-baseline"
+              style="--score-x: 69.1%; --score-y: 50%; --time-x: 50%; --time-y: 31%; --fail-x: 100%; --fail-y: 50%;"
+            >
+              <span class="point-dot"></span>
+              <span class="point-label">Claude baseline · 50%</span>
+            </article>
+          </div>
+
+          <div class="leaderboard-table-wrap">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th scope="col">Run</th>
+                  <th scope="col">Pass@1</th>
+                  <th scope="col">Score</th>
+                  <th scope="col">Agent time</th>
+                  <th scope="col">Failed</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">
+                    <span class="agent-cell">
+                      <span class="agent-mark codex" aria-hidden="true">C</span>
+                      <span>
+                        <strong>Codex CLI</strong>
+                        <small>expanded corpus · 20260624T102722Z</small>
+                      </span>
+                    </span>
+                  </th>
+                  <td>
+                    <span class="score-percent">91%</span>
+                    <span class="mini-bar"><span style="width: 91%;"></span></span>
+                  </td>
+                  <td>1000 / 1100</td>
+                  <td>15m 43s</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <th scope="row">
+                    <span class="agent-cell">
+                      <span class="agent-mark codex" aria-hidden="true">C</span>
+                      <span>
+                        <strong>Codex CLI</strong>
+                        <small>ten-task baseline · 20260623T082404Z</small>
+                      </span>
+                    </span>
+                  </th>
+                  <td>
+                    <span class="score-percent">50%</span>
+                    <span class="mini-bar"><span style="width: 50%;"></span></span>
+                  </td>
+                  <td>500 / 1000</td>
+                  <td>19m 08s</td>
+                  <td>5</td>
+                </tr>
+                <tr>
+                  <th scope="row">
+                    <span class="agent-cell">
+                      <span class="agent-mark claude" aria-hidden="true">A</span>
+                      <span>
+                        <strong>Claude CLI</strong>
+                        <small>ten-task baseline · 20260623T093109Z</small>
+                      </span>
+                    </span>
+                  </th>
+                  <td>
+                    <span class="score-percent">50%</span>
+                    <span class="mini-bar"><span style="width: 50%;"></span></span>
+                  </td>
+                  <td>500 / 1000</td>
+                  <td>13m 49s</td>
+                  <td>5</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="source-note">
+            Current rows are local artifacts from <code>results/</code>. The ten-task comparison is summarized in <a href="../docs/runs/2026-06-23-agent-baseline.md">run notes</a>.
           </p>
-          <div class="hero-meta" aria-label="Benchmark qualities">
-            <span>24 hidden evaluators</span>
-            <span>Fake libs and builders</span>
-            <span>Diff-backed runs</span>
-          </div>
-          <div class="hero-actions" aria-label="Page actions">
-            <a class="button primary" href="results.html">View baseline results</a>
-            <a class="button ghost" href="#corpus">Inspect task corpus</a>
-          </div>
-        </div>
-        <div class="hero-instrument landing-instrument" aria-label="Current benchmark shape">
-          <aside class="instrument-rack" role="img" aria-label="Corpus pressure map with seven easy, thirteen medium, and four hard tasks">
-            <span class="rack-label">corpus pressure map</span>
-            <ol class="rack-grid" aria-hidden="true">
-              <li class="easy" style="--level: 28%;"></li>
-              <li class="medium" style="--level: 58%;"></li>
-              <li class="easy" style="--level: 35%;"></li>
-              <li class="medium" style="--level: 62%;"></li>
-              <li class="easy" style="--level: 30%;"></li>
-              <li class="medium" style="--level: 66%;"></li>
-              <li class="medium" style="--level: 54%;"></li>
-              <li class="easy" style="--level: 34%;"></li>
-              <li class="hard" style="--level: 92%;"></li>
-              <li class="easy" style="--level: 38%;"></li>
-              <li class="hard" style="--level: 86%;"></li>
-              <li class="easy" style="--level: 32%;"></li>
-              <li class="medium" style="--level: 60%;"></li>
-              <li class="medium" style="--level: 56%;"></li>
-              <li class="medium" style="--level: 64%;"></li>
-              <li class="hard" style="--level: 94%;"></li>
-              <li class="medium" style="--level: 52%;"></li>
-              <li class="medium" style="--level: 68%;"></li>
-              <li class="easy" style="--level: 36%;"></li>
-              <li class="medium" style="--level: 70%;"></li>
-              <li class="medium" style="--level: 59%;"></li>
-              <li class="hard" style="--level: 90%;"></li>
-              <li class="medium" style="--level: 63%;"></li>
-              <li class="medium" style="--level: 57%;"></li>
-            </ol>
-          </aside>
-          <div>
-            <span class="instrument-value">24</span>
-            <span class="instrument-label">tasks</span>
-          </div>
-          <div>
-            <span class="instrument-value">2400</span>
-            <span class="instrument-label">points</span>
-          </div>
-          <div>
-            <span class="instrument-value">9</span>
-            <span class="instrument-label">Nix areas</span>
-          </div>
-          <div>
-            <span class="instrument-value">0</span>
-            <span class="instrument-label">LLM judges</span>
-          </div>
         </div>
       </section>
 
-      <section class="summary-strip" aria-label="Benchmark summary">
-        <p>
-          NixBench is not a snippet prompt set. The agent receives a copied starter worktree, edits local files, exits, and then a hidden shell evaluator scores the final tree.
-        </p>
-      </section>
-
-      <section class="section-grid" aria-labelledby="measure-heading">
-        <div>
-          <p class="eyebrow">What it measures</p>
-          <h2 id="measure-heading">Nix mistakes that survive review but fail evaluation.</h2>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <span class="feature-code">eval</span>
-            <h3>Semantic correctness</h3>
-            <p>Tasks inspect flakes, modules, overlays, derivations, shells, fetchers, attrsets, and issue reports with objective checks.</p>
-          </article>
-          <article class="feature-card">
-            <span class="feature-code">fake lib</span>
-            <h3>Restricted environments</h3>
-            <p>Evaluators use small fake builders and package sets so unavailable helpers, host paths, and overfit assumptions fail quickly.</p>
-          </article>
-          <article class="feature-card">
-            <span class="feature-code">diff</span>
-            <h3>Agent behavior</h3>
-            <p>Every run records logs, timing, diffs, task scores, and timeout state for reproducible comparisons.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="process-section" aria-labelledby="process-heading">
-        <div class="process-copy">
-          <p class="eyebrow">Run model</p>
-          <h2 id="process-heading">A benchmark task is a small repository repair.</h2>
+      <section class="section explainer-section" aria-labelledby="why-heading">
+        <div class="narrative">
+          <h2 id="why-heading">NixBench exists because plausible Nix often fails at evaluation time.</h2>
           <p>
-            NixBench avoids isolated snippet prompts. The harness creates a temporary workdir, copies the starter files, runs the agent command there, and evaluates the resulting worktree after the agent exits.
+            The benchmark gives agents a copied starter tree, a prompt, and no access to the hidden evaluator. It rewards final worktree behavior, not a fluent explanation of what the code should do.
           </p>
         </div>
-        <ol class="run-steps">
-          <li><span>copy</span> Starter files and prompt enter a clean temporary workdir.</li>
-          <li><span>edit</span> The agent reads <code>NIXBENCH_PROMPT.md</code> and changes local files.</li>
-          <li><span>check</span> Hidden evaluators score the final worktree.</li>
-          <li><span>record</span> Logs, diffs, JSON summaries, and timings are written under <code>results/</code>.</li>
-        </ol>
+        <div class="advances-grid">
+          <article>
+            <span class="kicker">contamination</span>
+            <h3>Original repair tasks</h3>
+            <p>Tasks are written for this corpus rather than lifted from merged patches, which keeps the answer out of the visible prompt.</p>
+          </article>
+          <article>
+            <span class="kicker">scope</span>
+            <h3>Nix-specific failure surfaces</h3>
+            <p>The corpus covers flakes, modules, overlays, derivations, fetchers, Home Manager, shell escaping, and package contracts.</p>
+          </article>
+          <article>
+            <span class="kicker">verification</span>
+            <h3>Hand-written checks</h3>
+            <p>Each task has a shell evaluator that checks behavior with small fake package sets and libraries instead of relying on LLM judging.</p>
+          </article>
+          <article>
+            <span class="kicker">artifacts</span>
+            <h3>Diff-backed runs</h3>
+            <p>Every run records logs, timings, pass state, score JSON, and the final diff so failures can be inspected after the benchmark ends.</p>
+          </article>
+        </div>
       </section>
 
-      <section class="corpus-section" id="corpus" aria-labelledby="corpus-heading">
+      <section class="section tasks-section" id="tasks" aria-labelledby="tasks-heading">
         <div class="section-heading">
-          <p class="eyebrow">Expanded corpus</p>
-          <h2 id="corpus-heading">Twenty-four focused Nix failure surfaces.</h2>
+          <div>
+            <p class="eyebrow">Task examples</p>
+            <h2 id="tasks-heading">Twenty-four small repositories, one hidden evaluator each.</h2>
+          </div>
+          <a class="text-link" href="../README.md#what-it-measures">All 24 tasks</a>
         </div>
-        <div class="corpus-metrics" aria-label="Corpus summary">
+
+        <div class="task-grid">
+          <article class="task-card">
+            <h3>Respect NixOS, Home Manager, and nix-darwin boundaries</h3>
+            <p>Keep module outputs separated instead of leaking options across systems.</p>
+            <footer><span>modules</span><strong>hard</strong></footer>
+          </article>
+          <article class="task-card">
+            <h3>Patch Python CUDA package inputs</h3>
+            <p>Repair Python/CUDA packaging without falling back to generic Linux path guesses.</p>
+            <footer><span>packages</span><strong>hard</strong></footer>
+          </article>
+          <article class="task-card">
+            <h3>Compose module paths from arguments</h3>
+            <p>Build paths with Nix values while avoiding string interpolation traps.</p>
+            <footer><span>nix-language</span><strong>medium</strong></footer>
+          </article>
+          <article class="task-card">
+            <h3>Debug network symptoms without false leads</h3>
+            <p>Explain the observed NixOS service behavior without chasing a plausible but wrong network diagnosis.</p>
+            <footer><span>debugging</span><strong>medium</strong></footer>
+          </article>
+          <article class="task-card">
+            <h3>Manage home files declaratively</h3>
+            <p>Use Home Manager file and XDG options rather than imperative setup.</p>
+            <footer><span>modules</span><strong>easy</strong></footer>
+          </article>
+          <article class="task-card">
+            <h3>Pin a GitHub source fetcher</h3>
+            <p>Preserve the fixed-output fetcher contract with a commit pin and SRI hash.</p>
+            <footer><span>fetchers</span><strong>easy</strong></footer>
+          </article>
+        </div>
+
+        <div class="difficulty-strip" aria-label="Difficulty distribution">
           <article>
             <span>7</span>
-            <p>easy checks for syntax, lookup, stale options, and simple contracts</p>
+            <p>easy tasks for syntax, lookup, stale options, and small contracts</p>
           </article>
           <article>
             <span>13</span>
-            <p>medium repairs across flakes, containers, issue diagnosis, packaging, and escaping</p>
+            <p>medium repairs across flakes, containers, issue reports, and packaging</p>
           </article>
           <article>
             <span>4</span>
-            <p>hard traps for modules, overlays, and Python/CUDA package inputs</p>
+            <p>hard tasks for modules, overlays, and Python/CUDA package inputs</p>
           </article>
         </div>
-        <div class="corpus-table-wrap">
-          <table class="corpus-table">
-            <thead>
-              <tr>
-                <th scope="col">Task</th>
-                <th scope="col">Area</th>
-                <th scope="col">Difficulty</th>
-                <th scope="col">Primary pressure</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="difficulty-row easy">
-                <th scope="rowgroup" colspan="4">Easy tasks</th>
-              </tr>
-              <tr>
-                <td><code>debug-infinite-recursion</code></td>
-                <td>Debugging</td>
-                <td><span class="badge easy">Easy</span></td>
-                <td>Recursive attrsets without changing intended output</td>
-              </tr>
-              <tr>
-                <td><code>devshell-tooling-contract</code></td>
-                <td>Dev shells</td>
-                <td><span class="badge easy">Easy</span></td>
-                <td><code>mkShell</code>, optional inputs, and shell environment setup</td>
-              </tr>
-              <tr>
-                <td><code>fetcher-source-pin</code></td>
-                <td>Fetchers</td>
-                <td><span class="badge easy">Easy</span></td>
-                <td>Commit pinning, SRI hashes, and fetcher shape</td>
-              </tr>
-              <tr>
-                <td><code>home-manager-xdg-files</code></td>
-                <td>NixOS modules</td>
-                <td><span class="badge easy">Easy</span></td>
-                <td>Using Home Manager XDG/file options instead of imperative setup</td>
-              </tr>
-              <tr>
-                <td><code>lang-attrsets-normalize</code></td>
-                <td>Nix language</td>
-                <td><span class="badge easy">Easy</span></td>
-                <td>Attrset traversal, filtering, defaulting, and system support</td>
-              </tr>
-              <tr>
-                <td><code>module-stale-option-migration</code></td>
-                <td>NixOS modules</td>
-                <td><span class="badge easy">Easy</span></td>
-                <td>Migrating stale option paths to current NixOS options</td>
-              </tr>
-              <tr>
-                <td><code>package-name-lookup-contract</code></td>
-                <td>Packaging</td>
-                <td><span class="badge easy">Easy</span></td>
-                <td>Using only package attributes present in a constrained package set</td>
-              </tr>
-              <tr class="difficulty-row medium">
-                <th scope="rowgroup" colspan="4">Medium tasks</th>
-              </tr>
-              <tr>
-                <td><code>container-native-vs-oci</code></td>
-                <td>NixOS modules</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Distinguishing native NixOS containers from OCI container assumptions</td>
-              </tr>
-              <tr>
-                <td><code>debug-network-false-lead</code></td>
-                <td>Debugging</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Diagnosing from observed evidence without chasing plausible false leads</td>
-              </tr>
-              <tr>
-                <td><code>fhs-binary-wrapper</code></td>
-                <td>Packaging</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Wrapping FHS-oriented binaries without mutating global filesystem paths</td>
-              </tr>
-              <tr>
-                <td><code>flake-input-package-selection</code></td>
-                <td>Flakes</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Selecting actual flake package outputs instead of assuming <code>.default</code></td>
-              </tr>
-              <tr>
-                <td><code>flake-per-system-outputs</code></td>
-                <td>Flakes</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Per-system apps, checks, dev shells, and metadata</td>
-              </tr>
-              <tr>
-                <td><code>home-manager-wsl-module-import</code></td>
-                <td>NixOS modules</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Importing Home Manager as a NixOS module in a WSL configuration</td>
-              </tr>
-              <tr>
-                <td><code>issue-report-quality</code></td>
-                <td>Debugging</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Producing verifiable, low-noise Nixpkgs issue reports</td>
-              </tr>
-              <tr>
-                <td><code>module-path-composition</code></td>
-                <td>Nix language</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Path composition from module arguments without string/path syntax mistakes</td>
-              </tr>
-              <tr>
-                <td><code>mutable-config-home-manager</code></td>
-                <td>NixOS modules</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Separating mutable GUI app state from Home Manager-managed defaults</td>
-              </tr>
-              <tr>
-                <td><code>package-python-application</code></td>
-                <td>Packaging</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Python application packaging contracts</td>
-              </tr>
-              <tr>
-                <td><code>package-stdenv-cli</code></td>
-                <td>Packaging</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td><code>stdenv.mkDerivation</code>, phases, native tools, and metadata</td>
-              </tr>
-              <tr>
-                <td><code>purity-wrapper-derivation</code></td>
-                <td>Purity</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Avoiding host paths and environment impurities</td>
-              </tr>
-              <tr>
-                <td><code>string-escaping-systemd</code></td>
-                <td>Nix language</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td>Preserving literal shell variables inside Nix strings</td>
-              </tr>
-              <tr class="difficulty-row hard">
-                <th scope="rowgroup" colspan="4">Hard tasks</th>
-              </tr>
-              <tr>
-                <td><code>module-service-options</code></td>
-                <td>NixOS modules</td>
-                <td><span class="badge hard">Hard</span></td>
-                <td>Options, types, <code>mkIf</code>, service config, and firewall config</td>
-              </tr>
-              <tr>
-                <td><code>module-system-boundaries</code></td>
-                <td>NixOS modules</td>
-                <td><span class="badge hard">Hard</span></td>
-                <td>Keeping NixOS, Home Manager, and nix-darwin module outputs separate</td>
-              </tr>
-              <tr>
-                <td><code>overlay-override-package</code></td>
-                <td>Overlays</td>
-                <td><span class="badge hard">Hard</span></td>
-                <td><code>overrideAttrs</code>, metadata preservation, and final vs prev</td>
-              </tr>
-              <tr>
-                <td><code>python-cuda-uv2nix-patch</code></td>
-                <td>Packaging</td>
-                <td><span class="badge hard">Hard</span></td>
-                <td>Python/CUDA inputs, <code>autoPatchelf</code>, and avoiding generic Linux fixes</td>
-              </tr>
-            </tbody>
-          </table>
+      </section>
+
+      <section class="section method-section" aria-labelledby="method-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Methodology</p>
+            <h2 id="method-heading">The agent edits a worktree. The evaluator scores the result.</h2>
+          </div>
+          <a class="text-link" href="../docs/running-agents.md">Run guide</a>
         </div>
+        <ol class="method-list">
+          <li>
+            <span>copy</span>
+            <p>Starter files and the prompt enter a clean temporary workdir.</p>
+          </li>
+          <li>
+            <span>edit</span>
+            <p>The agent reads <code>NIXBENCH_PROMPT.md</code> and modifies only local files.</p>
+          </li>
+          <li>
+            <span>check</span>
+            <p>A hidden shell evaluator scores the final tree after the agent exits.</p>
+          </li>
+          <li>
+            <span>record</span>
+            <p>Logs, timing, score JSON, and the final diff are written under <code>results/</code>.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="updates-section" id="updates" aria-labelledby="updates-heading">
+        <div>
+          <p class="eyebrow">Run your agent</p>
+          <h2 id="updates-heading">Add another row to the benchmark.</h2>
+          <p>Use the local harness to run a CLI agent against the same copied worktree contract and hidden evaluator shape.</p>
+        </div>
+        <a class="button primary" href="../README.md#running-with-codex">Open run command <span aria-hidden="true">-&gt;</span></a>
       </section>
     </main>
 
     <footer class="site-footer">
       <p>NixBench records objective agent runs under <code>results/&lt;run-id&gt;/</code>.</p>
-      <a href="results.html">Compare the initial 10-task GPT 5.5 and Claude 4.8 baseline</a>
+      <a href="../docs/scoring.md">Scoring model</a>
     </footer>
 
     <script src="app.js"></script>
