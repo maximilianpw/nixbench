@@ -79,8 +79,8 @@ The reference should pass. The starter should usually fail. If a starter passes,
 For fair runs:
 
 - Do not expose `tests/check.sh` to the agent workdir.
+- Do not expose the original task directory, reference solution, or score file path to the agent.
 - Use the same timeout for every comparable agent.
 - Record the exact agent command.
 - Keep `summary.json`, `result.json`, `agent.log`, `check.log`, and `diff.patch`.
 - Pin task corpus versions when comparing results over time.
-

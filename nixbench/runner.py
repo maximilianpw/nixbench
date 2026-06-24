@@ -106,7 +106,7 @@ def run_task(
     if solution_mode == "reference":
         _copy_overlay(task.reference_dir, workdir)
 
-    score_file = result_dir / "score.json"
+    score_file = (result_dir / "score.json").resolve()
     agent_env, evaluator_env = _build_command_envs(
         task=task,
         workdir=workdir,
@@ -123,6 +123,8 @@ def run_task(
             timeout_seconds=agent_timeout_seconds,
             log_path=result_dir / "agent.log",
         )
+
+    score_file.unlink(missing_ok=True)
 
     check_result = _run_exec_command(
         ["/bin/sh", str(task.evaluator_path), str(workdir)],
@@ -326,31 +328,35 @@ def _read_score(
     max_score: float,
 ) -> tuple[float, dict[str, Any] | None]:
     if not score_file.exists():
-        return default_score, None
+        return _clamp_score(default_score, max_score), None
 
     text = score_file.read_text().strip()
     if not text:
-        return default_score, None
+        return _clamp_score(default_score, max_score), None
 
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:
         score = _coerce_score(text, max_score=max_score)
         if score is None:
-            return default_score, {"format": "invalid", "raw": text}
+            return _clamp_score(default_score, max_score), {"format": "invalid", "raw": text}
         return score, {"format": "plain"}
 
     if isinstance(parsed, dict) and "score" in parsed:
         score = _coerce_score(parsed["score"], max_score=max_score)
         if score is None:
-            return default_score, parsed
+            return _clamp_score(default_score, max_score), parsed
         return score, parsed
 
     score = _coerce_score(parsed, max_score=max_score)
     if score is not None:
         return score, {"format": "json-number"}
 
-    return default_score, {"format": "unsupported", "raw": parsed}
+    return _clamp_score(default_score, max_score), {"format": "unsupported", "raw": parsed}
+
+
+def _clamp_score(score: float, max_score: float) -> float:
+    return max(0.0, min(score, max_score))
 
 
 def _coerce_score(value: Any, *, max_score: float) -> float | None:

@@ -25,11 +25,11 @@
   --glass: rgba(255, 255, 255, 0.07);
   --shadow-card: 0 1px 2px rgba(14, 17, 23, 0.05), 0 10px 30px rgba(14, 17, 23, 0.07);
   --shadow-raised: 0 1px 2px rgba(14, 17, 23, 0.06), 0 18px 48px rgba(14, 17, 23, 0.1);
-  --radius: 10px;
+  --radius: 8px;
   --radius-sm: 6px;
 
-  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mono: "SFMono-Regular", ui-monospace, "Roboto Mono", Consolas, "Liberation Mono", monospace;
+  --sans: "Aptos", "Avenir Next", "IBM Plex Sans", "Segoe UI", ui-sans-serif, sans-serif;
+  --mono: "Berkeley Mono", "JetBrains Mono", "SFMono-Regular", ui-monospace, Consolas, monospace;
 
   --shell: clamp(1.25rem, 5vw, 5vw);
 }
@@ -89,7 +89,7 @@ h1,
 h2,
 h3 {
   font-family: var(--sans);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 /* ---------- Header ---------- */
@@ -117,7 +117,7 @@ h3 {
   font-family: var(--mono);
   font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   text-decoration: none;
 }
 
@@ -205,7 +205,7 @@ h3 {
   font-family: var(--mono);
   font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -228,20 +228,20 @@ h3 {
   margin: 0;
   max-width: 16ch;
   font-weight: 800;
-  font-size: clamp(2.75rem, 7vw, 4.5rem);
+  font-size: 4.5rem;
   line-height: 1;
 }
 
 .results-hero h1 {
   max-width: 22ch;
-  font-size: clamp(2.1rem, 5vw, 3.5rem);
+  font-size: 3.4rem;
 }
 
 .hero-lede {
   max-width: 60ch;
   margin: 1.4rem 0 0;
   color: rgba(244, 246, 249, 0.82);
-  font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+  font-size: 1.16rem;
   line-height: 1.58;
 }
 
@@ -270,7 +270,7 @@ h3 {
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   padding: 0.36rem 0.62rem;
 }
 
@@ -293,7 +293,7 @@ h3 {
   font-family: var(--mono);
   font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   text-decoration: none;
   transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -331,7 +331,7 @@ h3 {
   max-width: 400px;
 }
 
-.hero-instrument div {
+.hero-instrument > div {
   display: grid;
   grid-template-columns: minmax(82px, auto) 1fr;
   align-items: baseline;
@@ -344,8 +344,80 @@ h3 {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.hero-instrument div:hover {
+.hero-instrument > div:hover {
   background: rgba(244, 246, 249, 0.1);
+}
+
+.landing-instrument > div:nth-of-type(2) {
+  border-left-color: var(--amber);
+}
+
+.landing-instrument > div:nth-of-type(3) {
+  border-left-color: var(--nix-blue);
+}
+
+.landing-instrument > div:nth-of-type(4) {
+  border-left-color: var(--fail);
+}
+
+.instrument-rack {
+  display: block;
+  border: 1px solid rgba(244, 246, 249, 0.13);
+  border-radius: var(--radius-sm);
+  background:
+    linear-gradient(135deg, rgba(244, 246, 249, 0.08), rgba(244, 246, 249, 0.025)),
+    rgba(14, 17, 23, 0.18);
+  padding: 1rem 1.05rem 1.1rem;
+}
+
+.rack-label {
+  color: rgba(244, 246, 249, 0.66);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.rack-grid {
+  display: grid;
+  grid-template-columns: repeat(17, minmax(7px, 1fr));
+  gap: 4px;
+  height: 74px;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rack-grid li {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(244, 246, 249, 0.13);
+  border-radius: 3px;
+  background: rgba(244, 246, 249, 0.06);
+}
+
+.rack-grid li::before {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  height: var(--level);
+  border-radius: 2px;
+  background: var(--task-color);
+  content: "";
+}
+
+.rack-grid .easy {
+  --task-color: var(--pass);
+}
+
+.rack-grid .medium {
+  --task-color: var(--amber);
+}
+
+.rack-grid .hard {
+  --task-color: var(--fail);
 }
 
 .results-instrument div:nth-child(1) {
@@ -366,7 +438,7 @@ h3 {
   font-size: 2.5rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1;
 }
 
@@ -374,7 +446,7 @@ h3 {
   color: rgba(244, 246, 249, 0.66);
   font-family: var(--mono);
   font-size: 0.74rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -424,7 +496,7 @@ h3 {
   margin: 0;
   color: var(--text);
   font-weight: 800;
-  font-size: clamp(1.9rem, 3.4vw, 2.45rem);
+  font-size: 2.45rem;
   line-height: 1.04;
 }
 
@@ -434,6 +506,55 @@ h3 {
   justify-content: space-between;
   gap: 2rem;
   margin-bottom: 1.6rem;
+}
+
+.corpus-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin: -0.35rem 0 1.25rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--rule);
+  box-shadow: var(--shadow-card);
+}
+
+.corpus-metrics article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+  background: var(--surface-strong);
+  padding: 1rem 1.15rem;
+}
+
+.corpus-metrics span {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.corpus-metrics article:nth-child(1) span {
+  color: var(--pass);
+}
+
+.corpus-metrics article:nth-child(2) span {
+  color: var(--amber);
+}
+
+.corpus-metrics article:nth-child(3) span {
+  color: var(--fail);
+}
+
+.corpus-metrics p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 /* ---------- Feature / failure cards ---------- */
@@ -477,7 +598,7 @@ h3 {
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   padding: 0.26rem 0.55rem;
 }
 
@@ -487,7 +608,7 @@ h3 {
   color: var(--text);
   font-weight: 700;
   font-size: 1.08rem;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .score-card h3 {
@@ -546,7 +667,7 @@ h3 {
   font-family: var(--mono);
   font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -590,7 +711,7 @@ thead th {
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -628,7 +749,7 @@ tbody tr {
   background: #f4f6f9;
   color: var(--text);
   font-size: 0.72rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
 }
 
 .difficulty-row th::before {
@@ -664,7 +785,7 @@ tbody tr {
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   padding: 0.22rem 0.5rem;
 }
 
@@ -762,7 +883,7 @@ tbody tr {
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -774,7 +895,7 @@ tbody tr {
   font-size: 1.45rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   line-height: 1.1;
 }
 
@@ -820,10 +941,10 @@ tbody tr {
   margin: 1.2rem 0;
   color: var(--text);
   font-family: var(--mono);
-  font-size: clamp(3rem, 7vw, 4.4rem);
+  font-size: 4.4rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   line-height: 1;
 }
 
@@ -850,7 +971,7 @@ tbody tr {
   color: var(--muted);
   font-family: var(--mono);
   font-size: 0.72rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -1021,6 +1142,7 @@ tbody tr {
 
   .feature-grid,
   .failure-grid,
+  .corpus-metrics,
   .verdict-strip {
     grid-template-columns: 1fr;
   }
@@ -1062,13 +1184,31 @@ tbody tr {
     font-size: 1rem;
   }
 
-  .hero-instrument div {
+  .hero h1 {
+    font-size: 3.2rem;
+  }
+
+  .results-hero h1 {
+    font-size: 2.45rem;
+  }
+
+  .section-grid h2,
+  .section-heading h2,
+  .process-copy h2 {
+    font-size: 2rem;
+  }
+
+  .hero-instrument > div {
     grid-template-columns: 1fr;
     gap: 0.3rem;
   }
 
   .instrument-value {
     font-size: 2.1rem;
+  }
+
+  .rack-grid {
+    height: 56px;
   }
 
   .section-grid,
@@ -1085,6 +1225,10 @@ tbody tr {
 
   .metric-list {
     grid-template-columns: 1fr;
+  }
+
+  .score-number {
+    font-size: 3.2rem;
   }
 
   .site-footer {
