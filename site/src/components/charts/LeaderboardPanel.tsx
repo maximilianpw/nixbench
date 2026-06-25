@@ -83,13 +83,13 @@ function buildChartPoint(run: LeaderboardRun): ChartPoint {
     "gpt-55": "var(--pass)",
     "gpt-54": "var(--codex)",
     "gpt-54-mini": "var(--cyan)",
-    "claude-opus-48-partial": "var(--claude)",
+    "claude-opus-48": "var(--claude)",
   };
 
   return {
     ...run,
     agentMinutes: formatMinutes(run.agentTimeSeconds),
-    label: `${run.agent} · ${run.passRate}%${run.status === "partial" ? " partial" : ""}`,
+    label: `${run.agent} · ${run.passRate}%`,
     color: colors[run.id] ?? (run.current ? "var(--pass)" : `var(--${run.kind})`),
   };
 }
@@ -108,9 +108,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
       <dl>
         <div>
           <dt>Pass@1</dt>
-          <dd>
-            {run.passRate}%{run.status === "partial" ? " partial" : ""}
-          </dd>
+          <dd>{run.passRate}%</dd>
         </div>
         <div>
           <dt>Agent time</dt>
@@ -177,14 +175,14 @@ export function LeaderboardPanel() {
               <strong>24 tasks</strong> · updated <strong>June 24, 2026</strong>
             </span>
             <button className="filter-button" type="button">
-              Runs <span>(3 full, 1 partial)</span>
+              Runs <span>(4/4)</span>
             </button>
           </div>
         </div>
 
         <div className="score-plot react-chart-frame" role="img" aria-label={config.label}>
           <div className="plot-title">NixBench score</div>
-          <span className="plot-note">partial run shown separately</span>
+          <span className="plot-note">higher pass rate is better</span>
           <div className="chart-shell">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 48, right: 56, bottom: 42, left: 34 }}>
@@ -269,12 +267,11 @@ export function LeaderboardPanel() {
                   </td>
                   <td>
                     {run.score} / {run.maxScore}
-                    {run.status === "partial" ? <small className="partial-note">partial</small> : null}
                   </td>
                   <td>{run.agentTimeLabel}</td>
                   <td>
                     {run.failed}
-                    <small className="partial-note">
+                    <small className="task-count-note">
                       {run.completedTasks}/{run.totalTasks}
                     </small>
                   </td>

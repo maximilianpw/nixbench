@@ -831,7 +831,7 @@ html[data-theme="dark"] .theme-icon {
   --point-color: var(--codex);
 }
 
-.claude-opus-48-partial {
+.claude-opus-48 {
   --point-color: var(--claude);
 }
 
@@ -927,7 +927,7 @@ tbody tr:hover {
   font-weight: 800;
 }
 
-.partial-note {
+.task-count-note {
   display: block;
   margin-top: 0.2rem;
   color: var(--muted);
@@ -1330,10 +1330,6 @@ tbody tr:hover {
   border-left-color: var(--amber);
 }
 
-.result-table .outcome-partial td:first-child {
-  border-left-color: var(--muted);
-}
-
 .status {
   display: inline-flex;
   min-width: 3.55rem;
@@ -1388,11 +1384,6 @@ tbody tr:hover {
 .status.fail {
   background: color-mix(in srgb, var(--fail) 16%, transparent);
   color: var(--fail);
-}
-
-.status.not-run {
-  background: var(--panel-muted);
-  color: var(--muted);
 }
 
 .timing-chart {

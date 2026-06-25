@@ -18,10 +18,10 @@ export function ResultsHero() {
       <div className="detail-hero-inner">
         <div>
           <p className="eyebrow">Model comparison · June 24, 2026</p>
-          <h1>GPT model runs on the full 24-task NixBench corpus.</h1>
+          <h1>GPT and Claude model runs on the full 24-task NixBench corpus.</h1>
           <p>
-            GPT-5.5, GPT-5.4, and GPT-5.4 mini completed the full corpus. Claude Opus 4.8 is recorded as a partial
-            run because it was stopped early to conserve credits.
+            GPT-5.5, GPT-5.4, GPT-5.4 mini, and Claude Opus 4.8 all completed the same copied-worktree benchmark
+            contract with a 240 second per-task agent timeout.
           </p>
         </div>
         <dl className="result-stats" aria-label="Baseline summary">
@@ -91,14 +91,6 @@ export function ResultsSummary() {
 }
 
 function StatusBadge({ status }: { status: TaskStatus }) {
-  if (status === "not-run") {
-    return (
-      <Badge variant="muted" className="status not-run">
-        Not run
-      </Badge>
-    );
-  }
-
   return (
     <Badge variant={status} className={`status ${status}`}>
       {status === "pass" ? "Pass" : "Fail"}
@@ -107,9 +99,6 @@ function StatusBadge({ status }: { status: TaskStatus }) {
 }
 
 function taskOutcomeClass(cells: TaskRunCell[]) {
-  if (cells.some((cell) => cell.status === "not-run")) {
-    return "outcome-partial";
-  }
   if (cells.every((cell) => cell.status === "pass")) {
     return "outcome-mutual-pass";
   }

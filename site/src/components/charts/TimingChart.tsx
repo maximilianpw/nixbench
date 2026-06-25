@@ -65,7 +65,7 @@ function TimingTooltip({
         {payload.map((entry) => (
           <div key={entry.name}>
             <dt>{entry.name}</dt>
-            <dd>{entry.value == null ? "not run" : `${entry.value.toFixed(1)}s`}</dd>
+            <dd>{entry.value == null ? "--" : `${entry.value.toFixed(1)}s`}</dd>
           </div>
         ))}
       </dl>

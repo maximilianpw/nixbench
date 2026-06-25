@@ -1,6 +1,6 @@
 export type AgentKind = "codex" | "claude";
-export type RunStatus = "complete" | "partial";
-export type TaskStatus = "pass" | "fail" | "not-run";
+export type RunStatus = "complete";
+export type TaskStatus = "pass" | "fail";
 export type ModelKey = "gpt55" | "gpt54" | "gpt54Mini" | "claudeOpus48";
 
 export type LeaderboardRun = {
@@ -51,7 +51,7 @@ export const heroStats = [
   ["tasks", "24"],
   ["areas", "9"],
   ["evaluators", "24"],
-  ["scored runs", "3 + 1 partial"],
+  ["scored runs", "4"],
 ] as const;
 
 export const leaderboardRuns: LeaderboardRun[] = [
@@ -108,22 +108,21 @@ export const leaderboardRuns: LeaderboardRun[] = [
     status: "complete",
   },
   {
-    id: "claude-opus-48-partial",
+    id: "claude-opus-48",
     agent: "Claude Opus 4.8",
     kind: "claude",
-    corpus: "24-task corpus (partial)",
+    corpus: "24-task corpus",
     runId: "20260624T202141Z-881ef1e9",
     marker: "O",
-    passRate: 84,
-    score: 1600,
-    maxScore: 1900,
-    agentTimeSeconds: 1028.41,
-    agentTimeLabel: "17m 08s",
-    failed: 3,
-    completedTasks: 19,
+    passRate: 79,
+    score: 1900,
+    maxScore: 2400,
+    agentTimeSeconds: 1357.658,
+    agentTimeLabel: "22m 38s",
+    failed: 5,
+    completedTasks: 24,
     totalTasks: 24,
-    status: "partial",
-    ranked: false,
+    status: "complete",
   },
 ];
 
@@ -205,8 +204,8 @@ export const explainerCards = [
 export const resultStats = [
   ["Top full score", "2000"],
   ["Best full pass", "20/24"],
-  ["Full runs", "3"],
-  ["Claude partial", "16/19"],
+  ["Full runs", "4"],
+  ["Runner-up score", "1900"],
 ] as const;
 
 export const verdicts = [
@@ -218,12 +217,12 @@ export const verdicts = [
   {
     label: "Spread",
     value: "17-20 passes",
-    description: "The three completed GPT runs landed within a three-task band while sharing several persistent failures.",
+    description: "The four completed runs landed within a three-task band while sharing several persistent failures.",
   },
   {
-    label: "Partial",
-    value: "Claude 16/19",
-    description: "Claude Opus 4.8 was stopped early to conserve credits, so it is recorded but not ranked as a full run.",
+    label: "Runner-up",
+    value: "GPT-5.4 + Claude",
+    description: "GPT-5.4 and Claude Opus 4.8 both scored 1900/2400, but failed different packaging and language tasks.",
   },
 ];
 
@@ -274,14 +273,14 @@ export const modelRunCards = [
     kind: "claude" as const,
     agent: "Claude Opus 4.8",
     runId: "20260624T202141Z-881ef1e9",
-    score: "1600",
-    maxScore: "1900",
-    status: "partial",
+    score: "1900",
+    maxScore: "2400",
+    status: "complete",
     metrics: [
-      ["Passed", "16"],
-      ["Failed", "3"],
-      ["Completed", "19/24"],
-      ["Agent time", "17m 08s"],
+      ["Passed", "19"],
+      ["Failed", "5"],
+      ["Timeouts", "0"],
+      ["Agent time", "22m 38s"],
     ],
   },
 ];
@@ -484,7 +483,7 @@ export const taskResults: TaskResult[] = [
       gpt55: { status: "pass", seconds: 133.51 },
       gpt54: { status: "fail", seconds: 185.563 },
       gpt54Mini: { status: "fail", seconds: 240.009 },
-      claudeOpus48: { status: "not-run" },
+      claudeOpus48: { status: "pass", seconds: 51.509 },
     },
   },
   {
@@ -494,7 +493,7 @@ export const taskResults: TaskResult[] = [
       gpt55: { status: "pass", seconds: 182.157 },
       gpt54: { status: "fail", seconds: 203.113 },
       gpt54Mini: { status: "fail", seconds: 184.5 },
-      claudeOpus48: { status: "not-run" },
+      claudeOpus48: { status: "fail", seconds: 30.315 },
     },
   },
   {
@@ -504,7 +503,7 @@ export const taskResults: TaskResult[] = [
       gpt55: { status: "pass", seconds: 145.04 },
       gpt54: { status: "pass", seconds: 107.322 },
       gpt54Mini: { status: "pass", seconds: 79.14 },
-      claudeOpus48: { status: "not-run" },
+      claudeOpus48: { status: "pass", seconds: 100.403 },
     },
   },
   {
@@ -514,7 +513,7 @@ export const taskResults: TaskResult[] = [
       gpt55: { status: "pass", seconds: 44.377 },
       gpt54: { status: "pass", seconds: 52.841 },
       gpt54Mini: { status: "pass", seconds: 68.93 },
-      claudeOpus48: { status: "not-run" },
+      claudeOpus48: { status: "pass", seconds: 35.43 },
     },
   },
   {
@@ -524,7 +523,7 @@ export const taskResults: TaskResult[] = [
       gpt55: { status: "pass", seconds: 231.92 },
       gpt54: { status: "pass", seconds: 83.086 },
       gpt54Mini: { status: "fail", seconds: 122.819 },
-      claudeOpus48: { status: "not-run" },
+      claudeOpus48: { status: "fail", seconds: 111.591 },
     },
   },
 ];
@@ -546,9 +545,9 @@ export const failureNotes = [
     description: "GPT-5.5 solved the Python application and stdenv CLI tasks that both GPT-5.4 variants missed.",
   },
   {
-    kicker: "partial",
-    title: "Claude stopped before the tail",
-    description: "Claude Opus 4.8 completed 19 tasks before the run was interrupted to conserve credits.",
+    kicker: "language",
+    title: "String escaping split the runners",
+    description: "GPT-5.5 and GPT-5.4 passed string escaping, while GPT-5.4 mini and Claude Opus 4.8 failed it.",
   },
 ];
 
