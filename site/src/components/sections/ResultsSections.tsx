@@ -17,11 +17,11 @@ export function ResultsHero() {
     <section className="detail-hero">
       <div className="detail-hero-inner">
         <div>
-          <p className="eyebrow">Model comparison · June 24, 2026</p>
-          <h1>GPT and Claude model runs on the full 24-task NixBench corpus.</h1>
+          <p className="eyebrow">Model comparison · June 24-25, 2026</p>
+          <h1>GPT and Claude model runs on the full 26-task NixBench corpus.</h1>
           <p>
-            GPT-5.5, GPT-5.4, GPT-5.4 mini, and Claude Opus 4.8 all completed the same copied-worktree benchmark
-            contract with a 240 second per-task agent timeout.
+            GPT-5.5 and GPT-5.4 were swept across reasoning effort levels, while GPT-5.4 mini and Claude Opus 4.8
+            remain xhigh/default baselines under the same 240 second per-task timeout.
           </p>
         </div>
         <dl className="result-stats" aria-label="Baseline summary">
@@ -42,15 +42,15 @@ export function ResultsSummary() {
     <section className="section results-summary" aria-labelledby="summary-heading">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">Scoreboard</p>
-          <h2 id="summary-heading">GPT-5.5 leads the completed full-corpus runs.</h2>
+          <p className="eyebrow">Run summary</p>
+          <h2 id="summary-heading">Two rows reached 22 passes on the 26-task corpus.</h2>
         </div>
         <a className="text-link" href="docs/runs/2026-06-24-model-comparison.md">
           Source notes
         </a>
       </div>
 
-      <div className="verdict-strip" aria-label="Comparison verdict">
+      <div className="verdict-strip" aria-label="Run observations">
         {verdicts.map((verdict) => (
           <article key={verdict.label}>
             <span>{verdict.label}</span>
@@ -62,7 +62,7 @@ export function ResultsSummary() {
 
       <div className="run-card-grid">
         {modelRunCards.map((run) => (
-          <Card key={run.agent} className={`run-card ${run.kind}-card`}>
+          <Card key={run.runId} className={`run-card ${run.kind}-card`}>
             <div className="run-card-head">
               <h3>{run.agent}</h3>
               <span>
@@ -122,7 +122,7 @@ export function TaskResultsSection() {
       <div className="section-heading">
         <div>
           <p className="eyebrow">Per-task outcomes</p>
-          <h2 id="task-results-heading">The common misses show up quickly.</h2>
+          <h2 id="task-results-heading">Baseline outcomes are shown task by task.</h2>
         </div>
       </div>
       <div className="result-table-wrap">
@@ -169,8 +169,8 @@ export function FailureSection() {
     <section className="section failure-section" aria-labelledby="failure-heading">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">Failure notes</p>
-          <h2 id="failure-heading">The hard cases were fake-lib and hidden-shape traps.</h2>
+          <p className="eyebrow">Outcome notes</p>
+          <h2 id="failure-heading">Several outcome patterns repeat across runs.</h2>
         </div>
       </div>
       <div className="advances-grid">

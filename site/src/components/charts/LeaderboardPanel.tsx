@@ -11,7 +11,7 @@ import {
 } from "recharts";
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { leaderboardRuns, formatMinutes, type LeaderboardRun } from "@/data/benchmark";
+import { leaderboardRuns, formatMinutes, type LeaderboardRun, type ModelKey } from "@/data/benchmark";
 
 type ChartMode = "score" | "time" | "failures";
 
@@ -19,6 +19,27 @@ type ChartPoint = LeaderboardRun & {
   agentMinutes: number;
   label: string;
   color: string;
+};
+
+type ChartSeries = {
+  key: ModelKey;
+  label: string;
+  color: string;
+  points: ChartPoint[];
+};
+
+const effortOrder = {
+  low: 0,
+  medium: 1,
+  high: 2,
+  xhigh: 3,
+} as const;
+
+const seriesColors: Record<ModelKey, string> = {
+  gpt55: "var(--pass)",
+  gpt54: "var(--codex)",
+  gpt54Mini: "var(--cyan)",
+  claudeOpus48: "var(--claude)",
 };
 
 const chartModes: Record<
@@ -43,9 +64,9 @@ const chartModes: Record<
     yKey: "passRate",
     xLabel: "Agent minutes",
     yLabel: "Pass rate",
-    xDomain: [0, 40],
+    xDomain: [0, 45],
     yDomain: [0, 100],
-    xTicks: [0, 10, 20, 30, 40],
+    xTicks: [0, 15, 30, 45],
     yTicks: [25, 50, 75, 100],
     xFormatter: (value) => `${value}m`,
     yFormatter: (value) => `${value}%`,
@@ -57,9 +78,9 @@ const chartModes: Record<
     xLabel: "Pass rate",
     yLabel: "Agent minutes",
     xDomain: [0, 100],
-    yDomain: [0, 40],
+    yDomain: [0, 45],
     xTicks: [0, 25, 50, 75, 100],
-    yTicks: [0, 10, 20, 30, 40],
+    yTicks: [0, 15, 30, 45],
     xFormatter: (value) => `${value}%`,
     yFormatter: (value) => `${value}m`,
   },
@@ -79,19 +100,53 @@ const chartModes: Record<
 };
 
 function buildChartPoint(run: LeaderboardRun): ChartPoint {
-  const colors: Record<string, string> = {
-    "gpt-55": "var(--pass)",
-    "gpt-54": "var(--codex)",
-    "gpt-54-mini": "var(--cyan)",
-    "claude-opus-48": "var(--claude)",
-  };
+  const effortLabel = run.effort ? ` · ${run.effort}` : "";
 
   return {
     ...run,
     agentMinutes: formatMinutes(run.agentTimeSeconds),
-    label: `${run.agent} · ${run.passRate}%`,
-    color: colors[run.id] ?? (run.current ? "var(--pass)" : `var(--${run.kind})`),
+    label: `${run.agent}${effortLabel} · ${run.passRate}%`,
+    color: run.series ? seriesColors[run.series] : run.current ? "var(--pass)" : `var(--${run.kind})`,
   };
+}
+
+function buildSeries(chartData: ChartPoint[]) {
+  const groups = new Map<ModelKey, ChartPoint[]>();
+  const standaloneData: ChartPoint[] = [];
+
+  for (const point of chartData) {
+    if (!point.series) {
+      standaloneData.push(point);
+      continue;
+    }
+
+    const series = groups.get(point.series) ?? [];
+    series.push(point);
+    groups.set(point.series, series);
+  }
+
+  const linkedSeries: ChartSeries[] = [];
+
+  for (const [key, points] of groups) {
+    const sortedPoints = [...points].sort((a, b) => {
+      const aOrder = a.effort ? effortOrder[a.effort] : 0;
+      const bOrder = b.effort ? effortOrder[b.effort] : 0;
+      return aOrder - bOrder;
+    });
+
+    if (sortedPoints.length > 1) {
+      linkedSeries.push({
+        key,
+        label: sortedPoints[0].agent,
+        color: seriesColors[key],
+        points: sortedPoints,
+      });
+    } else {
+      standaloneData.push(sortedPoints[0]);
+    }
+  }
+
+  return { linkedSeries, standaloneData };
 }
 
 function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartPoint }> }) {
@@ -104,7 +159,10 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
   return (
     <div className="chart-tooltip">
       <strong>{run.agent}</strong>
-      <span>{run.corpus}</span>
+      <span>
+        {run.corpus}
+        {run.effort ? ` · ${run.effort}` : ""}
+      </span>
       <dl>
         <div>
           <dt>Pass@1</dt>
@@ -132,16 +190,17 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
 export function LeaderboardPanel() {
   const [mode, setMode] = useState<ChartMode>("score");
   const chartData = useMemo(() => leaderboardRuns.map(buildChartPoint), []);
+  const { linkedSeries, standaloneData } = useMemo(() => buildSeries(chartData), [chartData]);
   const config = chartModes[mode];
 
   return (
     <section className="section leaderboard-section" id="leaderboard" aria-labelledby="leaderboard-heading">
       <div className="section-heading compact">
-        <h2 id="leaderboard-heading">Leaderboard</h2>
+        <h2 id="leaderboard-heading">Run plot</h2>
       </div>
 
       <div className="leaderboard-panel">
-        <div className="control-bar" aria-label="Leaderboard controls">
+        <div className="control-bar" aria-label="Run plot controls">
           <div className="control-groups">
             <ToggleGroup type="single" value="v0.2" aria-label="Corpus version">
               <ToggleGroupItem value="v0.2" aria-label="Corpus v0.2">
@@ -172,17 +231,19 @@ export function LeaderboardPanel() {
           </div>
           <div className="leaderboard-meta">
             <span>
-              <strong>24 tasks</strong> · updated <strong>June 24, 2026</strong>
+              <strong>26 tasks</strong> · updated <strong>June 25, 2026</strong>
             </span>
             <button className="filter-button" type="button">
-              Runs <span>(4/4)</span>
+              Runs <span>({leaderboardRuns.length}/{leaderboardRuns.length})</span>
             </button>
           </div>
         </div>
 
         <div className="score-plot react-chart-frame" role="img" aria-label={config.label}>
-          <div className="plot-title">NixBench score</div>
-          <span className="plot-note">higher pass rate is better</span>
+          <div className="plot-header">
+            <div className="plot-title">NixBench score</div>
+            <span className="plot-note">pass rate by agent time</span>
+          </div>
           <div className="chart-shell">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 48, right: 56, bottom: 42, left: 34 }}>
@@ -209,7 +270,19 @@ export function LeaderboardPanel() {
                 />
                 <ZAxis range={[120, 180]} />
                 <Tooltip cursor={{ stroke: "var(--border-strong)" }} content={<ChartTooltip />} />
-                {chartData.map((entry) => (
+                {linkedSeries.map((series) => (
+                  <Scatter
+                    key={series.key}
+                    data={series.points}
+                    fill={series.color}
+                    line={{ stroke: series.color, strokeWidth: 2, strokeOpacity: 0.68 }}
+                    lineType="joint"
+                    name={series.label}
+                    stroke="var(--panel)"
+                    strokeWidth={2}
+                  />
+                ))}
+                {standaloneData.map((entry) => (
                   <Scatter
                     key={entry.id}
                     data={[entry]}
@@ -226,7 +299,8 @@ export function LeaderboardPanel() {
             {chartData.map((run) => (
               <span key={run.id}>
                 <i style={{ "--swatch": run.color } as CSSProperties} />
-                {run.label}
+                <strong>{run.marker}</strong>{" "}
+                {run.effort ?? run.agent.replace("Claude ", "")} · {run.passRate}%
               </span>
             ))}
           </div>
@@ -237,6 +311,7 @@ export function LeaderboardPanel() {
             <thead>
               <tr>
                 <th scope="col">Run</th>
+                <th scope="col">Effort</th>
                 <th scope="col">Pass@1</th>
                 <th scope="col">Score</th>
                 <th scope="col">Agent time</th>
@@ -259,6 +334,7 @@ export function LeaderboardPanel() {
                       </span>
                     </span>
                   </th>
+                  <td>{run.effort ?? "default"}</td>
                   <td>
                     <span className="score-percent">{run.passRate}%</span>
                     <span className="mini-bar">

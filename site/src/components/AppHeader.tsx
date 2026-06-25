@@ -12,7 +12,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Leaderboard", href: "index.html#leaderboard" },
+  { label: "Runs", href: "index.html#leaderboard" },
   { label: "Tasks", href: "index.html#tasks" },
   { label: "Results", href: "results.html", activeOn: "results" },
   { label: "Design", href: "docs/benchmark-design.md" },

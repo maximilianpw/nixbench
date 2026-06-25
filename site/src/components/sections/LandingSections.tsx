@@ -90,10 +90,10 @@ export function TasksSection() {
       <div className="section-heading">
         <div>
           <p className="eyebrow">Task examples</p>
-          <h2 id="tasks-heading">Twenty-four small repositories, one hidden evaluator each.</h2>
+          <h2 id="tasks-heading">Twenty-six small repositories, one hidden evaluator each.</h2>
         </div>
         <a className="text-link" href="https://github.com/maximilianpw/nixbench#what-it-measures">
-          All 24 tasks
+          All 26 tasks
         </a>
       </div>
 
