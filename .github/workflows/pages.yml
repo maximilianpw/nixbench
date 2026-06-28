@@ -27,20 +27,25 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
           node-version: 24
-          cache: npm
-          cache-dependency-path: site/package-lock.json
+          cache: pnpm
+          cache-dependency-path: site/pnpm-lock.yaml
 
       - name: Install site dependencies
         working-directory: site
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build site
         working-directory: site
-        run: npm run build
+        run: pnpm run build
 
       - name: Prepare Pages artifact
         run: |

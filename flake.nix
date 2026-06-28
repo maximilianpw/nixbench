@@ -60,6 +60,7 @@
           pkgs.python3
           pkgs.nix
           pkgs.nodejs_24
+          pkgs.pnpm
           pkgs.nixfmt-rfc-style
           pkgs.statix
           pkgs.deadnix
