@@ -37,7 +37,7 @@ const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl);
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <title>{title}</title>
-    <link rel="icon" href="data:," />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline>
       (() => {
         const storedTheme = window.localStorage.getItem("nixbench-theme");

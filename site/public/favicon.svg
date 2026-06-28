@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="NixBench">
+  <rect width="64" height="64" rx="10" fill="#08090b" />
+  <path d="M9 47 47 9h8L17 47z" fill="#5277c3" />
+  <path d="M18 47 56 9v8L26 47z" fill="#2f9cba" opacity=".9" />
+  <path
+    d="M21.2 49 31.8 15h6.7L27.9 49zm6.3-15.7h7.4L46.2 49h-7.3z"
+    fill="#f7f8fb"
+  />
+</svg>
