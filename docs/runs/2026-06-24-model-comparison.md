@@ -32,7 +32,7 @@ On June 27 and June 28, Claude Opus 4.8 was run with explicit Claude Code effort
 | Claude Code | `claude-opus-4-8` | low | `20260627T214634Z-4e66a550` | complete | 1900/2600 | 19 | 7 | 0 | 9m 02s |
 | Claude Code | `claude-opus-4-8` | medium | `20260627T214634Z-8d1944d5` | complete | 1500/2600 | 15 | 11 | 0 | 9m 15s |
 | Claude Code | `claude-opus-4-8` | high | `20260628T071803Z-ca820a9b` | complete | 2100/2600 | 21 | 5 | 0 | 12m 58s |
-| Claude Code | `claude-opus-4-8` | xhigh | `20260628T071803Z-48e54513` | complete | 1100/2600 | 11 | 15 | 0 | 13m 25s |
+| Claude Code | `claude-opus-4-8` | xhigh | `20260628T154937Z-ed26a81d` | complete | 2100/2600 | 21 | 5 | 0 | 22m 03s |
 | Claude Code | `claude-opus-4-8` | default | `20260624T202141Z-881ef1e9` (+2) | complete | 2100/2600 | 21 | 5 | 0 | 25m 24s |
 
 All runs used a 240 second per-task agent timeout and the same task prompt contract: read `NIXBENCH_PROMPT.md`, edit only the copied task workdir, do not inspect hidden evaluators, run local checks if useful, then stop.
@@ -44,7 +44,7 @@ All runs used a 240 second per-task agent timeout and the same task prompt contr
 | `gpt-5.5` | Low effort recorded 21/26, medium and high recorded 19/26, and the xhigh baseline recorded 22/26. |
 | `gpt-5.4` | Scores increased from 20/26 at low effort to 21/26 at medium and 22/26 at high, while xhigh recorded 21/26. |
 | `gpt-5.4-mini` | Low, medium, and high effort each recorded 21/26; the xhigh baseline recorded 19/26 with three timeouts. |
-| `claude-opus-4-8` | Explicit low, medium, high, and xhigh efforts recorded 19/26, 15/26, 21/26, and 11/26; the earlier default baseline recorded 21/26. |
+| `claude-opus-4-8` | Explicit low, medium, high, and xhigh efforts recorded 19/26, 15/26, 21/26, and 21/26; the earlier default baseline recorded 21/26. |
 | Highest score | `gpt-5.4` high and `gpt-5.5` xhigh both scored 2200/2600; `gpt-5.4` high used less agent time. |
 
 ## Baseline Per-Task Results
