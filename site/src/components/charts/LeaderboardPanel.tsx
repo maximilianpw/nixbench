@@ -231,7 +231,7 @@ export function LeaderboardPanel() {
           </div>
           <div className="leaderboard-meta">
             <span>
-              <strong>26 tasks</strong> · updated <strong>June 25, 2026</strong>
+              <strong>26 tasks</strong> · updated <strong>June 27, 2026</strong>
             </span>
             <button className="filter-button" type="button">
               Runs <span>({leaderboardRuns.length}/{leaderboardRuns.length})</span>
