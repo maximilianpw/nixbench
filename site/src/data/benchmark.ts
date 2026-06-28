@@ -474,7 +474,7 @@ export const modelRunCards = leaderboardRuns.map((run) => ({
     ["Failed", String(run.failed)],
     ["Timeouts", String(run.timeouts)],
     ["Agent time", run.agentTimeLabel],
-  ],
+  ] satisfies [string, string][],
 }));
 
 export const taskResults: TaskResult[] = [

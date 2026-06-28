@@ -1,12 +1,6 @@
 ---
 import SiteLayout from "@/layouts/SiteLayout.astro";
-import {
-  FailureSection,
-  ResultsHero,
-  ResultsSummary,
-  TaskResultsSection,
-  TimingChart,
-} from "@/components/sections/ResultsSections";
+import { ResultsPage } from "@/components/pages/ResultsPage";
 ---
 
 <SiteLayout
@@ -20,19 +14,5 @@ import {
     label: "Back to benchmark landing page",
   }}
 >
-  <main>
-    <ResultsHero />
-    <ResultsSummary />
-    <TaskResultsSection />
-    <section class="section timing-section" aria-labelledby="timing-heading">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Agent duration</p>
-          <h2 id="timing-heading">The xhigh/default baselines show the per-task time profile.</h2>
-        </div>
-      </div>
-      <TimingChart client:visible />
-    </section>
-    <FailureSection />
-  </main>
+  <ResultsPage client:load />
 </SiteLayout>

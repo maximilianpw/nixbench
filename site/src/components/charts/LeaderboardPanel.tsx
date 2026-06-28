@@ -10,6 +10,26 @@ import {
   ZAxis,
 } from "recharts";
 
+import { PageSection, SectionHeader } from "@/components/benchmark/BenchmarkPrimitives";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { leaderboardRuns, formatMinutes, type LeaderboardRun, type ModelKey } from "@/data/benchmark";
 
@@ -194,10 +214,13 @@ export function LeaderboardPanel() {
   const config = chartModes[mode];
 
   return (
-    <section className="section leaderboard-section" id="leaderboard" aria-labelledby="leaderboard-heading">
-      <div className="section-heading compact">
-        <h2 id="leaderboard-heading">Run plot</h2>
-      </div>
+    <PageSection id="leaderboard" className="leaderboard-section" labelledBy="leaderboard-heading">
+      <SectionHeader
+        eyebrow="Leaderboard"
+        title="Run plot"
+        headingId="leaderboard-heading"
+        compact
+      />
 
       <div className="leaderboard-panel">
         <div className="control-bar" aria-label="Run plot controls">
@@ -233,95 +256,99 @@ export function LeaderboardPanel() {
             <span>
               <strong>26 tasks</strong> · updated <strong>June 27, 2026</strong>
             </span>
-            <button className="filter-button" type="button">
+            <Button variant="secondary" size="sm" type="button">
               Runs <span>({leaderboardRuns.length}/{leaderboardRuns.length})</span>
-            </button>
+            </Button>
           </div>
         </div>
 
-        <div className="score-plot react-chart-frame" role="img" aria-label={config.label}>
-          <div className="plot-header">
-            <div className="plot-title">NixBench score</div>
-            <span className="plot-note">pass rate by agent time</span>
-          </div>
-          <div className="chart-shell">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 48, right: 56, bottom: 42, left: 34 }}>
-                <CartesianGrid stroke="var(--grid-line)" strokeDasharray="0" />
-                <XAxis
-                  dataKey={config.xKey as string}
-                  domain={config.xDomain}
-                  tickFormatter={config.xFormatter}
-                  ticks={config.xTicks}
-                  type="number"
-                  label={{ value: config.xLabel, position: "insideBottomRight", offset: -18 }}
-                  stroke="var(--muted)"
-                  tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
-                />
-                <YAxis
-                  dataKey={config.yKey as string}
-                  domain={config.yDomain}
-                  tickFormatter={config.yFormatter}
-                  ticks={config.yTicks}
-                  type="number"
-                  label={{ value: config.yLabel, position: "insideTopLeft", offset: -26 }}
-                  stroke="var(--muted)"
-                  tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
-                />
-                <ZAxis range={[120, 180]} />
-                <Tooltip cursor={{ stroke: "var(--border-strong)" }} content={<ChartTooltip />} />
-                {linkedSeries.map((series) => (
-                  <Scatter
-                    key={series.key}
-                    data={series.points}
-                    fill={series.color}
-                    line={{ stroke: series.color, strokeWidth: 2, strokeOpacity: 0.68 }}
-                    lineType="joint"
-                    name={series.label}
-                    stroke="var(--panel)"
-                    strokeWidth={2}
+        <Card className="chart-card score-plot react-chart-frame" role="img" aria-label={config.label}>
+          <CardHeader>
+            <CardTitle>NixBench score</CardTitle>
+            <CardDescription>Pass rate by agent time, effort, and failure count.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="chart-shell">
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart margin={{ top: 48, right: 56, bottom: 42, left: 34 }}>
+                  <CartesianGrid stroke="var(--grid-line)" strokeDasharray="0" />
+                  <XAxis
+                    dataKey={config.xKey as string}
+                    domain={config.xDomain}
+                    tickFormatter={config.xFormatter}
+                    ticks={config.xTicks}
+                    type="number"
+                    label={{ value: config.xLabel, position: "insideBottomRight", offset: -18 }}
+                    stroke="var(--muted)"
+                    tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
                   />
-                ))}
-                {standaloneData.map((entry) => (
-                  <Scatter
-                    key={entry.id}
-                    data={[entry]}
-                    fill={entry.color}
-                    name={entry.label}
-                    stroke="var(--panel)"
-                    strokeWidth={2}
+                  <YAxis
+                    dataKey={config.yKey as string}
+                    domain={config.yDomain}
+                    tickFormatter={config.yFormatter}
+                    ticks={config.yTicks}
+                    type="number"
+                    label={{ value: config.yLabel, position: "insideTopLeft", offset: -26 }}
+                    stroke="var(--muted)"
+                    tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
                   />
-                ))}
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="chart-legend" aria-hidden="true">
-            {chartData.map((run) => (
-              <span key={run.id}>
-                <i style={{ "--swatch": run.color } as CSSProperties} />
-                <strong>{run.marker}</strong>{" "}
-                {run.effort ?? run.agent.replace("Claude ", "")} · {run.passRate}%
-              </span>
-            ))}
-          </div>
-        </div>
+                  <ZAxis range={[120, 180]} />
+                  <Tooltip cursor={{ stroke: "var(--border-strong)" }} content={<ChartTooltip />} />
+                  {linkedSeries.map((series) => (
+                    <Scatter
+                      key={series.key}
+                      data={series.points}
+                      fill={series.color}
+                      line={{ stroke: series.color, strokeWidth: 2, strokeOpacity: 0.68 }}
+                      lineType="joint"
+                      name={series.label}
+                      stroke="var(--panel)"
+                      strokeWidth={2}
+                    />
+                  ))}
+                  {standaloneData.map((entry) => (
+                    <Scatter
+                      key={entry.id}
+                      data={[entry]}
+                      fill={entry.color}
+                      name={entry.label}
+                      stroke="var(--panel)"
+                      strokeWidth={2}
+                    />
+                  ))}
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <div className="chart-legend" aria-hidden="true">
+              {chartData.map((run) => (
+                <span key={run.id}>
+                  <i style={{ "--swatch": run.color } as CSSProperties} />
+                  <strong>{run.marker}</strong>{" "}
+                  {run.effort ?? run.agent.replace("Claude ", "")} · {run.passRate}%
+                </span>
+              ))}
+            </div>
+          </CardFooter>
+        </Card>
 
-        <div className="leaderboard-table-wrap">
-          <table className="leaderboard-table">
-            <thead>
-              <tr>
-                <th scope="col">Run</th>
-                <th scope="col">Effort</th>
-                <th scope="col">Pass@1</th>
-                <th scope="col">Score</th>
-                <th scope="col">Agent time</th>
-                <th scope="col">Failed</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="table-wrapper leaderboard-table-wrap">
+          <Table className="leaderboard-table">
+            <TableHeader>
+              <TableRow>
+                <TableHead scope="col">Run</TableHead>
+                <TableHead scope="col">Effort</TableHead>
+                <TableHead scope="col">Pass@1</TableHead>
+                <TableHead scope="col">Score</TableHead>
+                <TableHead scope="col">Agent time</TableHead>
+                <TableHead scope="col">Failed</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {leaderboardRuns.map((run) => (
-                <tr key={run.id}>
-                  <th scope="row">
+                <TableRow key={run.id}>
+                  <TableHead scope="row">
                     <span className="agent-cell">
                       <span className={`agent-mark ${run.kind}`} aria-hidden="true">
                         {run.marker}
@@ -333,28 +360,28 @@ export function LeaderboardPanel() {
                         </small>
                       </span>
                     </span>
-                  </th>
-                  <td>{run.effort ?? "default"}</td>
-                  <td>
+                  </TableHead>
+                  <TableCell>
+                    <Badge variant="default">{run.effort ?? "default"}</Badge>
+                  </TableCell>
+                  <TableCell>
                     <span className="score-percent">{run.passRate}%</span>
-                    <span className="mini-bar">
-                      <span style={{ width: `${run.passRate}%` }} />
-                    </span>
-                  </td>
-                  <td>
+                    <Progress value={run.passRate} aria-label={`${run.agent} pass rate`} />
+                  </TableCell>
+                  <TableCell>
                     {run.score} / {run.maxScore}
-                  </td>
-                  <td>{run.agentTimeLabel}</td>
-                  <td>
+                  </TableCell>
+                  <TableCell>{run.agentTimeLabel}</TableCell>
+                  <TableCell>
                     {run.failed}
                     <small className="task-count-note">
                       {run.completedTasks}/{run.totalTasks}
                     </small>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
         <p className="source-note">
@@ -362,6 +389,6 @@ export function LeaderboardPanel() {
           <a href="docs/runs/2026-06-24-model-comparison.md">run notes</a>.
         </p>
       </div>
-    </section>
+    </PageSection>
   );
 }

@@ -1,13 +1,6 @@
 ---
 import SiteLayout from "@/layouts/SiteLayout.astro";
-import {
-  ExplainerSection,
-  LeaderboardPanel,
-  Masthead,
-  MethodSection,
-  TasksSection,
-  UpdatesSection,
-} from "@/components/sections/LandingSections";
+import { HomePage } from "@/components/pages/HomePage";
 ---
 
 <SiteLayout
@@ -21,12 +14,5 @@ import {
     label: "Scoring model",
   }}
 >
-  <main>
-    <Masthead />
-    <LeaderboardPanel client:visible />
-    <ExplainerSection />
-    <TasksSection />
-    <MethodSection />
-    <UpdatesSection />
-  </main>
+  <HomePage client:load />
 </SiteLayout>
