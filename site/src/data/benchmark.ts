@@ -41,7 +41,7 @@ export type TaskRunCell = {
 export type TaskResult = {
   task: string;
   area: string;
-  results: Record<ModelKey, TaskRunCell>;
+  results: Partial<Record<ModelKey, TaskRunCell>>;
 };
 
 export const resultColumns: ResultColumn[] = [
@@ -437,46 +437,6 @@ export const explainerCards = [
   },
 ];
 
-export const resultStats = [
-  ["Highest score", "2200"],
-  ["Highest pass count", "22/26"],
-  ["Full runs", "15"],
-  ["Shortest 22/26 run", "28m 16s"],
-] as const;
-
-export const verdicts = [
-  {
-    label: "Highest score",
-    value: "22/26",
-    description: "Two rows reached 2200/2600: GPT-5.4 at high effort and GPT-5.5 at xhigh effort.",
-  },
-  {
-    label: "Range",
-    value: "19-22 passes",
-    description: "The fifteen completed rows span four pass-count values across the full 26-task corpus.",
-  },
-  {
-    label: "Effort",
-    value: "Model-specific",
-    description: "GPT-5.4 increased from low through high effort; GPT-5.4 mini reached 21/26 at low, medium, and high effort.",
-  },
-];
-
-export const modelRunCards = leaderboardRuns.map((run) => ({
-  kind: run.kind,
-  agent: run.effort ? `${run.agent} (${run.effort})` : run.agent,
-  runId: run.runId,
-  score: String(run.score),
-  maxScore: String(run.maxScore),
-  status: run.status,
-  metrics: [
-    ["Passed", String(run.completedTasks - run.failed)],
-    ["Failed", String(run.failed)],
-    ["Timeouts", String(run.timeouts)],
-    ["Agent time", run.agentTimeLabel],
-  ] satisfies [string, string][],
-}));
-
 export const taskResults: TaskResult[] = [
   {
     task: "container-native-vs-oci",
@@ -763,6 +723,92 @@ export const failureNotes = [
   },
 ];
 
+export function passedTasks(run: LeaderboardRun) {
+  return run.completedTasks - run.failed;
+}
+
+export function formatDuration(seconds: number) {
+  if (seconds >= 60) {
+    const minutes = Math.floor(seconds / 60);
+    const remainder = Math.round(seconds % 60);
+    return remainder === 0 ? `${minutes}m` : `${minutes}m ${remainder}s`;
+  }
+
+  return `${Math.round(seconds)}s`;
+}
+
 export function formatMinutes(seconds: number) {
   return Math.round((seconds / 60) * 10) / 10;
 }
+
+function compareRunQuality(a: LeaderboardRun, b: LeaderboardRun) {
+  return (
+    b.score - a.score ||
+    passedTasks(b) - passedTasks(a) ||
+    a.agentTimeSeconds - b.agentTimeSeconds ||
+    a.agent.localeCompare(b.agent)
+  );
+}
+
+function bestRunFrom(runs: LeaderboardRun[]) {
+  return [...runs].sort(compareRunQuality)[0];
+}
+
+function fastestRunFrom(runs: LeaderboardRun[]) {
+  return [...runs].sort((a, b) => a.agentTimeSeconds - b.agentTimeSeconds)[0];
+}
+
+function effortLabelFor(runs: LeaderboardRun[]) {
+  const labels = [...new Set(runs.map((run) => run.effort ?? "default"))];
+  return labels.length > 0 ? labels.join(", ") : "none";
+}
+
+export const topRun = bestRunFrom(leaderboardRuns);
+
+export const resultOverviewStats = [
+  ["models", String(resultColumns.length)],
+  ["scored runs", String(leaderboardRuns.length)],
+  ["best row", topRun ? `${passedTasks(topRun)}/${topRun.totalTasks}` : "--"],
+  ["task rows", String(taskResults.length)],
+] as const;
+
+export const modelSummaries = resultColumns.map((column) => {
+  const runs = leaderboardRuns.filter((run) => run.series === column.key);
+  const bestRun = bestRunFrom(runs);
+  const fastestRun = fastestRunFrom(runs);
+  const totalTimeouts = runs.reduce((sum, run) => sum + run.timeouts, 0);
+
+  return {
+    ...column,
+    kind: bestRun?.kind ?? runs[0]?.kind,
+    runCount: runs.length,
+    bestRun,
+    fastestRun,
+    bestPassLabel: bestRun ? `${passedTasks(bestRun)}/${bestRun.totalTasks}` : "--",
+    bestScoreLabel: bestRun ? `${bestRun.score}/${bestRun.maxScore}` : "--",
+    bestEffortLabel: bestRun?.effort ?? "default",
+    fastestRunLabel: fastestRun?.agentTimeLabel ?? "--",
+    effortLabel: effortLabelFor(runs),
+    timeoutLabel: String(totalTimeouts),
+  };
+});
+
+export const modelTaskSummaries = resultColumns.map((column) => {
+  const cells = taskResults.map((task) => task.results[column.key]).filter((cell): cell is TaskRunCell => Boolean(cell));
+  const timedCells = cells.filter((cell) => cell.seconds != null);
+  const passed = cells.filter((cell) => cell.status === "pass").length;
+  const averageSeconds =
+    timedCells.length > 0
+      ? timedCells.reduce((sum, cell) => sum + (cell.seconds ?? 0), 0) / timedCells.length
+      : undefined;
+
+  return {
+    ...column,
+    total: cells.length,
+    passed,
+    failed: cells.length - passed,
+    passRate: cells.length > 0 ? Math.round((passed / cells.length) * 100) : 0,
+    passLabel: cells.length > 0 ? `${passed}/${cells.length}` : "--",
+    averageTimeLabel: averageSeconds == null ? "--" : formatDuration(averageSeconds),
+  };
+});
