@@ -2,44 +2,51 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => <table ref={ref} className={cn("table", className)} {...props} />,
-);
-Table.displayName = "Table";
+export type TableProps = React.ComponentProps<"table"> & {
+  containerClassName?: string;
+};
+export type TableHeaderProps = React.ComponentProps<"thead">;
+export type TableBodyProps = React.ComponentProps<"tbody">;
+export type TableFooterProps = React.ComponentProps<"tfoot">;
+export type TableRowProps = React.ComponentProps<"tr">;
+export type TableHeadProps = React.ComponentProps<"th">;
+export type TableCellProps = React.ComponentProps<"td">;
+export type TableCaptionProps = React.ComponentProps<"caption">;
 
-const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className, ...props }, ref) => <thead ref={ref} className={cn("table-header", className)} {...props} />,
-);
-TableHeader.displayName = "TableHeader";
+function Table({ className, containerClassName, ...props }: TableProps) {
+  return (
+    <div data-slot="table-container" className={cn("table-wrapper", containerClassName)}>
+      <table data-slot="table" className={cn("table", className)} {...props} />
+    </div>
+  );
+}
 
-const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className, ...props }, ref) => <tbody ref={ref} className={cn("table-body", className)} {...props} />,
-);
-TableBody.displayName = "TableBody";
+function TableHeader({ className, ...props }: TableHeaderProps) {
+  return <thead data-slot="table-header" className={cn("table-header", className)} {...props} />;
+}
 
-const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className, ...props }, ref) => <tfoot ref={ref} className={cn("table-footer", className)} {...props} />,
-);
-TableFooter.displayName = "TableFooter";
+function TableBody({ className, ...props }: TableBodyProps) {
+  return <tbody data-slot="table-body" className={cn("table-body", className)} {...props} />;
+}
 
-const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(
-  ({ className, ...props }, ref) => <tr ref={ref} className={cn("table-row", className)} {...props} />,
-);
-TableRow.displayName = "TableRow";
+function TableFooter({ className, ...props }: TableFooterProps) {
+  return <tfoot data-slot="table-footer" className={cn("table-footer", className)} {...props} />;
+}
 
-const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(
-  ({ className, ...props }, ref) => <th ref={ref} className={cn("table-head", className)} {...props} />,
-);
-TableHead.displayName = "TableHead";
+function TableRow({ className, ...props }: TableRowProps) {
+  return <tr data-slot="table-row" className={cn("table-row", className)} {...props} />;
+}
 
-const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(
-  ({ className, ...props }, ref) => <td ref={ref} className={cn("table-cell", className)} {...props} />,
-);
-TableCell.displayName = "TableCell";
+function TableHead({ className, ...props }: TableHeadProps) {
+  return <th data-slot="table-head" className={cn("table-head", className)} {...props} />;
+}
 
-const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttributes<HTMLTableCaptionElement>>(
-  ({ className, ...props }, ref) => <caption ref={ref} className={cn("table-caption", className)} {...props} />,
-);
-TableCaption.displayName = "TableCaption";
+function TableCell({ className, ...props }: TableCellProps) {
+  return <td data-slot="table-cell" className={cn("table-cell", className)} {...props} />;
+}
 
-export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };
+function TableCaption({ className, ...props }: TableCaptionProps) {
+  return <caption data-slot="table-caption" className={cn("table-caption", className)} {...props} />;
+}
+
+export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow };

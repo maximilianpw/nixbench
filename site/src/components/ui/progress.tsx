@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-type ProgressProps = React.HTMLAttributes<HTMLDivElement> & {
+export type ProgressProps = React.HTMLAttributes<HTMLDivElement> & {
   value: number;
   max?: number;
 };
@@ -13,6 +13,7 @@ function Progress({ className, value, max = 100, ...props }: ProgressProps) {
 
   return (
     <div
+      data-slot="progress"
       className={cn("progress", className)}
       role="progressbar"
       aria-valuemax={max}
@@ -21,6 +22,7 @@ function Progress({ className, value, max = 100, ...props }: ProgressProps) {
       {...props}
     >
       <div
+        data-slot="progress-indicator"
         className="progress-indicator"
         style={{ "--progress-value": `${percent}%` } as React.CSSProperties}
       />
