@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-type ActivePage = "home" | "results";
+type ActivePage = "home" | "results" | "docs";
 
 type NavItem = {
   label: string;
@@ -12,10 +12,10 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Runs", href: "index.html#leaderboard" },
-  { label: "Tasks", href: "index.html#tasks" },
-  { label: "Results", href: "results.html", activeOn: "results" },
-  { label: "Design", href: "docs/benchmark-design.md" },
+  { label: "Runs", href: "/index.html#leaderboard" },
+  { label: "Tasks", href: "/index.html#tasks" },
+  { label: "Results", href: "/results.html", activeOn: "results" },
+  { label: "Design", href: "/docs/benchmark-design.html", activeOn: "docs" },
   { label: "GitHub", href: "https://github.com/maximilianpw/nixbench" },
 ] as const;
 
@@ -43,7 +43,7 @@ export function AppHeader({ activePage }: AppHeaderProps) {
   return (
     <header className="site-header">
       <div className="header-inner">
-        <a className="brand" href="index.html" aria-label="NixBench home">
+        <a className="brand" href="/index.html" aria-label="NixBench home">
           <span className="brand-mark" aria-hidden="true">
             λ
           </span>

@@ -6,14 +6,14 @@ const lastmod = "2026-06-25";
 const urls = [
   { path: "/", priority: "1.0" },
   { path: "/results.html", priority: "0.9" },
-  { path: "/docs/benchmark-design.md", priority: "0.7" },
-  { path: "/docs/running-agents.md", priority: "0.7" },
-  { path: "/docs/task-format.md", priority: "0.6" },
-  { path: "/docs/authoring.md", priority: "0.6" },
-  { path: "/docs/scoring.md", priority: "0.6" },
-  { path: "/docs/reproducibility.md", priority: "0.6" },
-  { path: "/docs/research-derived-tasks.md", priority: "0.6" },
-  { path: "/docs/runs/2026-06-24-model-comparison.md", priority: "0.5" },
+  { path: "/docs/benchmark-design.html", priority: "0.7" },
+  { path: "/docs/running-agents.html", priority: "0.7" },
+  { path: "/docs/task-format.html", priority: "0.6" },
+  { path: "/docs/authoring.html", priority: "0.6" },
+  { path: "/docs/scoring.html", priority: "0.6" },
+  { path: "/docs/reproducibility.html", priority: "0.6" },
+  { path: "/docs/research-derived-tasks.html", priority: "0.6" },
+  { path: "/docs/runs/2026-06-24-model-comparison.html", priority: "0.5" },
 ];
 
 function escapeXml(value: string) {
