@@ -52,9 +52,9 @@ export const resultColumns: ResultColumn[] = [
 ];
 
 export const heroStats = [
-  ["tasks", "26"],
+  ["tasks", "29"],
   ["areas", "9"],
-  ["evaluators", "26"],
+  ["evaluators", "29"],
   ["scored runs", "15"],
 ] as const;
 
@@ -403,8 +403,8 @@ export const taskExamples = [
 
 export const difficultyDistribution = [
   ["7", "easy tasks for syntax, lookup, stale options, and small contracts"],
-  ["15", "medium repairs across flakes, containers, issue reports, overlays, and packaging"],
-  ["4", "hard tasks for modules, overlays, and Python/CUDA package inputs"],
+  ["16", "medium repairs across flakes, containers, issue reports, overlays, packaging, and shell integration"],
+  ["6", "hard tasks for modules, overlays, portals, Rust purity, and Python/CUDA package inputs"],
 ] as const;
 
 export const methodSteps = [
@@ -619,6 +619,11 @@ export const taskResults: TaskResult[] = [
     },
   },
   {
+    task: "nushell-command-not-found",
+    area: "Modules",
+    results: {},
+  },
+  {
     task: "overlay-module-boundary",
     area: "Overlays",
     results: {
@@ -689,6 +694,11 @@ export const taskResults: TaskResult[] = [
     },
   },
   {
+    task: "rust-no-network-build",
+    area: "Packaging",
+    results: {},
+  },
+  {
     task: "string-escaping-systemd",
     area: "Nix language",
     results: {
@@ -697,6 +707,11 @@ export const taskResults: TaskResult[] = [
       gpt54Mini: { status: "fail", seconds: 122.819 },
       claudeOpus48: { status: "fail", seconds: 111.591 },
     },
+  },
+  {
+    task: "xdg-portal-merge",
+    area: "Modules",
+    results: {},
   },
 ];
 
