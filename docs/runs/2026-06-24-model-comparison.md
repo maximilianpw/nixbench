@@ -1,6 +1,6 @@
-# 2026-06-24 and 2026-06-25 Model Comparison Runs
+# 2026-06-24 through 2026-07-10 Model Comparison Runs
 
-These are local NixBench runs against the full 26-task corpus.
+These are local NixBench runs against the corpus version current on each run date. Historical rows cover 26 tasks; the July 9-10 GPT-5.6 rows cover the expanded 29-task corpus and retain their own denominator in every score.
 
 The raw `results/` artifacts are intentionally not tracked because they contain logs, temporary diffs, and machine-local paths. This document records the durable statistics needed for comparison.
 
@@ -10,10 +10,28 @@ On June 27, `gpt-5.4-mini` was run across the missing low, medium, and high Code
 
 On June 27 and June 28, Claude Opus 4.8 was run with explicit Claude Code effort settings.
 
+On July 9, GPT-5.6 Sol, Terra, and Luna were each run at xhigh effort against all 29 current tasks using the Codex CLI bundled with the desktop app.
+
+On July 10, the GPT-5.6 effort sweep added low, medium, and high rows for all three models, plus max rows for Sol and Luna. Sol ultra and Terra max/ultra were paused before they started and are not represented below.
+
 ## Summary
 
 | Agent | Model | Effort | Run ID | Status | Score | Passed | Failed | Timeout Count | Agent Time |
 |---|---|---|---|---|---:|---:|---:|---:|---:|
+| Codex CLI | `gpt-5.6-sol` | low | `20260710T080546Z-b5d84e84` | complete | 2100/2900 | 21 | 8 | 0 | 18m 56s |
+| Codex CLI | `gpt-5.6-sol` | medium | `20260710T082452Z-0d42d5d1` | complete | 2200/2900 | 22 | 7 | 0 | 27m 24s |
+| Codex CLI | `gpt-5.6-sol` | high | `20260710T085227Z-8ce3793d` | complete | 2200/2900 | 22 | 7 | 0 | 30m 15s |
+| Codex CLI | `gpt-5.6-sol` | xhigh | `20260709T175817Z-cb86c575` | complete | 2100/2900 | 21 | 8 | 0 | 26m 32s |
+| Codex CLI | `gpt-5.6-sol` | max | `20260710T152810Z-214936aa` | complete | 2200/2900 | 22 | 7 | 2 | 47m 54s |
+| Codex CLI | `gpt-5.6-terra` | low | `20260710T080604Z-36ff1ac9` | complete | 2000/2900 | 20 | 9 | 0 | 29m 50s |
+| Codex CLI | `gpt-5.6-terra` | medium | `20260710T083607Z-086ef952` | complete | 2100/2900 | 21 | 8 | 0 | 33m 14s |
+| Codex CLI | `gpt-5.6-terra` | high | `20260710T152820Z-20a86451` | complete | 2100/2900 | 21 | 8 | 0 | 27m 14s |
+| Codex CLI | `gpt-5.6-terra` | xhigh | `20260709T175820Z-36a5f2f2` | complete | 1900/2900 | 19 | 10 | 0 | 20m 22s |
+| Codex CLI | `gpt-5.6-luna` | low | `20260710T080607Z-d15bf2ca` | complete | 2200/2900 | 22 | 7 | 0 | 16m 10s |
+| Codex CLI | `gpt-5.6-luna` | medium | `20260710T082225Z-8be54afa` | complete | 2000/2900 | 20 | 9 | 0 | 19m 51s |
+| Codex CLI | `gpt-5.6-luna` | high | `20260710T084224Z-5fdc40c6` | complete | 2100/2900 | 21 | 8 | 0 | 27m 18s |
+| Codex CLI | `gpt-5.6-luna` | xhigh | `20260709T175826Z-b8e5f041` | complete | 1900/2900 | 19 | 10 | 0 | 23m 47s |
+| Codex CLI | `gpt-5.6-luna` | max | `20260710T152845Z-c0067294` | complete | 2200/2900 | 22 | 7 | 0 | 40m 20s |
 | Codex CLI | `gpt-5.5` | low | `20260625T072711Z-e484ea0f` | complete | 2100/2600 | 21 | 5 | 0 | 19m 25s |
 | Codex CLI | `gpt-5.5` | medium | `20260625T073226Z-3fce189c` | complete | 1900/2600 | 19 | 7 | 0 | 22m 15s |
 | Codex CLI | `gpt-5.5` | high | `20260625T073227Z-167ae812` | complete | 1900/2600 | 19 | 7 | 0 | 25m 59s |
@@ -40,7 +58,10 @@ All runs used a 240 second per-task agent timeout and the same task prompt contr
 | `gpt-5.4` | Scores increased from 20/26 at low effort to 21/26 at medium and 22/26 at high, while xhigh recorded 21/26. |
 | `gpt-5.4-mini` | Low, medium, and high effort each recorded 21/26; the xhigh baseline recorded 19/26 with three timeouts. |
 | `claude-opus-4-8` | Explicit low, high, and xhigh efforts recorded 19/26, 21/26, and 21/26. |
-| Highest score | `gpt-5.4` high and `gpt-5.5` xhigh both scored 2200/2600; `gpt-5.4` high used less agent time. |
+| `gpt-5.6-sol` | Low and xhigh passed 21/29. Medium, high, and max passed 22/29; max took 47m 54s and timed out twice. Ultra remains paused. |
+| `gpt-5.6-terra` | Low passed 20/29, medium and high passed 21/29, and xhigh passed 19/29. Max and ultra remain paused. |
+| `gpt-5.6-luna` | Low and max passed 22/29, medium passed 20/29, high passed 21/29, and xhigh passed 19/29. Low was the fastest GPT-5.6 row at 16m 10s. |
+| Highest historical pass rate | `gpt-5.4` high and `gpt-5.5` xhigh both passed 22/26 tasks (85%); `gpt-5.4` high used less agent time. |
 
 ## Baseline Per-Task Results
 
@@ -97,3 +118,7 @@ The original xhigh/default comparison commands did not pass `-c model_reasoning_
 The June 27 `gpt-5.4-mini` effort runs used the same command shape with `<model>` set to `gpt-5.4-mini`.
 
 The Claude Opus effort runs used the same Claude Code command shape with `--model opus` and `--effort low`, `--effort high`, or `--effort xhigh`.
+
+The July 9 GPT-5.6 runs used the compatible Codex binary bundled with the desktop app because the separately installed Codex CLI 0.143.0 rejected these models as requiring a newer version. Each run used the same prompt contract and timeout shown above, with `<model>` set to `gpt-5.6-sol`, `gpt-5.6-terra`, or `gpt-5.6-luna`, and explicit `model_reasoning_effort="xhigh"`.
+
+The July 10 GPT-5.6 effort rows used that same bundled binary and command shape with explicit low, medium, high, or max effort. The first attempt reached the account usage limit after eight complete rows; quota-contaminated partial directories were discarded and the affected rows were rerun from task 1 after reset. Every recorded summary above is a complete, quota-clean 29-task run.
