@@ -107,7 +107,7 @@
       if (width >= 560) {
         context.font = "700 12px SFMono-Regular, ui-monospace, monospace";
         context.fillStyle = "rgba(244, 246, 249, 0.34)";
-        context.fillText(scene === "results" ? "hidden evaluator trace" : "17-task evaluator trace", width - 230, height - 34);
+        context.fillText(scene === "results" ? "hidden evaluator trace" : "23-task evaluator trace", width - 230, height - 34);
       }
     }
 
@@ -125,5 +125,83 @@
     if (!reducedMotion) {
       window.requestAnimationFrame(tick);
     }
+  });
+
+  const tableToolbars = document.querySelectorAll("[data-table-toolbar]");
+
+  tableToolbars.forEach((toolbar) => {
+    const tableId = toolbar.dataset.tableToolbar;
+    const table = document.getElementById(tableId);
+    if (!table) {
+      return;
+    }
+
+    const buttons = Array.from(toolbar.querySelectorAll("[data-table-filter]"));
+    const search = toolbar.querySelector(`[data-table-search="${tableId}"]`);
+    const count = toolbar.querySelector(`[data-table-count="${tableId}"]`);
+    const rows = Array.from(table.querySelectorAll("tbody tr[data-difficulty], tbody tr[data-outcome]"));
+    let activeFilter = "all";
+
+    function matchesActiveFilter(row) {
+      if (activeFilter === "all") {
+        return true;
+      }
+
+      if (row.dataset.difficulty) {
+        return row.dataset.difficulty === activeFilter;
+      }
+
+      if (activeFilter === "failed") {
+        return row.dataset.outcome !== "mutual-pass";
+      }
+
+      return row.dataset.outcome === activeFilter;
+    }
+
+    function updateDifficultyHeaders() {
+      const headers = table.querySelectorAll(".difficulty-row");
+      headers.forEach((header) => {
+        const difficulty = ["easy", "medium", "hard"].find((name) => header.classList.contains(name));
+        const hasVisibleRows = rows.some((row) => (
+          row.dataset.difficulty === difficulty && row.dataset.filterHidden !== "true"
+        ));
+        header.dataset.filterHidden = String(!hasVisibleRows);
+      });
+    }
+
+    function applyFilters() {
+      const query = search ? search.value.trim().toLowerCase() : "";
+      let visibleRows = 0;
+
+      rows.forEach((row) => {
+        const matchesSearch = !query || row.textContent.toLowerCase().includes(query);
+        const visible = matchesActiveFilter(row) && matchesSearch;
+        row.dataset.filterHidden = String(!visible);
+        if (visible) {
+          visibleRows += 1;
+        }
+      });
+
+      updateDifficultyHeaders();
+      if (count) {
+        count.textContent = `${visibleRows} ${visibleRows === 1 ? "task" : "tasks"}`;
+      }
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        activeFilter = button.dataset.tableFilter;
+        buttons.forEach((candidate) => {
+          candidate.setAttribute("aria-pressed", String(candidate === button));
+        });
+        applyFilters();
+      });
+    });
+
+    if (search) {
+      search.addEventListener("input", applyFilters);
+    }
+
+    applyFilters();
   });
 })();

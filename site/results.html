@@ -18,9 +18,10 @@
         <span>NixBench</span>
       </a>
       <nav class="nav-links" aria-label="Primary">
-        <a href="index.html#corpus">Corpus</a>
+        <a href="index.html">Overview</a>
         <a aria-current="page" href="results.html">Results</a>
-        <a href="../docs/runs/2026-06-23-agent-baseline.md">Run notes</a>
+        <a href="index.html#corpus">Tasks</a>
+        <a href="#method-note">Method notes</a>
       </nav>
     </header>
 
@@ -28,92 +29,124 @@
       <section class="hero results-hero">
         <canvas class="trace-canvas" data-scene="results" aria-hidden="true"></canvas>
         <div class="hero-copy">
-          <p class="eyebrow">Baseline run · June 23, 2026</p>
-          <h1>GPT 5.5 extra high vs Claude 4.8 xhigh</h1>
+          <p class="eyebrow">Published baseline · June 23, 2026</p>
+          <h1>The first NixBench baseline ends in a tie.</h1>
           <p class="hero-lede">
-            The first ten-task NixBench corpus produced a score tie. Claude finished faster overall; each model solved one task the other missed.
+            GPT 5.5 and Claude 4.8 each solved 5 of 10 tasks. Their scores match, but their failures—and observed run times—do not.
           </p>
           <div class="hero-meta" aria-label="Run constraints">
+            <span>Initial corpus</span>
             <span>240s timeout</span>
-            <span>10 tasks</span>
-            <span>Same prompt contract</span>
+            <span>1 run per model</span>
           </div>
         </div>
-        <div class="hero-instrument results-instrument" aria-label="Headline result">
-          <div>
-            <span class="instrument-value">500</span>
-            <span class="instrument-label">GPT score</span>
+        <aside class="hero-result-card result-verdict-card" aria-label="Headline result">
+          <div class="hero-result-head">
+            <div>
+              <span class="live-dot">Headline result</span>
+              <strong>Exact score tie</strong>
+            </div>
+            <span class="version-chip">10 tasks</span>
           </div>
-          <div>
-            <span class="instrument-value">500</span>
-            <span class="instrument-label">Claude score</span>
+          <div class="tie-score">
+            <strong>50%</strong>
+            <span>5 / 10 tasks passed by each model</span>
           </div>
-          <div>
-            <span class="instrument-value">5-5</span>
-            <span class="instrument-label">pass split</span>
-          </div>
+          <p class="hero-result-note">A single run shows what happened here; it does not establish statistical model ranking.</p>
+        </aside>
+      </section>
+
+      <section class="scope-banner" aria-label="Result scope">
+        <div>
+          <span class="scope-label">Scope note</span>
+          <p><strong>These results cover the original 10-task corpus.</strong> The current benchmark has 23 tasks, so this is a dated baseline rather than a current full-corpus leaderboard.</p>
         </div>
+        <a href="index.html#corpus">See the current corpus <span aria-hidden="true">→</span></a>
       </section>
 
       <section class="results-summary" aria-labelledby="summary-heading">
         <div class="section-heading">
-          <p class="eyebrow">Scoreboard</p>
-          <h2 id="summary-heading">Same score, different failure shape.</h2>
+          <div>
+            <p class="eyebrow">Baseline table</p>
+            <h2 id="summary-heading">Same score, different run shape.</h2>
+          </div>
+          <p class="section-kicker">Score is objective evaluator points earned divided by total available points.</p>
         </div>
-        <div class="verdict-strip" aria-label="Comparison verdict">
+        <div class="leaderboard-wrap">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">Model / effort</th>
+                <th scope="col">Score</th>
+                <th scope="col">Passed</th>
+                <th scope="col">Observed time</th>
+                <th scope="col">Timeouts</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="gpt-row">
+                <td><span class="rank-chip">T1</span></td>
+                <th scope="row">
+                  <strong>GPT 5.5</strong>
+                  <span>extra high · run <code>20260623T082404Z</code></span>
+                </th>
+                <td><strong class="table-score">50.0%</strong><span class="score-track"><i style="--score: 50%;"></i></span></td>
+                <td>5 / 10</td>
+                <td>19m 08s</td>
+                <td><span class="count-badge has-timeout">1</span></td>
+              </tr>
+              <tr class="claude-row">
+                <td><span class="rank-chip">T1</span></td>
+                <th scope="row">
+                  <strong>Claude 4.8</strong>
+                  <span>xhigh · run <code>20260623T093109Z-b488de64</code></span>
+                </th>
+                <td><strong class="table-score">50.0%</strong><span class="score-track"><i style="--score: 50%;"></i></span></td>
+                <td>5 / 10</td>
+                <td>13m 49s</td>
+                <td><span class="count-badge">0</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="verdict-strip" aria-label="Comparison takeaways">
           <article>
             <span>Score</span>
             <strong>Exact tie</strong>
-            <p>Both runs landed at 500/1000 with five passes and five failures.</p>
+            <p>Both runs earned 500 of 1,000 objective evaluator points.</p>
           </article>
           <article>
-            <span>Time</span>
-            <strong>Claude -319.7s</strong>
-            <p>Claude completed the corpus in 13m 49s versus GPT's 19m 08s.</p>
+            <span>Observed run time</span>
+            <strong>Claude −319.7s</strong>
+            <p>Descriptive for these two runs; hardware and network conditions were not normalized for a latency claim.</p>
           </article>
           <article>
-            <span>Split tasks</span>
-            <strong>1 each</strong>
-            <p>GPT alone passed <code>package-stdenv-cli</code>; Claude alone passed <code>purity-wrapper-derivation</code>.</p>
-          </article>
-        </div>
-        <div class="score-grid">
-          <article class="score-card gpt-card">
-            <div class="score-card-head">
-              <h3>GPT 5.5 extra high</h3>
-              <span class="run-id">20260623T082404Z</span>
-            </div>
-            <p class="score-number">500<span>/1000</span></p>
-            <dl class="metric-list">
-              <div><dt>Passed</dt><dd>5</dd></div>
-              <div><dt>Failed</dt><dd>5</dd></div>
-              <div><dt>Timeouts</dt><dd>1</dd></div>
-              <div><dt>Total agent time</dt><dd>19m 08s</dd></div>
-            </dl>
-          </article>
-          <article class="score-card claude-card">
-            <div class="score-card-head">
-              <h3>Claude 4.8 xhigh</h3>
-              <span class="run-id">20260623T093109Z-b488de64</span>
-            </div>
-            <p class="score-number">500<span>/1000</span></p>
-            <dl class="metric-list">
-              <div><dt>Passed</dt><dd>5</dd></div>
-              <div><dt>Failed</dt><dd>5</dd></div>
-              <div><dt>Timeouts</dt><dd>0</dd></div>
-              <div><dt>Total agent time</dt><dd>13m 49s</dd></div>
-            </dl>
+            <span>Disagreements</span>
+            <strong>2 tasks</strong>
+            <p>Each model uniquely solved one task the other missed.</p>
           </article>
         </div>
       </section>
 
       <section class="task-results" aria-labelledby="task-results-heading">
         <div class="section-heading">
-          <p class="eyebrow">Per-task outcomes</p>
-          <h2 id="task-results-heading">The tie was not identical.</h2>
+          <div>
+            <p class="eyebrow">Per-task outcomes</p>
+            <h2 id="task-results-heading">Where the tie diverges.</h2>
+          </div>
+          <p class="section-kicker">Filter to the two disagreements for the fastest comparison.</p>
+        </div>
+        <div class="table-toolbar compact-toolbar" data-table-toolbar="result-table">
+          <div class="filter-group" aria-label="Filter task outcomes">
+            <button type="button" aria-pressed="true" data-table-filter="all">All <span>10</span></button>
+            <button type="button" aria-pressed="false" data-table-filter="split">Disagreements <span>2</span></button>
+            <button type="button" aria-pressed="false" data-table-filter="failed">Any failure <span>6</span></button>
+          </div>
+          <p class="table-count" aria-live="polite" data-table-count="result-table">10 tasks</p>
         </div>
         <div class="result-table-wrap">
-          <table class="result-table">
+          <table class="result-table" id="result-table">
             <thead>
               <tr>
                 <th scope="col">Task</th>
@@ -124,70 +157,70 @@
               </tr>
             </thead>
             <tbody>
-              <tr class="outcome-mutual-pass">
+              <tr class="outcome-mutual-pass" data-outcome="mutual-pass">
                 <td><code>debug-infinite-recursion</code></td>
                 <td>Debugging</td>
                 <td><span class="status pass">Pass</span> 67.7s</td>
                 <td><span class="status pass">Pass</span> 58.6s</td>
                 <td>Both repaired the recursive attrset; Claude was 9.1s faster.</td>
               </tr>
-              <tr class="outcome-mutual-pass">
+              <tr class="outcome-mutual-pass" data-outcome="mutual-pass">
                 <td><code>devshell-tooling-contract</code></td>
                 <td>Dev shells</td>
                 <td><span class="status pass">Pass</span> 78.2s</td>
                 <td><span class="status pass">Pass</span> 72.5s</td>
                 <td>Both satisfied the shell contract with similar timing.</td>
               </tr>
-              <tr class="outcome-mutual-pass">
+              <tr class="outcome-mutual-pass" data-outcome="mutual-pass">
                 <td><code>fetcher-source-pin</code></td>
                 <td>Fetchers</td>
                 <td><span class="status pass">Pass</span> 93.0s</td>
                 <td><span class="status pass">Pass</span> 43.6s</td>
                 <td>Both pinned the source; Claude finished less than half the time.</td>
               </tr>
-              <tr class="outcome-mutual-fail">
+              <tr class="outcome-mutual-fail" data-outcome="mutual-fail">
                 <td><code>flake-per-system-outputs</code></td>
                 <td>Flakes</td>
                 <td><span class="status fail">Fail</span> 240.0s</td>
                 <td><span class="status fail">Fail</span> 119.6s</td>
                 <td>Both missed app metadata; GPT also hit the 240s timeout.</td>
               </tr>
-              <tr class="outcome-mutual-fail">
+              <tr class="outcome-mutual-fail" data-outcome="mutual-fail">
                 <td><code>lang-attrsets-normalize</code></td>
                 <td>Nix language</td>
                 <td><span class="status fail">Fail</span> 65.4s</td>
                 <td><span class="status fail">Fail</span> 94.6s</td>
                 <td>Both filtered disabled packages too early.</td>
               </tr>
-              <tr class="outcome-mutual-fail">
+              <tr class="outcome-mutual-fail" data-outcome="mutual-fail">
                 <td><code>module-service-options</code></td>
                 <td>Modules</td>
                 <td><span class="status fail">Fail</span> 125.3s</td>
                 <td><span class="status fail">Fail</span> 121.9s</td>
                 <td>Both reached for helpers absent from the evaluator fake <code>lib</code>.</td>
               </tr>
-              <tr class="outcome-mutual-pass">
+              <tr class="outcome-mutual-pass" data-outcome="mutual-pass">
                 <td><code>overlay-override-package</code></td>
                 <td>Overlays</td>
                 <td><span class="status pass">Pass</span> 47.9s</td>
                 <td><span class="status pass">Pass</span> 37.3s</td>
                 <td>Both preserved the override shape and metadata.</td>
               </tr>
-              <tr class="outcome-mutual-fail">
+              <tr class="outcome-mutual-fail" data-outcome="mutual-fail">
                 <td><code>package-python-application</code></td>
                 <td>Packaging</td>
                 <td><span class="status fail">Fail</span> 73.9s</td>
                 <td><span class="status fail">Fail</span> 169.0s</td>
                 <td>Both selected <code>mit</code> where the evaluator expected <code>asl20</code>.</td>
               </tr>
-              <tr class="outcome-gpt-only">
+              <tr class="outcome-gpt-only" data-outcome="split">
                 <td><code>package-stdenv-cli</code></td>
                 <td>Packaging</td>
                 <td><span class="status pass">Pass</span> 176.6s</td>
                 <td><span class="status fail">Fail</span> 43.5s</td>
                 <td>GPT solved it; Claude returned a function where a set was expected.</td>
               </tr>
-              <tr class="outcome-claude-only">
+              <tr class="outcome-claude-only" data-outcome="split">
                 <td><code>purity-wrapper-derivation</code></td>
                 <td>Purity</td>
                 <td><span class="status fail">Fail</span> 180.3s</td>
@@ -206,34 +239,34 @@
         </div>
         <div class="timing-chart" role="img" aria-label="Task duration bars for GPT and Claude">
           <div class="timing-row" style="--gpt: 28%; --claude: 24%;">
-            <span>debug recursion</span><i class="bar gpt"></i><i class="bar claude"></i>
+            <span>debug recursion</span><i class="bar gpt" data-value="67.7s"></i><i class="bar claude" data-value="58.6s"></i>
           </div>
           <div class="timing-row" style="--gpt: 33%; --claude: 30%;">
-            <span>dev shell</span><i class="bar gpt"></i><i class="bar claude"></i>
+            <span>dev shell</span><i class="bar gpt" data-value="78.2s"></i><i class="bar claude" data-value="72.5s"></i>
           </div>
           <div class="timing-row" style="--gpt: 39%; --claude: 18%;">
-            <span>fetcher pin</span><i class="bar gpt"></i><i class="bar claude"></i>
+            <span>fetcher pin</span><i class="bar gpt" data-value="93.0s"></i><i class="bar claude" data-value="43.6s"></i>
           </div>
           <div class="timing-row" style="--gpt: 100%; --claude: 50%;">
-            <span>flake outputs</span><i class="bar gpt timeout"></i><i class="bar claude"></i>
+            <span>flake outputs</span><i class="bar gpt timeout" data-value="240s"></i><i class="bar claude" data-value="119.6s"></i>
           </div>
           <div class="timing-row" style="--gpt: 27%; --claude: 39%;">
-            <span>attrsets</span><i class="bar gpt"></i><i class="bar claude"></i>
+            <span>attrsets</span><i class="bar gpt" data-value="65.4s"></i><i class="bar claude" data-value="94.6s"></i>
           </div>
           <div class="timing-row" style="--gpt: 52%; --claude: 51%;">
-            <span>module options</span><i class="bar gpt"></i><i class="bar claude"></i>
+            <span>module options</span><i class="bar gpt" data-value="125.3s"></i><i class="bar claude" data-value="121.9s"></i>
           </div>
           <div class="timing-row" style="--gpt: 20%; --claude: 16%;">
-            <span>overlay</span><i class="bar gpt"></i><i class="bar claude"></i>
+            <span>overlay</span><i class="bar gpt" data-value="47.9s"></i><i class="bar claude" data-value="37.3s"></i>
           </div>
           <div class="timing-row" style="--gpt: 31%; --claude: 70%;">
-            <span>python app</span><i class="bar gpt"></i><i class="bar claude"></i>
+            <span>python app</span><i class="bar gpt" data-value="73.9s"></i><i class="bar claude" data-value="169.0s"></i>
           </div>
           <div class="timing-row" style="--gpt: 74%; --claude: 18%;">
-            <span>stdenv cli</span><i class="bar gpt"></i><i class="bar claude"></i>
+            <span>stdenv cli</span><i class="bar gpt" data-value="176.6s"></i><i class="bar claude" data-value="43.5s"></i>
           </div>
           <div class="timing-row" style="--gpt: 75%; --claude: 28%;">
-            <span>purity wrapper</span><i class="bar gpt"></i><i class="bar claude"></i>
+            <span>purity wrapper</span><i class="bar gpt" data-value="180.3s"></i><i class="bar claude" data-value="68.1s"></i>
           </div>
           <div class="legend" aria-hidden="true">
             <span><i class="legend-swatch gpt"></i>GPT 5.5 extra high</span>
@@ -266,9 +299,27 @@
         </div>
       </section>
 
-      <section class="method-note" aria-label="Method note">
-        <p>
-          Source data is copied from <a href="../docs/runs/2026-06-23-agent-baseline.md">docs/runs/2026-06-23-agent-baseline.md</a>. Both runs used the same ten-task corpus, the same prompt contract, and a 240 second per-task agent timeout.
+      <section class="method-note" id="method-note" aria-labelledby="method-note-heading">
+        <div class="method-note-heading">
+          <p class="eyebrow">How to read this run</p>
+          <h2 id="method-note-heading">Useful evidence, with narrow claims.</h2>
+        </div>
+        <div class="method-facts">
+          <article>
+            <strong>Objective score</strong>
+            <p>Hidden shell evaluators score the final worktree. No LLM judge decides whether a solution is good.</p>
+          </article>
+          <article>
+            <strong>Single samples</strong>
+            <p>Each model ran once, so the table reports observed outcomes—not confidence intervals or expected pass rates.</p>
+          </article>
+          <article>
+            <strong>Matched task contract</strong>
+            <p>Both runs used the same 10 tasks, prompt contract, and 240-second per-task timeout.</p>
+          </article>
+        </div>
+        <p class="source-note">
+          Source data: <a href="docs/runs/2026-06-23-agent-baseline.md">June 23 baseline run notes</a>. See also the <a href="docs/benchmark-design.md">benchmark design</a> and <a href="docs/scoring.md">scoring specification</a>.
         </p>
       </section>
     </main>
