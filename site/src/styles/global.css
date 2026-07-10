@@ -686,7 +686,7 @@ html[data-theme="dark"] .theme-icon {
 
 .chart-shell {
   position: relative;
-  height: 330px;
+  height: 380px;
   margin: 0.25rem 0.75rem 0;
 }
 
@@ -2232,6 +2232,26 @@ tbody tr:hover {
 
 .chart-card .chart-legend {
   width: 100%;
+}
+
+.score-plot .chart-legend {
+  gap: 0.55rem;
+}
+
+.score-plot .chart-legend span {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-muted);
+  padding: 0.45rem 0.6rem;
+}
+
+.score-plot .chart-legend strong {
+  font-size: 0.74rem;
+}
+
+.score-plot .chart-legend small {
+  color: var(--subtle);
+  font-size: 0.68rem;
 }
 
 /* Documentation */

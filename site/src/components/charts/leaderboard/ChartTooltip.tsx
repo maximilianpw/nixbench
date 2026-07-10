@@ -21,7 +21,7 @@ export function LeaderboardChartTooltip({ active, payload }: ChartTooltipProps) 
       </span>
       <dl>
         <div>
-          <dt>Pass@1</dt>
+          <dt>Pass rate</dt>
           <dd>{run.passRate}%</dd>
         </div>
         <div>

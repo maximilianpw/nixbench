@@ -15,12 +15,39 @@ export type LeaderboardChartProps = {
 
 export function LeaderboardChart({ chartData, config, linkedSeries, standaloneData }: LeaderboardChartProps) {
   const chartConfig = buildLeaderboardChartConfig(linkedSeries, standaloneData);
+  const passRateScale = buildPassRateScale(chartData);
+  const xDomain = config.xKey === "passRate" ? passRateScale.domain : config.xDomain;
+  const yDomain = config.yKey === "passRate" ? passRateScale.domain : config.yDomain;
+  const xTicks = config.xKey === "passRate" ? passRateScale.ticks : config.xTicks;
+  const yTicks = config.yKey === "passRate" ? passRateScale.ticks : config.yTicks;
+  const legendItems = [
+    ...linkedSeries.map((series) => ({
+      key: series.key,
+      label: series.label,
+      color: series.color,
+      runCount: series.points.length,
+    })),
+    ...standaloneData.map((run) => ({
+      key: run.id,
+      label: run.agent,
+      color: run.color,
+      runCount: 1,
+    })),
+  ];
 
   return (
-    <Card className="chart-card score-plot react-chart-frame" role="img" aria-label={config.label}>
+    <Card
+      className="chart-card score-plot react-chart-frame"
+      role="group"
+      aria-labelledby="leaderboard-chart-title"
+      aria-describedby="leaderboard-chart-description"
+    >
       <CardHeader>
-        <CardTitle>NixBench score</CardTitle>
-        <CardDescription>Pass rate by agent time, effort, and failure count.</CardDescription>
+        <CardTitle id="leaderboard-chart-title">Run comparison</CardTitle>
+        <CardDescription id="leaderboard-chart-description">
+          Each color is a model; lines connect effort from low → medium → high → xhigh → max. The pass-rate axis is
+          zoomed to the visible range.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="chart-shell" config={chartConfig} initialDimension={{ width: 860, height: 330 }}>
@@ -28,9 +55,9 @@ export function LeaderboardChart({ chartData, config, linkedSeries, standaloneDa
             <CartesianGrid stroke="var(--grid-line)" strokeDasharray="0" />
             <XAxis
               dataKey={config.xKey as string}
-              domain={config.xDomain}
+              domain={xDomain}
               tickFormatter={config.xFormatter}
-              ticks={config.xTicks}
+              ticks={xTicks}
               type="number"
               label={{ value: config.xLabel, position: "insideBottomRight", offset: -18 }}
               stroke="var(--muted)"
@@ -38,15 +65,15 @@ export function LeaderboardChart({ chartData, config, linkedSeries, standaloneDa
             />
             <YAxis
               dataKey={config.yKey as string}
-              domain={config.yDomain}
+              domain={yDomain}
               tickFormatter={config.yFormatter}
-              ticks={config.yTicks}
+              ticks={yTicks}
               type="number"
               label={{ value: config.yLabel, position: "insideTopLeft", offset: -26 }}
               stroke="var(--muted)"
               tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
             />
-            <ZAxis range={[120, 180]} />
+            <ZAxis range={[160, 220]} />
             <ChartTooltip cursor={{ stroke: "var(--border-strong)" }} content={<LeaderboardChartTooltip />} />
             {linkedSeries.map((series) => (
               <Scatter
@@ -74,11 +101,15 @@ export function LeaderboardChart({ chartData, config, linkedSeries, standaloneDa
         </ChartContainer>
       </CardContent>
       <CardFooter>
-        <div className="chart-legend" aria-hidden="true">
-          {chartData.map((run) => (
-            <span key={run.id}>
-              <i style={{ "--swatch": chartColor(run.series ?? run.id, run.color) } as CSSProperties} />
-              <strong>{run.marker}</strong> {run.effort ?? run.agent.replace("Claude ", "")} · {run.passRate}%
+        <div className="chart-legend" aria-label="Model legend">
+          {legendItems.map((item) => (
+            <span key={item.key}>
+              <i
+                aria-hidden="true"
+                style={{ "--swatch": chartColor(item.key, item.color) } as CSSProperties}
+              />
+              <strong>{item.label}</strong>
+              <small>{item.runCount} {item.runCount === 1 ? "run" : "runs"}</small>
             </span>
           ))}
         </div>
@@ -96,4 +127,30 @@ function buildLeaderboardChartConfig(linkedSeries: ChartSeries[], standaloneData
 
 function chartColor(key: string, fallback: string) {
   return `var(--color-${key}, ${fallback})`;
+}
+
+function buildPassRateScale(chartData: ChartPoint[]) {
+  if (chartData.length === 0) {
+    return { domain: [0, 100] as [number, number], ticks: [0, 25, 50, 75, 100] };
+  }
+
+  const passRates = chartData.map((run) => run.passRate);
+  let lower = Math.max(0, Math.floor((Math.min(...passRates) - 5) / 5) * 5);
+  let upper = Math.min(100, Math.ceil((Math.max(...passRates) + 5) / 5) * 5);
+
+  while (upper - lower < 20) {
+    if (lower > 0) {
+      lower -= 5;
+    }
+    if (upper < 100) {
+      upper += 5;
+    }
+  }
+
+  const ticks: number[] = [];
+  for (let tick = lower; tick <= upper; tick += 5) {
+    ticks.push(tick);
+  }
+
+  return { domain: [lower, upper] as [number, number], ticks };
 }
