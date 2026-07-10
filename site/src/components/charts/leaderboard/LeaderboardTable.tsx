@@ -18,12 +18,14 @@ type SortState = {
   direction: SortDirection;
 };
 
-const defaultSort: SortState = { key: "score", direction: "desc" };
+const defaultSort: SortState = { key: "passRate", direction: "desc" };
 const effortRank = {
   low: 0,
   medium: 1,
   high: 2,
   xhigh: 3,
+  max: 4,
+  ultra: 5,
 } as const;
 
 export function LeaderboardTable({ runs }: LeaderboardTableProps) {
