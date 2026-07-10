@@ -2,6 +2,8 @@
 
 NixBench is a benchmark for measuring how well AI coding agents write, repair, and reason about Nix code.
 
+Website: <https://nixbench.com>
+
 The benchmark is intentionally agentic. A model is not asked to produce a single snippet in isolation. Instead, it receives a small broken or incomplete Nix project, edits files in a temporary working directory, and is judged by hidden evaluators. This better matches how people use coding agents in real repositories: inspect the prompt, edit the code, run checks, recover from errors, and leave behind a concrete diff.
 
 ## Why This Exists
@@ -18,7 +20,7 @@ NixBench is built to catch those issues with objective tests.
 
 ## What It Measures
 
-The corpus covers twenty-three self-contained tasks:
+The corpus covers twenty-six self-contained tasks:
 
 | Task | Area | Difficulty | What It Tests |
 |---|---|---:|---|
@@ -30,14 +32,17 @@ The corpus covers twenty-three self-contained tasks:
 | `fhs-binary-wrapper` | Packaging | Medium | Wrapping FHS-oriented binaries without mutating global filesystem paths |
 | `flake-input-package-selection` | Flakes | Medium | Selecting actual flake package outputs instead of assuming `.default` |
 | `flake-per-system-outputs` | Flakes | Medium | Per-system outputs, apps, checks, devShells, and shared helpers |
+| `home-manager-extra-special-args` | Flakes | Medium | Passing flake inputs into Home Manager modules with `extraSpecialArgs` |
 | `home-manager-wsl-module-import` | NixOS modules | Medium | Importing Home Manager as a NixOS module in a WSL configuration |
 | `home-manager-xdg-files` | NixOS modules | Easy | Using Home Manager XDG/file options instead of imperative home-directory setup |
 | `issue-report-quality` | Debugging | Medium | Producing verifiable, low-noise Nixpkgs issue reports |
 | `lang-attrsets-normalize` | Nix language | Easy | Attrset traversal, filtering, defaulting, system support |
+| `module-path-composition` | Nix language | Medium | Path composition from module arguments without string/path syntax mistakes |
 | `module-service-options` | NixOS modules | Hard | Options, types, `mkIf`, service config, firewall config |
 | `module-stale-option-migration` | NixOS modules | Easy | Migrating stale NixOS option paths to current options |
 | `module-system-boundaries` | NixOS modules | Hard | Keeping NixOS, Home Manager, and nix-darwin module outputs separate |
 | `mutable-config-home-manager` | NixOS modules | Medium | Separating mutable GUI app state from Home Manager-managed defaults |
+| `overlay-module-boundary` | Overlays | Medium | Keeping package overlays separate from module-defined systemd options |
 | `overlay-override-package` | Overlays | Hard | `overrideAttrs`, metadata preservation, final vs prev |
 | `package-name-lookup-contract` | Packaging | Easy | Avoiding hallucinated package names when a package set is constrained |
 | `package-python-application` | Packaging | Medium | Python application packaging contracts |
@@ -49,6 +54,8 @@ The corpus covers twenty-three self-contained tasks:
 Most tasks use fake `lib`, fake builders, or fake package sets in the evaluator. That keeps the benchmark fast, deterministic, and focused on Nix structure rather than network access or large builds.
 
 Several tasks are derived from documented community complaints about LLM behavior on Nix/NixOS problems. See [Research-Derived Tasks](docs/research-derived-tasks.md) for the source mapping.
+
+We also refresh this research-derived slice weekly by scanning new NixOS Discourse threads for sharp failures, surprising constraints, maintainer corrections, and other issues that can be turned into deterministic benchmark tasks.
 
 ## Repository Layout
 
@@ -306,7 +313,7 @@ alejandra flake.nix tasks/*/starter/*.nix tasks/*/reference/*.nix
 
 Current limitations:
 
-- The initial corpus is small.
+- The corpus is still small enough that repeated runs are needed before treating a score as stable.
 - Scoring is mostly pass/fail.
 - No leaderboard service exists yet.
 - The harness does not isolate agents with containers or VMs.
@@ -328,4 +335,4 @@ Good next steps:
 - [Authoring Tasks](docs/authoring.md)
 - [Scoring](docs/scoring.md)
 - [Reproducibility](docs/reproducibility.md)
-- [2026-06-23 Agent Baseline Runs](docs/runs/2026-06-23-agent-baseline.md)
+- [2026-06-24 Model Comparison Runs](docs/runs/2026-06-24-model-comparison.md)

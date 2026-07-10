@@ -1,0 +1,18 @@
+---
+import SiteLayout from "@/layouts/SiteLayout.astro";
+import { ResultsPage } from "@/components/pages/ResultsPage";
+---
+
+<SiteLayout
+  title="NixBench Results | Model Comparison"
+  description="NixBench results across model families, effort sweeps, per-task outcomes, and timing on the recorded 26- and 29-task corpora."
+  activePage="results"
+  canonicalPath="/results.html"
+  footer={{
+    text: "Raw run artifacts are local under <code>results/</code>; durable comparison notes are tracked under <code>docs/runs/</code>.",
+    href: "index.html",
+    label: "Back to benchmark landing page",
+  }}
+>
+  <ResultsPage client:load />
+</SiteLayout>

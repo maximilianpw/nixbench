@@ -1,0 +1,18 @@
+---
+import SiteLayout from "@/layouts/SiteLayout.astro";
+import { HomePage } from "@/components/pages/HomePage";
+---
+
+<SiteLayout
+  title="NixBench | Agentic Nix Benchmark"
+  description="NixBench measures AI coding agents on objective, hidden-evaluator Nix repair tasks."
+  activePage="home"
+  canonicalPath="/"
+  footer={{
+    text: "NixBench records objective agent runs under <code>results/&lt;run-id&gt;/</code>.",
+    href: "docs/scoring.html",
+    label: "Scoring model",
+  }}
+>
+  <HomePage client:load />
+</SiteLayout>

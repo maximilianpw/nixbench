@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import difflib
 import json
+import math
 import os
 import platform
 import shutil
@@ -17,6 +18,7 @@ from typing import Any, Literal
 from .task import Task
 
 SolutionMode = Literal["agent", "starter", "reference"]
+MAX_DIFF_TEXT_BYTES = 1_000_000
 
 
 @dataclass
@@ -105,27 +107,11 @@ def run_task(
         _copy_overlay(task.reference_dir, workdir)
 
     score_file = (result_dir / "score.json").resolve()
-    env = os.environ.copy()
-    if extra_env:
-        env.update(extra_env)
-    env.update(
-        {
-            "NIXBENCH_TASK_ID": task.id,
-            "NIXBENCH_WORKDIR": str(workdir),
-            "NIXBENCH_PROMPT": str(workdir / "NIXBENCH_PROMPT.md"),
-        }
-    )
-
-    agent_env = env.copy()
-    agent_env.pop("NIXBENCH_TASK_DIR", None)
-    agent_env.pop("NIXBENCH_SCORE_FILE", None)
-
-    evaluator_env = env.copy()
-    evaluator_env.update(
-        {
-            "NIXBENCH_TASK_DIR": str(task.root),
-            "NIXBENCH_SCORE_FILE": str(score_file),
-        }
+    agent_env, evaluator_env = _build_command_envs(
+        task=task,
+        workdir=workdir,
+        score_file=score_file,
+        extra_env=extra_env,
     )
 
     agent_result: CommandResult | None = None
@@ -151,8 +137,9 @@ def run_task(
     diff_path = result_dir / "diff.patch"
     _write_unified_dir_diff(original_dir, workdir, diff_path)
 
-    agent_timed_out = agent_result.timed_out if agent_result else False
-    passed = check_result.returncode == 0 and not check_result.timed_out and not agent_timed_out
+    agent_timed_out = agent_result.timed_out if agent_result is not None else False
+    check_passed = check_result.returncode == 0 and not check_result.timed_out
+    passed = check_passed and not agent_timed_out
     score, score_detail = _read_score(
         score_file,
         default_score=task.max_score if passed else 0.0,
@@ -184,6 +171,40 @@ def run_task(
         shutil.rmtree(temp_parent, ignore_errors=True)
 
     return result
+
+
+def _build_command_envs(
+    *,
+    task: Task,
+    workdir: Path,
+    score_file: Path,
+    extra_env: dict[str, str] | None,
+) -> tuple[dict[str, str], dict[str, str]]:
+    base_env = os.environ.copy()
+    if extra_env:
+        base_env.update(extra_env)
+
+    public_env = {
+        "NIXBENCH_TASK_ID": task.id,
+        "NIXBENCH_WORKDIR": str(workdir),
+        "NIXBENCH_PROMPT": str(workdir / "NIXBENCH_PROMPT.md"),
+    }
+
+    agent_env = base_env.copy()
+    agent_env.pop("NIXBENCH_TASK_DIR", None)
+    agent_env.pop("NIXBENCH_SCORE_FILE", None)
+    agent_env.update(public_env)
+
+    evaluator_env = base_env.copy()
+    evaluator_env.update(public_env)
+    evaluator_env.update(
+        {
+            "NIXBENCH_TASK_DIR": str(task.root),
+            "NIXBENCH_SCORE_FILE": str(score_file),
+        }
+    )
+
+    return agent_env, evaluator_env
 
 
 def write_summary(results_dir: Path, run_id: str, results: list[TaskRunResult]) -> Path:
@@ -316,24 +337,39 @@ def _read_score(
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:
-        try:
-            return _clamp_score(float(text), max_score), {"format": "plain"}
-        except ValueError:
+        score = _coerce_score(text, max_score=max_score)
+        if score is None:
             return _clamp_score(default_score, max_score), {"format": "invalid", "raw": text}
+        return score, {"format": "plain"}
 
     if isinstance(parsed, dict) and "score" in parsed:
-        try:
-            return _clamp_score(float(parsed["score"]), max_score), parsed
-        except (TypeError, ValueError):
+        score = _coerce_score(parsed["score"], max_score=max_score)
+        if score is None:
             return _clamp_score(default_score, max_score), parsed
+        return score, parsed
 
-    if isinstance(parsed, int | float):
-        return _clamp_score(float(parsed), max_score), {"format": "json-number"}
+    score = _coerce_score(parsed, max_score=max_score)
+    if score is not None:
+        return score, {"format": "json-number"}
 
     return _clamp_score(default_score, max_score), {"format": "unsupported", "raw": parsed}
 
 
 def _clamp_score(score: float, max_score: float) -> float:
+    return max(0.0, min(score, max_score))
+
+
+def _coerce_score(value: Any, *, max_score: float) -> float | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        return None
+
+    if not math.isfinite(score):
+        return None
+
     return max(0.0, min(score, max_score))
 
 
@@ -364,12 +400,28 @@ def _write_unified_dir_diff(original: Path, changed: Path, output_path: Path) ->
 
 
 def _relative_files(root: Path) -> set[Path]:
-    return {path.relative_to(root) for path in root.rglob("*") if path.is_file()}
+    return {path.relative_to(root) for path in root.rglob("*") if path.is_symlink() or path.is_file()}
 
 
 def _read_text_lines(path: Path) -> list[str]:
+    if path.is_symlink():
+        try:
+            target = os.readlink(path)
+        except OSError:
+            target = "<unreadable>"
+        return [f"<symlink -> {target}>"]
+
     if not path.exists():
         return []
+
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return ["<unreadable file>"]
+
+    if size > MAX_DIFF_TEXT_BYTES:
+        return [f"<large file: {size} bytes>"]
+
     try:
         return path.read_text().splitlines()
     except UnicodeDecodeError:

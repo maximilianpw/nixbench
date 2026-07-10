@@ -12,6 +12,7 @@ For every system, expose:
 
 - `packages.${system}.default` with `pname = "nixbench-sample"`, `version = "0.1.0"`, and the `system`.
 - `apps.${system}.default` with `type = "app"`.
+- `apps.${system}.default.meta.package = "nixbench-sample"`.
 - `checks.${system}.eval` pointing at the package for that system.
 - `devShells.${system}.default` with `name = "nixbench-dev"` and tools containing `nixfmt` and `statix`.
 

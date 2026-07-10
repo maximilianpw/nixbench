@@ -1,0 +1,53 @@
+---
+import { AppHeader } from "@/components/AppHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import "@/styles/global.css";
+
+type Props = {
+  title: string;
+  description: string;
+  activePage: "home" | "results" | "docs";
+  canonicalPath?: string;
+  footer: {
+    text: string;
+    href: string;
+    label: string;
+  };
+};
+
+const { title, description, activePage, canonicalPath, footer } = Astro.props;
+const siteUrl = Astro.site ?? new URL("https://nixbench.com");
+const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={canonicalUrl.toString()} />
+    <meta property="og:site_name" content="NixBench" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl.toString()} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      (() => {
+        const storedTheme = window.localStorage.getItem("nixbench-theme");
+        document.documentElement.dataset.theme = storedTheme || "light";
+      })();
+    </script>
+  </head>
+  <body>
+    <AppHeader activePage={activePage} client:load />
+    <slot />
+    <SiteFooter {...footer} />
+  </body>
+</html>

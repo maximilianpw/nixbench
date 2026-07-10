@@ -11,5 +11,6 @@ Requirements:
 - Include `makeWrapper` in `nativeBuildInputs`.
 - Do not reference `/usr/bin`, `/bin`, `$HOME`, or `builtins.getEnv`.
 - Use the provided `bash` package as the wrapped executable.
+- Do not use `lib.getExe`; use the provided `bash` package path directly.
 - Build `PATH` with `lib.makeBinPath [ coreutils ]`.
 - Set `passthru.pure = true`.

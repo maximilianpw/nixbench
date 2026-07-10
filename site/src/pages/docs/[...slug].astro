@@ -1,0 +1,143 @@
+---
+import { ArrowLeft, ArrowRight, BookOpenText, FileText } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import SiteLayout from "@/layouts/SiteLayout.astro";
+import { getDocs } from "@/lib/docs";
+
+export async function getStaticPaths() {
+  const docs = await getDocs();
+
+  return docs.map((doc) => ({
+    params: {
+      slug: doc.pageSlug,
+    },
+    props: {
+      doc,
+      docs,
+    },
+  }));
+}
+
+const { doc, docs } = Astro.props;
+const currentIndex = docs.findIndex((entry) => entry.slug === doc.slug);
+const previousDoc = currentIndex > 0 ? docs[currentIndex - 1] : undefined;
+const nextDoc = currentIndex >= 0 && currentIndex < docs.length - 1 ? docs[currentIndex + 1] : undefined;
+const sourceHref = `https://github.com/maximilianpw/nixbench/blob/main/${doc.sourcePath}`;
+---
+
+<SiteLayout
+  title={`${doc.title} | NixBench Docs`}
+  description={doc.summary}
+  activePage="docs"
+  canonicalPath={`/docs/${doc.pageSlug}.html`}
+  footer={{
+    text: "NixBench docs are generated from <code>docs/</code> in the benchmark repository.",
+    href: sourceHref,
+    label: "View source",
+  }}
+>
+  <main class="docs-page">
+    <section class="docs-hero" aria-labelledby="docs-title">
+      <div class="docs-hero-inner">
+        <div class="docs-title-block">
+          <Badge variant={doc.group === "Run Notes" ? "codex" : "muted"}>{doc.group}</Badge>
+          <h1 id="docs-title">{doc.title}</h1>
+          <p>{doc.summary}</p>
+        </div>
+        <Card className="docs-context-card">
+          <CardHeader>
+            <Badge variant="default">Source</Badge>
+            <CardTitle>{doc.sourcePath}</CardTitle>
+            <CardDescription>Static HTML generated from the repository markdown.</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button asChild variant="ghost" size="sm">
+              <a href={sourceHref}>
+                <FileText data-icon="inline-start" aria-hidden="true" />
+                Open source
+              </a>
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </section>
+
+    <div class="docs-shell">
+      <aside class="docs-rail" aria-label="Documentation navigation">
+        <div class="docs-rail-sticky">
+          <div class="docs-rail-heading">
+            <BookOpenText aria-hidden="true" />
+            <span>Docs</span>
+          </div>
+          <nav class="docs-nav">
+            {docs.map((entry) => (
+              <a href={`/docs/${entry.pageSlug}.html`} aria-current={entry.slug === doc.slug ? "page" : undefined}>
+                <span>{entry.group}</span>
+                {entry.title}
+              </a>
+            ))}
+          </nav>
+          {doc.headings.length > 0 && (
+            <>
+              <Separator className="docs-rail-separator" />
+              <div class="docs-rail-heading docs-rail-heading-secondary">
+                <span>On this page</span>
+              </div>
+              <nav class="docs-toc">
+                {doc.headings.map((heading) => (
+                  <a class:list={{ "toc-child": heading.depth === 3 }} href={`#${heading.id}`}>
+                    {heading.text}
+                  </a>
+                ))}
+              </nav>
+            </>
+          )}
+        </div>
+      </aside>
+
+      <article class="docs-article">
+        <div class="docs-prose" set:html={doc.html} />
+        <nav class="docs-neighbors" aria-label="Adjacent documentation pages">
+          {previousDoc && (
+            <Card className="docs-neighbor-card">
+              <CardHeader>
+                <Badge variant="muted">Previous</Badge>
+                <CardTitle>{previousDoc.title}</CardTitle>
+                <CardDescription>{previousDoc.summary}</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button asChild variant="ghost" size="sm">
+                  <a href={`/docs/${previousDoc.pageSlug}.html`}>
+                    <ArrowLeft data-icon="inline-start" aria-hidden="true" />
+                    Read previous
+                  </a>
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+          {nextDoc && (
+            <Card className="docs-neighbor-card">
+              <CardHeader>
+                <Badge variant="muted">Next</Badge>
+                <CardTitle>{nextDoc.title}</CardTitle>
+                <CardDescription>{nextDoc.summary}</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button asChild variant="ghost" size="sm">
+                  <a href={`/docs/${nextDoc.pageSlug}.html`}>
+                    Read next
+                    <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                  </a>
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+        </nav>
+      </article>
+    </div>
+  </main>
+</SiteLayout>
