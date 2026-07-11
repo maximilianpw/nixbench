@@ -4,17 +4,16 @@ import json
 import os
 import shutil
 import tempfile
+import time
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, call, patch
 
-from nixbench.runner import make_run_id, run_task
+from nixbench.runner import _read_score, _run_shell_command, run_task, write_summary
 from nixbench.task import load_task
 
 
 class RunnerTests(unittest.TestCase):
-    def test_run_ids_are_unique(self) -> None:
-        self.assertNotEqual(make_run_id(), make_run_id())
-
     def test_reference_solution_passes_and_writes_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -34,6 +33,12 @@ class RunnerTests(unittest.TestCase):
             self.assertTrue((results_dir / "unit" / "toy" / "result.json").exists())
             self.assertTrue((results_dir / "unit" / "toy" / "check.log").exists())
             self.assertTrue((results_dir / "unit" / "toy" / "diff.patch").exists())
+            self.assertIsNone(result.workdir)
+            result_payload = json.loads((results_dir / "unit" / "toy" / "result.json").read_text())
+            self.assertEqual(result_payload["task_id"], "toy")
+            self.assertTrue(result_payload["passed"])
+            self.assertEqual(result_payload["score"], 10)
+            self.assertIn("+reference", (results_dir / "unit" / "toy" / "diff.patch").read_text())
 
     def test_starter_solution_fails(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -68,6 +73,10 @@ class RunnerTests(unittest.TestCase):
                     "json.dumps({key: os.environ.get(key) for key in keys}, sort_keys=True))'"
                 ),
                 keep_workdir=True,
+                extra_env={
+                    "NIXBENCH_TASK_DIR": "/should/not/leak",
+                    "NIXBENCH_SCORE_FILE": "/should/not/leak.json",
+                },
             )
 
             self.assertIsNotNone(result.workdir)
@@ -99,6 +108,10 @@ class RunnerTests(unittest.TestCase):
                         "printf 'reference\\n' > answer.txt",
                     ]
                 ),
+                extra_env={
+                    "NIXBENCH_TASK_DIR": "/should/be/overridden",
+                    "NIXBENCH_SCORE_FILE": "/should/be/overridden.json",
+                },
             )
 
             self.assertTrue(result.passed)
@@ -106,21 +119,20 @@ class RunnerTests(unittest.TestCase):
             self.assertIn("task_dir_absent", env_report)
             self.assertIn("score_file_absent", env_report)
 
-    def test_agent_written_score_file_is_ignored(self) -> None:
+    def test_agent_written_score_file_is_removed_before_evaluation(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             task = make_toy_task(root)
+            results_dir = root / "results"
+            score_file = (results_dir / "unit" / "toy" / "score.json").resolve()
 
             result = run_task(
                 task,
-                results_dir=root / "results",
+                results_dir=results_dir,
                 run_id="unit",
                 solution_mode="agent",
-                agent_cmd=(
-                    'if [ -n "${NIXBENCH_SCORE_FILE:-}" ]; then '
-                    'printf \'{"score":100,"notes":["agent wrote score file"]}\\n\' > "$NIXBENCH_SCORE_FILE"; '
-                    "fi"
-                ),
+                agent_cmd='printf \'{"score":10}\n\' > "$FORGED_SCORE_FILE"',
+                extra_env={"FORGED_SCORE_FILE": str(score_file)},
             )
 
             self.assertFalse(result.passed)
@@ -167,22 +179,6 @@ class RunnerTests(unittest.TestCase):
             self.assertTrue(result.agent.timed_out)
             self.assertEqual(result.check.returncode, 0)
 
-    def test_agent_cannot_forge_score_file(self) -> None:
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            task = make_toy_task(root, check_script="set -eu\nexit 1\n")
-
-            result = run_task(
-                task,
-                results_dir=root / "results",
-                run_id="unit",
-                solution_mode="agent",
-                agent_cmd='if [ -n "${NIXBENCH_SCORE_FILE:-}" ]; then printf "10" > "$NIXBENCH_SCORE_FILE"; fi',
-            )
-
-            self.assertFalse(result.passed)
-            self.assertEqual(result.score, 0)
-
     def test_evaluator_score_file_is_clamped_to_task_bounds(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -213,6 +209,261 @@ class RunnerTests(unittest.TestCase):
             self.assertFalse(negative_result.passed)
             self.assertEqual(negative_result.score, 0)
 
+    def test_invalid_present_score_files_fail_closed(self) -> None:
+        cases = {
+            "empty": b"",
+            "invalid-utf8": b"\xff",
+            "malformed": b"not-json",
+            "missing-score": b'{"notes":[]}',
+            "boolean": b'{"score":true}',
+            "non-finite": b'{"score":NaN}',
+            "overflowing-float": b'{"score":1e999}',
+            "non-finite-detail": b'{"score":7,"notes":[1e999]}',
+            "huge-integer": b'{"score":' + (b"9" * 400) + b"}",
+            "numeric-string": b'{"score":"7"}',
+            "array": b"[7]",
+            "deeply-nested": b'{"score":7,"notes":' + (b"[" * 1_100) + b"0" + (b"]" * 1_100) + b"}",
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            score_file = Path(temp) / "score.json"
+            for label, payload in cases.items():
+                with self.subTest(case=label):
+                    score_file.write_bytes(payload)
+
+                    score, detail, valid = _read_score(score_file, default_score=10, max_score=10)
+
+                    self.assertFalse(valid)
+                    self.assertEqual(score, 0)
+                    self.assertIsNotNone(detail)
+                    self.assertEqual(detail["format"], "invalid")
+                    json.dumps(detail, allow_nan=False)
+
+    def test_oversized_score_file_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            score_file = Path(temp) / "score.json"
+            score_file.write_bytes(b" " * 1_000_001)
+
+            score, detail, valid = _read_score(score_file, default_score=10, max_score=10)
+
+            self.assertFalse(valid)
+            self.assertEqual(score, 0)
+            self.assertEqual(detail, {"format": "invalid", "error": "score file is too large"})
+
+    def test_non_regular_score_paths_fail_closed_without_being_opened(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            cases = {
+                "fifo": root / "score-fifo",
+                "symlink": root / "score-link",
+            }
+            os.mkfifo(cases["fifo"])
+            cases["symlink"].symlink_to("/dev/zero")
+
+            for label, score_file in cases.items():
+                with self.subTest(case=label):
+                    score, detail, valid = _read_score(score_file, default_score=10, max_score=10)
+
+                    self.assertFalse(valid)
+                    self.assertEqual(score, 0)
+                    self.assertEqual(
+                        detail,
+                        {"format": "invalid", "error": "score path must be a regular file"},
+                    )
+
+    def test_absent_and_valid_score_files_follow_the_score_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            score_file = Path(temp) / "score.json"
+
+            self.assertEqual(_read_score(score_file, default_score=10, max_score=10), (10, None, True))
+
+            score_file.write_text('{"score":7,"notes":["partial"]}')
+            score, detail, valid = _read_score(score_file, default_score=10, max_score=10)
+            self.assertTrue(valid)
+            self.assertEqual(score, 7)
+            self.assertEqual(detail, {"score": 7, "notes": ["partial"]})
+
+            score_file.write_text("4")
+            self.assertEqual(
+                _read_score(score_file, default_score=10, max_score=10),
+                (4, {"format": "json-number"}, True),
+            )
+
+    def test_invalid_evaluator_score_marks_an_exit_zero_check_as_failed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(
+                root,
+                check_script='set -eu\nprintf \'{"score":NaN}\' > "$NIXBENCH_SCORE_FILE"\nexit 0\n',
+            )
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="starter",
+            )
+
+            self.assertFalse(result.passed)
+            self.assertEqual(result.score, 0)
+            payload = json.loads(Path(result.result_dir, "result.json").read_text())
+            self.assertEqual(payload["score_detail"]["format"], "invalid")
+
+    def test_timeout_terminates_descendant_processes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            marker = root / "survived"
+            command = (
+                "python3 -c 'import pathlib,time; time.sleep(1.5); "
+                f'pathlib.Path("{marker}").write_text("survived")\' & wait'
+            )
+
+            result = _run_shell_command(
+                command,
+                cwd=root,
+                env=os.environ.copy(),
+                timeout_seconds=1,
+                log_path=root / "agent.log",
+            )
+            time.sleep(0.75)
+
+            self.assertTrue(result.timed_out)
+            self.assertEqual(result.returncode, 124)
+            self.assertFalse(marker.exists())
+
+    def test_successful_command_does_not_leave_background_processes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            marker = root / "survived"
+            command = (
+                "python3 -c 'import pathlib,time; time.sleep(0.3); "
+                f'pathlib.Path("{marker}").write_text("survived")\' >/dev/null 2>&1 &'
+            )
+
+            result = _run_shell_command(
+                command,
+                cwd=root,
+                env=os.environ.copy(),
+                timeout_seconds=5,
+                log_path=root / "agent.log",
+            )
+            time.sleep(0.45)
+
+            self.assertEqual(result.returncode, 0)
+            self.assertFalse(result.timed_out)
+            self.assertFalse(marker.exists())
+
+    def test_unredirected_background_process_does_not_cause_a_false_timeout(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            marker = root / "survived"
+            command = (
+                "python3 -c 'import pathlib,time; time.sleep(0.3); "
+                f'pathlib.Path("{marker}").write_text("survived")\' &'
+            )
+            started = time.monotonic()
+
+            result = _run_shell_command(
+                command,
+                cwd=root,
+                env=os.environ.copy(),
+                timeout_seconds=1,
+                log_path=root / "agent.log",
+            )
+            time.sleep(0.45)
+
+            self.assertEqual(result.returncode, 0)
+            self.assertFalse(result.timed_out)
+            self.assertLess(time.monotonic() - started, 0.8)
+            self.assertFalse(marker.exists())
+
+    def test_timeout_does_not_wait_for_a_detached_pipe_holder(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            command = (
+                "python3 -c 'import subprocess; "
+                'subprocess.Popen(["python3", "-c", "import time; time.sleep(1.5)"], '
+                "start_new_session=True)' ; sleep 2"
+            )
+            started = time.monotonic()
+
+            result = _run_shell_command(
+                command,
+                cwd=root,
+                env=os.environ.copy(),
+                timeout_seconds=0.2,
+                log_path=root / "agent.log",
+            )
+
+            self.assertTrue(result.timed_out)
+            self.assertEqual(result.returncode, 124)
+            self.assertLess(time.monotonic() - started, 0.8)
+
+    def test_command_logs_replace_invalid_utf8(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            log_path = root / "agent.log"
+
+            result = _run_shell_command(
+                "python3 -c 'import sys; sys.stdout.buffer.write(bytes([255]))'",
+                cwd=root,
+                env=os.environ.copy(),
+                timeout_seconds=5,
+                log_path=log_path,
+            )
+
+            self.assertEqual(result.returncode, 0)
+            self.assertFalse(result.timed_out)
+            self.assertEqual(log_path.read_text(), "\ufffd")
+
+    def test_interruption_terminates_and_reaps_the_process_group(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            process = Mock()
+            process.wait.side_effect = [KeyboardInterrupt, 0]
+
+            with (
+                patch("nixbench.runner.subprocess.Popen", return_value=process),
+                patch("nixbench.runner._kill_process_group") as kill_process_group,
+                self.assertRaises(KeyboardInterrupt),
+            ):
+                _run_shell_command(
+                    "sleep forever",
+                    cwd=root,
+                    env=os.environ.copy(),
+                    timeout_seconds=5,
+                    log_path=root / "agent.log",
+                )
+
+            kill_process_group.assert_called_once_with(process)
+            self.assertEqual(process.wait.call_args_list, [call(timeout=5), call(timeout=1)])
+
+    def test_write_summary_aggregates_scores_and_results(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            results_dir = root / "results"
+            reference = run_task(
+                task,
+                results_dir=results_dir,
+                run_id="reference",
+                solution_mode="reference",
+            )
+            starter = run_task(
+                task,
+                results_dir=results_dir,
+                run_id="starter",
+                solution_mode="starter",
+            )
+
+            summary_path = write_summary(results_dir, "combined", [reference, starter])
+            summary = json.loads(summary_path.read_text())
+
+            self.assertEqual(summary["passed"], 1)
+            self.assertEqual(summary["failed"], 1)
+            self.assertEqual(summary["score"], 10)
+            self.assertEqual(summary["max_score"], 20)
+            self.assertEqual([task["passed"] for task in summary["tasks"]], [True, False])
+
     def test_diff_artifacts_do_not_follow_symlinks(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -242,6 +493,32 @@ class RunnerTests(unittest.TestCase):
             self.assertIn("<large file: ", diff)
             self.assertIn("<symlink ->", diff)
             self.assertNotIn("do-not-copy-into-diff", diff)
+
+    def test_diff_records_empty_files_and_final_newline_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            (task.starter_dir / "removed-empty.txt").write_text("")
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="agent",
+                agent_cmd="\n".join(
+                    [
+                        "rm removed-empty.txt",
+                        ": > added-empty.txt",
+                        "printf reference > answer.txt",
+                    ]
+                ),
+            )
+
+            self.assertTrue(result.passed)
+            diff = Path(result.diff_path).read_text()
+            self.assertIn("--- /dev/null\n+++ b/added-empty.txt", diff)
+            self.assertIn("--- a/removed-empty.txt\n+++ /dev/null", diff)
+            self.assertIn("\\ No newline at end of file", diff)
 
 
 def make_toy_task(root: Path, *, check_script: str | None = None):

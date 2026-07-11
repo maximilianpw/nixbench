@@ -67,6 +67,8 @@ Task evaluator timeouts are set in each task's `metadata.toml`:
 timeout_seconds = 60
 ```
 
+After each agent or evaluator command finishes, the harness terminates any remaining processes in that command's process group; it does the same immediately when a timeout expires. This prevents ordinary background children from continuing into the evaluator or later tasks. Commands that deliberately detach into a separate session still require external sandboxing; the harness is not a container or VM boundary.
+
 ## Keeping Workdirs
 
 Use `--keep-workdir` when debugging a run:

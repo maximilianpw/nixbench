@@ -8,11 +8,17 @@ trap 'rm -rf "$tmpdir"' EXIT
 cat > "$tmpdir/test.nix" <<EOF
 let
   lib.optional = condition: value: if condition then [ value ] else [];
-  config = import ${workdir}/config.nix { inherit lib; };
+  withExplicitLib = import ${workdir}/config.nix { inherit lib; };
+  withDefaultLib = import ${workdir}/config.nix {};
+  expected = {
+    name = "nixbench";
+    enableDocs = true;
+    outputs = [ "nixbench" "manual" ];
+  };
 in
-assert config.name == "nixbench";
-assert config.enableDocs == true;
-assert config.outputs == [ "nixbench" "manual" ];
+assert withExplicitLib == expected;
+assert withDefaultLib == expected;
+assert builtins.attrNames withDefaultLib == [ "enableDocs" "name" "outputs" ];
 "ok"
 EOF
 

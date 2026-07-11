@@ -1,0 +1,37 @@
+name: Benchmark tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  harness:
+    name: Harness and corpus
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Check Python syntax
+        run: python3 -m py_compile bench.py nixbench/*.py tests/*.py
+
+      - name: Check evaluator shell syntax
+        run: |
+          for check in tasks/*/tests/check.sh; do
+            sh -n "$check"
+          done
+
+      - name: Run harness and corpus tests
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -v

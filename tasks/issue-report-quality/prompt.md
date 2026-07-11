@@ -18,7 +18,7 @@ Requirements:
 - `system` must include `system`, `nixosRelease`, and `nixpkgsRevision`.
 - `reproduction` must include the exact command above.
 - `logs` must include the observed error.
-- `analysis` should state the observed stale option path and the likely current option path, but must not claim an unverified root cause.
+- `analysis` should contain `observed` (a list), `likelyFix` (a string), and `unverified` (a list). It must state the observed stale option path and the likely current option path without adding a `rootCause` or `confirmedRootCause` claim.
 - Set `confidence = "observed"`.
 - Do not mention ChatGPT, Copilot, AI, or unsupported guesses.
 

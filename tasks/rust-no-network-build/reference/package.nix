@@ -9,7 +9,7 @@
 let
   model = fetchurl {
     url = "https://models.example.invalid/vision-indexer/model-v1.onnx";
-    hash = "sha256-model";
+    hash = "sha256-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=";
   };
 in
 rustPlatform.buildRustPackage rec {
