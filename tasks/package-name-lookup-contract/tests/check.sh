@@ -7,29 +7,30 @@ trap 'rm -rf "$tmpdir"' EXIT
 
 cat > "$tmpdir/test.nix" <<EOF
 let
+  package = name: marker: { inherit name marker; };
   pkgs = {
-    git = "git";
-    ripgrep = "ripgrep";
-    fd = "fd";
-    bat = "bat";
-    eza = "eza";
-    nixfmt-rfc-style = "nixfmt-rfc-style";
-    nil = "nil";
-    statix = "statix";
-    deadnix = "deadnix";
+    git = package "git" 11;
+    ripgrep = package "ripgrep" 23;
+    fd = package "fd" 37;
+    bat = package "bat" 41;
+    eza = package "eza" 53;
+    nixfmt-rfc-style = package "nixfmt-rfc-style" 67;
+    nil = package "nil" 79;
+    statix = package "statix" 83;
+    deadnix = package "deadnix" 97;
   };
   module = import ${workdir}/packages.nix { inherit pkgs; };
   packages = module.environment.systemPackages;
   required = [
-    "git"
-    "ripgrep"
-    "fd"
-    "bat"
-    "eza"
-    "nixfmt-rfc-style"
-    "nil"
-    "statix"
-    "deadnix"
+    pkgs.git
+    pkgs.ripgrep
+    pkgs.fd
+    pkgs.bat
+    pkgs.eza
+    pkgs.nixfmt-rfc-style
+    pkgs.nil
+    pkgs.statix
+    pkgs.deadnix
   ];
 in
 assert builtins.length packages == builtins.length required;

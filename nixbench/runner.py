@@ -6,7 +6,9 @@ import json
 import math
 import os
 import platform
+import signal
 import shutil
+import stat
 import subprocess
 import tempfile
 import time
@@ -19,6 +21,7 @@ from .task import Task
 
 SolutionMode = Literal["agent", "starter", "reference"]
 MAX_DIFF_TEXT_BYTES = 1_000_000
+MAX_SCORE_FILE_BYTES = 1_000_000
 
 
 @dataclass
@@ -46,6 +49,7 @@ class TaskRunResult:
     diff_path: str
     agent: CommandResult | None
     check: CommandResult
+    score_valid: bool
     score_detail: dict[str, Any] | None
 
     def to_json(self) -> dict[str, Any]:
@@ -140,11 +144,13 @@ def run_task(
     agent_timed_out = agent_result.timed_out if agent_result is not None else False
     check_passed = check_result.returncode == 0 and not check_result.timed_out
     passed = check_passed and not agent_timed_out
-    score, score_detail = _read_score(
+    score, score_detail, score_is_valid = _read_score(
         score_file,
         default_score=task.max_score if passed else 0.0,
         max_score=task.max_score,
     )
+    if not score_is_valid:
+        passed = False
 
     result = TaskRunResult(
         task_id=task.id,
@@ -161,11 +167,12 @@ def run_task(
         diff_path=str(diff_path),
         agent=agent_result,
         check=check_result,
+        score_valid=score_is_valid,
         score_detail=score_detail,
     )
 
     result_path = result_dir / "result.json"
-    result_path.write_text(json.dumps(result.to_json(), indent=2, sort_keys=True) + "\n")
+    result_path.write_text(json.dumps(result.to_json(), indent=2, sort_keys=True, allow_nan=False) + "\n")
 
     if not keep_workdir:
         shutil.rmtree(temp_parent, ignore_errors=True)
@@ -222,7 +229,7 @@ def write_summary(results_dir: Path, run_id: str, results: list[TaskRunResult]) 
         "tasks": [result.to_json() for result in results],
     }
     summary_path = run_dir / "summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n")
     return summary_path
 
 
@@ -288,30 +295,38 @@ def _run_subprocess(
     timed_out = False
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    try:
-        completed = subprocess.run(
+    with tempfile.TemporaryFile() as output_file:
+        process = subprocess.Popen(
             command,
             cwd=cwd,
             env=env,
             shell=shell,
-            text=True,
-            stdout=subprocess.PIPE,
+            stdout=output_file,
             stderr=subprocess.STDOUT,
-            timeout=timeout_seconds,
-            check=False,
+            start_new_session=True,
         )
-        output = completed.stdout
-        returncode = completed.returncode
-    except subprocess.TimeoutExpired as exc:
-        timed_out = True
-        output = exc.stdout or ""
-        if isinstance(output, bytes):
-            output = output.decode(errors="replace")
+        try:
+            process.wait(timeout=timeout_seconds)
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            _terminate_process_group(process)
+        except BaseException:
+            _terminate_process_group(process)
+            raise
+        else:
+            _kill_process_group(process)
+
+        output_file.seek(0)
+        output_bytes = output_file.read()
+
+    output = (output_bytes or b"").decode("utf-8", errors="replace")
+    returncode = process.returncode
+    if timed_out:
         output += f"\nTimed out after {timeout_seconds} seconds.\n"
         returncode = 124
 
     duration = time.monotonic() - start
-    log_path.write_text(output)
+    log_path.write_text(output, encoding="utf-8")
     return CommandResult(
         command=display_command,
         returncode=returncode,
@@ -321,38 +336,78 @@ def _run_subprocess(
     )
 
 
+def _kill_process_group(process: subprocess.Popen[bytes]) -> None:
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        if process.poll() is None:
+            process.kill()
+
+
+def _terminate_process_group(process: subprocess.Popen[bytes]) -> None:
+    _kill_process_group(process)
+    try:
+        process.wait(timeout=1)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait()
+
+
 def _read_score(
     score_file: Path,
     *,
     default_score: float,
     max_score: float,
-) -> tuple[float, dict[str, Any] | None]:
-    if not score_file.exists():
-        return _clamp_score(default_score, max_score), None
+) -> tuple[float, dict[str, Any] | None, bool]:
+    try:
+        score_stat = score_file.lstat()
+    except FileNotFoundError:
+        return _clamp_score(default_score, max_score), None, True
+    except OSError as exc:
+        return 0.0, {"format": "invalid", "error": type(exc).__name__}, False
 
-    text = score_file.read_text().strip()
-    if not text:
-        return _clamp_score(default_score, max_score), None
+    if not stat.S_ISREG(score_stat.st_mode):
+        return 0.0, {"format": "invalid", "error": "score path must be a regular file"}, False
 
     try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        score = _coerce_score(text, max_score=max_score)
-        if score is None:
-            return _clamp_score(default_score, max_score), {"format": "invalid", "raw": text}
-        return score, {"format": "plain"}
+        if score_stat.st_size > MAX_SCORE_FILE_BYTES:
+            return 0.0, {"format": "invalid", "error": "score file is too large"}, False
+        text = score_file.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError) as exc:
+        return 0.0, {"format": "invalid", "error": type(exc).__name__}, False
+    if not text:
+        return 0.0, {"format": "invalid", "error": "empty score file"}, False
+
+    try:
+        parsed = json.loads(text, parse_constant=_reject_json_constant)
+    except (json.JSONDecodeError, ValueError, RecursionError):
+        return 0.0, {"format": "invalid", "error": "invalid JSON"}, False
+    try:
+        json_safe = _is_json_safe(parsed)
+    except RecursionError:
+        json_safe = False
+    if not json_safe:
+        return 0.0, {"format": "invalid", "error": "score payload contains non-finite numbers"}, False
 
     if isinstance(parsed, dict) and "score" in parsed:
         score = _coerce_score(parsed["score"], max_score=max_score)
         if score is None:
-            return _clamp_score(default_score, max_score), parsed
-        return score, parsed
+            return (
+                0.0,
+                {"format": "invalid", "error": "score must be a finite JSON number"},
+                False,
+            )
+        return score, parsed, True
 
     score = _coerce_score(parsed, max_score=max_score)
     if score is not None:
-        return score, {"format": "json-number"}
+        return score, {"format": "json-number"}, True
 
-    return _clamp_score(default_score, max_score), {"format": "unsupported", "raw": parsed}
+    return (
+        0.0,
+        {"format": "invalid", "error": "score payload must be a JSON number or object with score"},
+        False,
+    )
 
 
 def _clamp_score(score: float, max_score: float) -> float:
@@ -360,17 +415,32 @@ def _clamp_score(score: float, max_score: float) -> float:
 
 
 def _coerce_score(value: Any, *, max_score: float) -> float | None:
-    if isinstance(value, bool):
+    if isinstance(value, bool) or not isinstance(value, int | float):
         return None
     try:
         score = float(value)
-    except (TypeError, ValueError):
+    except OverflowError:
         return None
-
     if not math.isfinite(score):
         return None
 
     return max(0.0, min(score, max_score))
+
+
+def _reject_json_constant(value: str) -> None:
+    raise ValueError(f"non-finite JSON number: {value}")
+
+
+def _is_json_safe(value: Any) -> bool:
+    if value is None or isinstance(value, str | bool | int):
+        return True
+    if isinstance(value, float):
+        return math.isfinite(value)
+    if isinstance(value, list):
+        return all(_is_json_safe(item) for item in value)
+    if isinstance(value, dict):
+        return all(isinstance(key, str) and _is_json_safe(item) for key, item in value.items())
+    return False
 
 
 def _write_unified_dir_diff(original: Path, changed: Path, output_path: Path) -> None:
@@ -380,27 +450,39 @@ def _write_unified_dir_diff(original: Path, changed: Path, output_path: Path) ->
     for rel_path in files:
         old_path = original / rel_path
         new_path = changed / rel_path
+        old_exists = _path_is_file_or_symlink(old_path)
+        new_exists = _path_is_file_or_symlink(new_path)
         old_lines = _read_text_lines(old_path)
         new_lines = _read_text_lines(new_path)
-        if old_lines == new_lines:
+        if old_exists == new_exists and old_lines == new_lines:
             continue
 
-        lines.extend(
+        diff_lines = list(
             difflib.unified_diff(
                 old_lines,
                 new_lines,
-                fromfile=f"a/{rel_path}",
-                tofile=f"b/{rel_path}",
+                fromfile=f"a/{rel_path}" if old_exists else "/dev/null",
+                tofile=f"b/{rel_path}" if new_exists else "/dev/null",
                 lineterm="",
             )
         )
+        if not diff_lines:
+            diff_lines = [
+                f"--- {'a/' + str(rel_path) if old_exists else '/dev/null'}",
+                f"+++ {'b/' + str(rel_path) if new_exists else '/dev/null'}",
+            ]
+        lines.extend(diff_lines)
         lines.append("")
 
     output_path.write_text("\n".join(lines))
 
 
 def _relative_files(root: Path) -> set[Path]:
-    return {path.relative_to(root) for path in root.rglob("*") if path.is_symlink() or path.is_file()}
+    return {path.relative_to(root) for path in root.rglob("*") if _path_is_file_or_symlink(path)}
+
+
+def _path_is_file_or_symlink(path: Path) -> bool:
+    return path.is_symlink() or path.is_file()
 
 
 def _read_text_lines(path: Path) -> list[str]:
@@ -413,6 +495,8 @@ def _read_text_lines(path: Path) -> list[str]:
 
     if not path.exists():
         return []
+    if not path.is_file():
+        return []
 
     try:
         size = path.stat().st_size
@@ -423,6 +507,13 @@ def _read_text_lines(path: Path) -> list[str]:
         return [f"<large file: {size} bytes>"]
 
     try:
-        return path.read_text().splitlines()
+        text = path.read_text()
     except UnicodeDecodeError:
         return ["<binary file>"]
+    except OSError:
+        return ["<unreadable file>"]
+
+    lines = text.splitlines()
+    if text and not text.endswith(("\n", "\r")):
+        lines.append("\\ No newline at end of file")
+    return lines

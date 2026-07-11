@@ -31,6 +31,7 @@ let
   keybindSource = module.home.file.".config/hypr/keybind.conf".source;
 in
 assert map toString module.imports == expectedImports;
+assert builtins.all (path: builtins.typeOf path == "path") module.imports;
 assert builtins.all builtins.pathExists module.imports;
 assert builtins.typeOf commonSource == "path";
 assert builtins.typeOf keybindSource == "path";

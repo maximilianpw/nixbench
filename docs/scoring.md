@@ -25,6 +25,8 @@ The harness records this detail in `result.json`.
 
 Evaluator-provided scores are clamped to the task's `[0, max_score]` range. Partial credit can be recorded even when the evaluator exits non-zero or the agent timed out, but `passed` remains false unless the agent completed and the evaluator exited `0`.
 
+If no score file exists, the evaluator exit status determines the default score. Once an evaluator creates a score file, it must be a reasonably sized regular file containing valid UTF-8 JSON with either a finite JSON number or an object with a finite numeric `score` field. Symlinks, streams, empty, oversized, malformed, excessively nested, boolean, numeric-string, non-finite, and unsupported payloads fail closed with zero credit. Invalid score details are still recorded in JSON-safe form for diagnosis.
+
 ## Recommended Rubric
 
 For larger tasks, split hidden checks roughly like this:

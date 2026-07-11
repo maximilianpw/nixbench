@@ -20,7 +20,7 @@ NixBench is built to catch those issues with objective tests.
 
 ## What It Measures
 
-The corpus covers twenty-six self-contained tasks:
+The corpus covers twenty-nine self-contained tasks:
 
 | Task | Area | Difficulty | What It Tests |
 |---|---|---:|---|
@@ -42,6 +42,7 @@ The corpus covers twenty-six self-contained tasks:
 | `module-stale-option-migration` | NixOS modules | Easy | Migrating stale NixOS option paths to current options |
 | `module-system-boundaries` | NixOS modules | Hard | Keeping NixOS, Home Manager, and nix-darwin module outputs separate |
 | `mutable-config-home-manager` | NixOS modules | Medium | Separating mutable GUI app state from Home Manager-managed defaults |
+| `nushell-command-not-found` | NixOS modules | Medium | Wiring command-not-found hooks into Nushell without breaking Bash behavior |
 | `overlay-module-boundary` | Overlays | Medium | Keeping package overlays separate from module-defined systemd options |
 | `overlay-override-package` | Overlays | Hard | `overrideAttrs`, metadata preservation, final vs prev |
 | `package-name-lookup-contract` | Packaging | Easy | Avoiding hallucinated package names when a package set is constrained |
@@ -49,7 +50,9 @@ The corpus covers twenty-six self-contained tasks:
 | `package-stdenv-cli` | Packaging | Medium | `stdenv.mkDerivation`, phases, native tools, metadata |
 | `purity-wrapper-derivation` | Purity | Medium | Avoiding host paths and environment impurities |
 | `python-cuda-uv2nix-patch` | Packaging | Hard | Python/CUDA packaging inputs, `autoPatchelf`, and avoiding generic Linux fixes |
+| `rust-no-network-build` | Packaging | Hard | Keeping Rust build scripts offline with system libraries and pinned assets |
 | `string-escaping-systemd` | Nix language | Medium | Preserving literal shell variables inside Nix strings |
+| `xdg-portal-merge` | NixOS modules | Hard | Extending portal configuration without discarding other desktop fallbacks |
 
 Most tasks use fake `lib`, fake builders, or fake package sets in the evaluator. That keeps the benchmark fast, deterministic, and focused on Nix structure rather than network access or large builds.
 
@@ -97,6 +100,10 @@ Check that the starters fail:
 ```sh
 python3 bench.py validate --solution starter
 ```
+
+Both validation commands exit `0` only when every task has the expected outcome: references pass at full score, while starters fail below full score. Executable commands such as `run-all` and `validate` fail clearly when the selected task set is empty.
+
+Keep `--results-dir` outside `--tasks-dir`; executable commands reject nested result directories so generated artifacts cannot be mistaken for task definitions on later runs.
 
 Run one task with an agent:
 
@@ -201,6 +208,7 @@ The default scoring model is strict:
 - agent timeout: run is marked failed and receives zero unless the evaluator supplies partial credit
 
 Scores written by evaluators are clamped to the task's `[0, max_score]` range.
+If an evaluator creates a score file, it must contain valid JSON with a finite numeric score. Empty, malformed, non-finite, or otherwise unsupported score payloads fail the task with zero credit instead of falling back to full credit.
 
 Evaluators can write partial-credit JSON to `$NIXBENCH_SCORE_FILE`:
 

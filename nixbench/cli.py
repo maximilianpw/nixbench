@@ -5,8 +5,8 @@ import json
 import sys
 from pathlib import Path
 
-from .runner import SolutionMode, detect_nix_system, make_run_id, run_task, write_summary
-from .task import TaskError, find_task, iter_tasks
+from .runner import TaskRunResult, SolutionMode, detect_nix_system, make_run_id, run_task, write_summary
+from .task import Task, TaskError, find_task, iter_tasks
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -90,10 +90,10 @@ def cmd_list(args: argparse.Namespace) -> int:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
+    _ensure_results_outside_tasks(args)
     task = find_task(args.tasks_dir, args.task_id)
     if not task.supports_system(args.system):
-        print(f"skip: {task.id} does not support {args.system}")
-        return 0
+        raise ValueError(f"{task.id} does not support {args.system}; no task was run")
 
     run_id = make_run_id()
     result = run_task(
@@ -111,7 +111,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def cmd_run_all(args: argparse.Namespace) -> int:
-    tasks = [task for task in iter_tasks(args.tasks_dir) if task.supports_system(args.system)]
+    tasks = _tasks_for_execution(args)
     run_id = make_run_id()
     results = []
     for task in tasks:
@@ -134,9 +134,11 @@ def cmd_run_all(args: argparse.Namespace) -> int:
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
-    tasks = [task for task in iter_tasks(args.tasks_dir) if task.supports_system(args.system)]
+    tasks = _tasks_for_execution(args)
     run_id = make_run_id()
     results = []
+    expected_pass = args.solution == "reference"
+    valid = 0
     for task in tasks:
         result = run_task(
             task,
@@ -146,12 +148,52 @@ def cmd_validate(args: argparse.Namespace) -> int:
             keep_workdir=args.keep_workdir,
         )
         results.append(result)
-        _print_result(result)
+        actual = "PASS" if result.passed else "FAIL"
+        expected = "PASS" if expected_pass else "FAIL"
+        matches_expectation = _matches_validation_expectation(result, args.solution)
+        valid += int(matches_expectation)
+        status = "OK" if matches_expectation else "UNEXPECTED"
+        print(
+            f"{status} {result.task_id} expected={expected} actual={actual} "
+            f"score={result.score:g}/{result.max_score:g} logs={result.result_dir}"
+        )
 
     summary_path = write_summary(args.results_dir, run_id, results)
-    passed = sum(1 for result in results if result.passed)
-    print(f"validation: {passed}/{len(results)} passed, wrote {summary_path}")
-    return 0 if all(result.passed for result in results) else 1
+    print(
+        f"validation: {valid}/{len(results)} {args.solution} outcomes matched expectations, "
+        f"wrote {summary_path}"
+    )
+    return 0 if valid == len(results) else 1
+
+
+def _tasks_for_execution(args: argparse.Namespace) -> list[Task]:
+    _ensure_results_outside_tasks(args)
+    tasks = [task for task in iter_tasks(args.tasks_dir) if task.supports_system(args.system)]
+    if not tasks:
+        raise ValueError(f"no tasks in {args.tasks_dir} support system {args.system}")
+    return tasks
+
+
+def _ensure_results_outside_tasks(args: argparse.Namespace) -> None:
+    tasks_dir = args.tasks_dir.resolve()
+    results_dir = args.results_dir.resolve()
+    try:
+        results_dir.relative_to(tasks_dir)
+    except ValueError:
+        return
+    raise ValueError("--results-dir must be outside --tasks-dir")
+
+
+def _matches_validation_expectation(result: TaskRunResult, solution: str) -> bool:
+    if solution == "reference":
+        return result.passed and result.score == result.max_score
+    return (
+        not result.passed
+        and result.score_valid
+        and not result.check.timed_out
+        and result.check.returncode == 1
+        and 0 <= result.score < result.max_score
+    )
 
 
 def _solution_mode(value: str) -> SolutionMode:

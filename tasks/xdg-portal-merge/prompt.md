@@ -12,6 +12,9 @@ Rewrite the module fragment so that:
 - It preserves existing `config.xdg.portal.configPackages`.
 - The merged defaults include both Hyprland and non-Hyprland fallbacks.
 - It does not replace the existing portal package lists with Hyprland-only lists.
+- Rely on module option merging (for example, `lib.mkAfter`) instead of reading
+  `config.xdg.portal.extraPortals` or `config.xdg.portal.configPackages` while
+  defining those same options.
 
 Do not solve this by disabling portals or by assuming the user only runs Hyprland.
 

@@ -73,6 +73,9 @@ python3 bench.py validate --solution starter
 ```
 
 The reference should pass. The starter should usually fail. If a starter passes, the task is not measuring anything useful.
+The `validate` command exits successfully only when every reference passes at full score or every starter is cleanly rejected with evaluator exit code `1` below full score, depending on the selected mode. Evaluator timeouts, invalid score files, and infrastructure exit codes are never counted as healthy starter failures. The command rejects an empty task selection rather than reporting a vacuous success.
+
+Those two checks are only corpus smoke tests. Evaluator contract tests should additionally prove that known-invalid mutations fail and valid alternative implementations pass. This prevents hidden checks from becoming either a reference-solution snapshot or a loose shape check that can be gamed with hard-coded values.
 
 ## Benchmark Integrity
 

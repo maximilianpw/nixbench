@@ -1,0 +1,251 @@
+from __future__ import annotations
+
+import contextlib
+import io
+import tempfile
+import unittest
+from pathlib import Path
+
+from nixbench.cli import main
+from tests.test_runner import make_toy_task
+
+
+class CliTests(unittest.TestCase):
+    def test_validate_accepts_failing_starter_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            make_toy_task(root)
+
+            returncode, stdout, stderr = run_cli(
+                root,
+                "validate",
+                "--solution",
+                "starter",
+            )
+
+            self.assertEqual(returncode, 0)
+            self.assertIn("1/1 starter outcomes matched expectations", stdout)
+            self.assertEqual(stderr, "")
+
+    def test_validate_rejects_passing_starter_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            make_toy_task(root, check_script="exit 0\n")
+
+            returncode, stdout, stderr = run_cli(
+                root,
+                "validate",
+                "--solution",
+                "starter",
+            )
+
+            self.assertEqual(returncode, 1)
+            self.assertIn("0/1 starter outcomes matched expectations", stdout)
+            self.assertEqual(stderr, "")
+
+    def test_validate_accepts_passing_reference_solution(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            make_toy_task(root)
+
+            returncode, stdout, stderr = run_cli(
+                root,
+                "validate",
+                "--solution",
+                "reference",
+            )
+
+            self.assertEqual(returncode, 0)
+            self.assertIn("1/1 reference outcomes matched expectations", stdout)
+            self.assertEqual(stderr, "")
+
+    def test_validate_rejects_an_under_scored_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            make_toy_task(
+                root,
+                check_script='printf \'{"score":5}\' > "$NIXBENCH_SCORE_FILE"\nexit 0\n',
+            )
+
+            returncode, stdout, stderr = run_cli(
+                root,
+                "validate",
+                "--solution",
+                "reference",
+            )
+
+            self.assertEqual(returncode, 1)
+            self.assertIn("0/1 reference outcomes matched expectations", stdout)
+            self.assertEqual(stderr, "")
+
+    def test_validate_rejects_a_full_scored_starter_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            make_toy_task(
+                root,
+                check_script='printf \'{"score":10}\' > "$NIXBENCH_SCORE_FILE"\nexit 1\n',
+            )
+
+            returncode, stdout, stderr = run_cli(
+                root,
+                "validate",
+                "--solution",
+                "starter",
+            )
+
+            self.assertEqual(returncode, 1)
+            self.assertIn("0/1 starter outcomes matched expectations", stdout)
+            self.assertEqual(stderr, "")
+
+    def test_validate_accepts_a_partial_scored_starter_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            make_toy_task(
+                root,
+                check_script='printf \'{"score":5}\' > "$NIXBENCH_SCORE_FILE"\nexit 1\n',
+            )
+
+            returncode, stdout, stderr = run_cli(
+                root,
+                "validate",
+                "--solution",
+                "starter",
+            )
+
+            self.assertEqual(returncode, 0)
+            self.assertIn("1/1 starter outcomes matched expectations", stdout)
+            self.assertEqual(stderr, "")
+
+    def test_validate_rejects_a_timed_out_starter_evaluator(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root, check_script="sleep 2\n")
+            metadata_path = task.root / "metadata.toml"
+            metadata_path.write_text(metadata_path.read_text().replace("timeout_seconds = 5", "timeout_seconds = 1"))
+
+            returncode, stdout, stderr = run_cli(root, "validate", "--solution", "starter")
+
+            self.assertEqual(returncode, 1)
+            self.assertIn("0/1 starter outcomes matched expectations", stdout)
+            self.assertEqual(stderr, "")
+
+    def test_validate_rejects_an_invalid_starter_score(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            make_toy_task(
+                root,
+                check_script='printf \'{"score":NaN}\' > "$NIXBENCH_SCORE_FILE"\nexit 0\n',
+            )
+
+            returncode, stdout, stderr = run_cli(root, "validate", "--solution", "starter")
+
+            self.assertEqual(returncode, 1)
+            self.assertIn("0/1 starter outcomes matched expectations", stdout)
+            self.assertEqual(stderr, "")
+
+    def test_validate_rejects_a_starter_evaluator_infrastructure_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            make_toy_task(root, check_script="exit 2\n")
+
+            returncode, stdout, stderr = run_cli(root, "validate", "--solution", "starter")
+
+            self.assertEqual(returncode, 1)
+            self.assertIn("0/1 starter outcomes matched expectations", stdout)
+            self.assertEqual(stderr, "")
+
+    def test_run_all_rejects_an_empty_task_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+
+            returncode, stdout, stderr = run_cli(root, "run-all", "--solution", "starter")
+
+            self.assertEqual(returncode, 2)
+            self.assertEqual(stdout, "")
+            self.assertIn("error: no tasks", stderr)
+
+    def test_execution_rejects_a_results_directory_inside_the_task_corpus(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            make_toy_task(root)
+
+            returncode, stdout, stderr = invoke_cli(
+                root,
+                root / "results",
+                "validate",
+                "--solution",
+                "starter",
+            )
+
+            self.assertEqual(returncode, 2)
+            self.assertEqual(stdout, "")
+            self.assertIn("--results-dir must be outside --tasks-dir", stderr)
+
+    def test_run_all_rejects_an_empty_system_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            metadata_path = task.root / "metadata.toml"
+            metadata_path.write_text(
+                metadata_path.read_text().replace('systems = ["any"]', 'systems = ["x86_64-linux"]')
+            )
+
+            returncode, stdout, stderr = run_cli(
+                root,
+                "--system",
+                "aarch64-darwin",
+                "run-all",
+                "--solution",
+                "starter",
+            )
+
+            self.assertEqual(returncode, 2)
+            self.assertEqual(stdout, "")
+            self.assertIn("support system aarch64-darwin", stderr)
+
+    def test_run_rejects_an_unsupported_task_without_reporting_a_skip(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            metadata_path = task.root / "metadata.toml"
+            metadata_path.write_text(
+                metadata_path.read_text().replace('systems = ["any"]', 'systems = ["x86_64-linux"]')
+            )
+
+            returncode, stdout, stderr = run_cli(
+                root,
+                "--system",
+                "aarch64-darwin",
+                "run",
+                "toy",
+                "--solution",
+                "starter",
+            )
+
+            self.assertEqual(returncode, 2)
+            self.assertEqual(stdout, "")
+            self.assertIn("no task was run", stderr)
+
+
+def run_cli(tasks_dir: Path, *args: str) -> tuple[int, str, str]:
+    with tempfile.TemporaryDirectory() as results:
+        return invoke_cli(tasks_dir, Path(results), *args)
+
+
+def invoke_cli(tasks_dir: Path, results_dir: Path, *args: str) -> tuple[int, str, str]:
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    argv = [
+        "--tasks-dir",
+        str(tasks_dir),
+        "--results-dir",
+        str(results_dir),
+        *args,
+    ]
+    with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+        returncode = main(argv)
+    return returncode, stdout.getvalue(), stderr.getvalue()
+
+
+if __name__ == "__main__":
+    unittest.main()

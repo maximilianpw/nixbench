@@ -14,7 +14,8 @@ assert src.__fetcher == "github";
 assert src.owner == "nix-community";
 assert src.repo == "nixbench-fixture";
 assert builtins.match "[0-9a-f]{40}" src.rev != null;
-assert builtins.match "sha256-.*" src.hash != null;
+assert builtins.isString src.hash;
+assert builtins.match "sha256-[A-Za-z0-9+/]{43}=" src.hash != null;
 assert src.fetchSubmodules == true;
 assert src.leaveDotGit == false;
 "ok"

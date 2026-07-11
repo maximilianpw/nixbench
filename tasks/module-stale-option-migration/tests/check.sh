@@ -9,12 +9,15 @@ cat > "$tmpdir/test.nix" <<EOF
 let
   module = import ${workdir}/module.nix {};
   cfg = module.config;
+  oldXserver = cfg.services.xserver or {};
+  oldDesktopManager = oldXserver.desktopManager or {};
 in
 assert cfg.services.displayManager.sddm.enable == true;
 assert cfg.services.desktopManager.plasma6.enable == true;
 assert cfg.hardware.graphics.enable == true;
 assert cfg.programs.kdeconnect.enable == true;
-assert !(cfg.services ? xserver);
+assert !(oldXserver ? displayManager);
+assert !(oldDesktopManager ? plasma5);
 assert !(cfg.hardware ? opengl);
 "ok"
 EOF

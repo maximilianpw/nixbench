@@ -17,18 +17,26 @@ let
       check = (builtins.getAttr system outputs.checks).eval;
       shell = (builtins.getAttr system outputs.devShells).default;
     in
-    package.pname == "nixbench-sample"
+    package.type == "derivation"
+    && package.pname == "nixbench-sample"
     && package.version == "0.1.0"
     && package.system == system
     && app.type == "app"
+    && app.program == (toString package + "/bin/nixbench-sample")
+    && app.meta.package == "nixbench-sample"
     && check == package
+    && check.type == "derivation"
+    && shell.type == "derivation"
     && shell.name == "nixbench-dev"
+    && shell.system == system
     && builtins.elem "nixfmt" shell.tools
     && builtins.elem "statix" shell.tools;
 in
+assert (flake.inputs or {}) == {};
 assert outputs.lib.systems == systems;
 assert builtins.all checkSystem systems;
 "ok"
 EOF
 
 nix eval --json --file "$tmpdir/test.nix" >/dev/null
+nix flake check --all-systems --no-build "path:$workdir" >/dev/null

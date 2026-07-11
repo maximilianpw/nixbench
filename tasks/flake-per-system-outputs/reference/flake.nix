@@ -10,11 +10,30 @@
         })
         systems);
 
+    emptyManifest = builtins.toFile "nixbench-empty-buildenv-manifest.json" "[]";
+    mkEmptyDerivation = {
+      name,
+      system,
+      extra ? {},
+    }:
+      builtins.derivation (
+        {
+          inherit name system;
+          builder = "builtin:buildenv";
+          manifest = emptyManifest;
+          derivations = [];
+        }
+        // extra
+      );
+
     packages = forAllSystems (system: {
-      default = {
-        pname = "nixbench-sample";
-        version = "0.1.0";
+      default = mkEmptyDerivation {
+        name = "nixbench-sample-0.1.0";
         inherit system;
+        extra = {
+          pname = "nixbench-sample";
+          version = "0.1.0";
+        };
       };
     });
   in {
@@ -24,7 +43,7 @@
     apps = forAllSystems (system: {
       default = {
         type = "app";
-        program = "/nix/store/placeholder-nixbench-sample/bin/nixbench-sample";
+        program = "${packages.${system}.default}/bin/nixbench-sample";
         meta.package = packages.${system}.default.pname;
       };
     });
@@ -34,10 +53,10 @@
     });
 
     devShells = forAllSystems (system: {
-      default = {
+      default = mkEmptyDerivation {
         name = "nixbench-dev";
-        tools = ["nixfmt" "statix"];
         inherit system;
+        extra.tools = ["nixfmt" "statix"];
       };
     });
   };

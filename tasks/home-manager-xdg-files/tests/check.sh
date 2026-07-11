@@ -7,21 +7,32 @@ trap 'rm -rf "$tmpdir"' EXIT
 
 cat > "$tmpdir/test.nix" <<EOF
 let
-  home = import ${workdir}/home.nix {
+  aliceHome = import ${workdir}/home.nix {
     homeDirectory = "/home/alice";
     configText = "theme = \"dark\"\n";
   };
-  text = builtins.toJSON home;
+  bobHome = import ${workdir}/home.nix {
+    homeDirectory = "/srv/users/bob";
+    configText = "theme = \"light\"\nfont = \"mono\"\n";
+  };
+  validHome = homeDirectory: configText: home:
+    let
+      text = builtins.toJSON home;
+    in
+      home.xdg.userDirs.enable == true
+      && home.xdg.userDirs.createDirectories == true
+      && home.xdg.userDirs.documents == "\${homeDirectory}/Documents"
+      && home.xdg.userDirs.download == "\${homeDirectory}/Downloads"
+      && home.xdg.configFile."nixbench/app.toml".text == configText
+      && home.home.file ? "GitHub_Repos/.keep"
+      && home.home.file."GitHub_Repos/.keep" ? text
+      && builtins.isString home.home.file."GitHub_Repos/.keep".text
+      && !(home.home ? activation)
+      && builtins.match ".*mkdir.*" text == null
+      && builtins.match ".*ln -s.*" text == null;
 in
-assert home.xdg.userDirs.enable == true;
-assert home.xdg.userDirs.createDirectories == true;
-assert home.xdg.userDirs.documents == "/home/alice/Documents";
-assert home.xdg.userDirs.download == "/home/alice/Downloads";
-assert home.xdg.configFile."nixbench/app.toml".text == "theme = \"dark\"\n";
-assert home.home.file."GitHub_Repos/.keep".text == "";
-assert !(home.home ? activation);
-assert builtins.match ".*mkdir.*" text == null;
-assert builtins.match ".*ln -s.*" text == null;
+assert validHome "/home/alice" "theme = \"dark\"\n" aliceHome;
+assert validHome "/srv/users/bob" "theme = \"light\"\nfont = \"mono\"\n" bobHome;
 "ok"
 EOF
 
