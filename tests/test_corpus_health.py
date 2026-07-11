@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import math
+import os
 import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from nixbench.runner import run_task
-from nixbench.task import iter_tasks
+from nixbench.task import find_task, iter_tasks
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +17,20 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipIf(shutil.which("nix") is None, "nix is required for corpus evaluator tests")
 class CorpusHealthTests(unittest.TestCase):
+    def test_nushell_evaluator_does_not_depend_on_ambient_name(self) -> None:
+        task = find_task(REPO_ROOT / "tasks", "nushell-command-not-found")
+        with tempfile.TemporaryDirectory() as temp, mock.patch.dict(os.environ):
+            os.environ.pop("name", None)
+            result = run_task(
+                task,
+                results_dir=Path(temp) / "results",
+                run_id="nushell-without-name",
+                solution_mode="reference",
+            )
+
+            check_log = Path(result.check.log_path).read_text()
+            self.assertTrue(result.passed, check_log)
+
     def test_reference_solutions_pass(self) -> None:
         tasks = iter_tasks(REPO_ROOT / "tasks")
         self.assertGreater(len(tasks), 0, "the benchmark corpus must not be empty")

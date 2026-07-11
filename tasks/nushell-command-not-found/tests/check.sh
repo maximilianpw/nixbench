@@ -12,11 +12,11 @@ let
       builtins.mapAttrs
         (name: _:
           if builtins.hasAttr name left && builtins.hasAttr name right then
-            merge left.${name} right.${name}
+            merge left.\${name} right.\${name}
           else if builtins.hasAttr name right then
-            right.${name}
+            right.\${name}
           else
-            left.${name})
+            left.\${name})
         (left // right)
     else
       right;
