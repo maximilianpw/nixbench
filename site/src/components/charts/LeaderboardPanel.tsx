@@ -11,7 +11,7 @@ import {
 } from "@/components/charts/leaderboard/LeaderboardControls";
 import { LeaderboardTable } from "@/components/charts/leaderboard/LeaderboardTable";
 import type { ChartMode } from "@/components/charts/leaderboard/types";
-import { leaderboardRuns, type LeaderboardRun } from "@/data/benchmark";
+import { leaderboardRuns, type LeaderboardRun, type ModelKey } from "@/data/benchmark";
 
 export type LeaderboardPanelProps = {};
 
@@ -19,6 +19,7 @@ export function LeaderboardPanel({}: LeaderboardPanelProps = {}) {
   const [mode, setMode] = useState<ChartMode>("score");
   const [corpus, setCorpus] = useState<CorpusFilter>("29-task corpus");
   const [view, setView] = useState<RunView>("best");
+  const [highlightedModel, setHighlightedModel] = useState<ModelKey | null>(null);
   const corpusRuns = useMemo(
     () => (corpus === "all" ? leaderboardRuns : leaderboardRuns.filter((run) => run.corpus === corpus)),
     [corpus],
@@ -70,8 +71,13 @@ export function LeaderboardPanel({}: LeaderboardPanelProps = {}) {
           linkedSeries={linkedSeries}
           standaloneData={standaloneData}
           showEffortSweep={view === "all"}
+          highlightedModel={highlightedModel}
         />
-        <LeaderboardTable runs={filteredRuns} />
+        <LeaderboardTable
+          runs={filteredRuns}
+          highlightedModel={highlightedModel}
+          onHighlightedModelChange={setHighlightedModel}
+        />
 
         <p className="source-note">
           Each row is one recorded run or documented composite. Corpus labels remain attached because 26- and 29-task

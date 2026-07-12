@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { LeaderboardRun } from "@/data/benchmark";
+import type { LeaderboardRun, ModelKey } from "@/data/benchmark";
 
 export type LeaderboardTableProps = {
   runs: LeaderboardRun[];
+  highlightedModel: ModelKey | null;
+  onHighlightedModelChange: (model: ModelKey | null) => void;
 };
 
 type SortKey = "run" | "effort" | "passRate" | "score" | "agentTimeSeconds" | "failed";
@@ -29,7 +31,11 @@ const effortRank = {
   ultra: 5,
 } as const;
 
-export function LeaderboardTable({ runs }: LeaderboardTableProps) {
+export function LeaderboardTable({
+  runs,
+  highlightedModel,
+  onHighlightedModelChange,
+}: LeaderboardTableProps) {
   const [sort, setSort] = useState<SortState>(defaultSort);
   const sortedRuns = useMemo(() => sortRuns(runs, sort), [runs, sort]);
   const rankById = useMemo(() => buildRanks(runs), [runs]);
@@ -79,9 +85,15 @@ export function LeaderboardTable({ runs }: LeaderboardTableProps) {
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody onPointerLeave={() => onHighlightedModelChange(null)}>
           {sortedRuns.map((run) => (
-            <TableRow key={run.id}>
+            <TableRow
+              key={run.id}
+              data-highlighted={highlightedModel === run.series || undefined}
+              data-dimmed={(highlightedModel !== null && highlightedModel !== run.series) || undefined}
+              style={agentMarkStyle(run)}
+              onPointerEnter={() => onHighlightedModelChange(run.series ?? null)}
+            >
               <TableCell className="rank-cell">#{rankById.get(run.id)}</TableCell>
               <TableHead scope="row">
                 <span className="agent-cell">

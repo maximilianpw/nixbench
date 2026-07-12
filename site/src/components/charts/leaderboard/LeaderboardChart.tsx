@@ -5,6 +5,8 @@ import { LeaderboardChartTooltip } from "@/components/charts/leaderboard/ChartTo
 import type { ChartConfig as PlotConfig, ChartPoint, ChartSeries } from "@/components/charts/leaderboard/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart";
+import type { ModelKey } from "@/data/benchmark";
+import { cn } from "@/lib/utils";
 
 export type LeaderboardChartProps = {
   chartData: ChartPoint[];
@@ -12,6 +14,7 @@ export type LeaderboardChartProps = {
   linkedSeries: ChartSeries[];
   standaloneData: ChartPoint[];
   showEffortSweep?: boolean;
+  highlightedModel: ModelKey | null;
 };
 
 export function LeaderboardChart({
@@ -20,6 +23,7 @@ export function LeaderboardChart({
   linkedSeries,
   standaloneData,
   showEffortSweep = false,
+  highlightedModel,
 }: LeaderboardChartProps) {
   const chartConfig = buildLeaderboardChartConfig(linkedSeries, standaloneData);
   const passRateScale = buildPassRateScale(chartData);
@@ -30,12 +34,14 @@ export function LeaderboardChart({
   const legendItems = [
     ...linkedSeries.map((series) => ({
       key: series.key,
+      model: series.key,
       label: series.label,
       color: series.color,
       runCount: series.points.length,
     })),
     ...standaloneData.map((run) => ({
       key: run.id,
+      model: run.series,
       label: run.agent,
       color: run.color,
       runCount: 1,
@@ -82,26 +88,42 @@ export function LeaderboardChart({
             />
             <ZAxis range={[160, 220]} />
             <ChartTooltip cursor={{ stroke: "var(--border-strong)" }} content={<LeaderboardChartTooltip />} />
-            {linkedSeries.map((series) => (
-              <Scatter
-                key={series.key}
-                data={series.points}
-                fill={chartColor(series.key, series.color)}
-                line={{ stroke: chartColor(series.key, series.color), strokeWidth: 2, strokeOpacity: 0.68 }}
-                lineType="joint"
-                name={series.label}
-                stroke="var(--panel)"
-                strokeWidth={2}
-              />
-            ))}
+            {linkedSeries.map((series) => {
+              const isHighlighted = highlightedModel === series.key;
+
+              return (
+                <Scatter
+                  key={series.key}
+                  className={cn(
+                    "leaderboard-series",
+                    isModelDimmed(highlightedModel, series.key) && "is-dimmed",
+                  )}
+                  data={series.points}
+                  fill={chartColor(series.key, series.color)}
+                  line={{
+                    stroke: chartColor(series.key, series.color),
+                    strokeWidth: isHighlighted ? 3 : 2,
+                    strokeOpacity: isHighlighted ? 1 : 0.68,
+                  }}
+                  lineType="joint"
+                  name={series.label}
+                  stroke="var(--panel)"
+                  strokeWidth={isHighlighted ? 3 : 2}
+                />
+              );
+            })}
             {standaloneData.map((entry) => (
               <Scatter
                 key={entry.id}
+                className={cn(
+                  "leaderboard-series",
+                  isModelDimmed(highlightedModel, entry.series) && "is-dimmed",
+                )}
                 data={[entry]}
                 fill={chartColor(entry.id, entry.color)}
                 name={entry.label}
                 stroke="var(--panel)"
-                strokeWidth={2}
+                strokeWidth={highlightedModel === entry.series ? 3 : 2}
               />
             ))}
           </ScatterChart>
@@ -110,7 +132,11 @@ export function LeaderboardChart({
       <CardFooter>
         <div className="chart-legend" role="list" aria-label="Model legend">
           {legendItems.map((item) => (
-            <span key={item.key} role="listitem">
+            <span
+              key={item.key}
+              role="listitem"
+              data-dimmed={isModelDimmed(highlightedModel, item.model) || undefined}
+            >
               <i
                 aria-hidden="true"
                 style={{ "--swatch": chartColor(item.key, item.color) } as CSSProperties}
@@ -123,6 +149,10 @@ export function LeaderboardChart({
       </CardFooter>
     </Card>
   );
+}
+
+function isModelDimmed(highlightedModel: ModelKey | null, model: ModelKey | undefined) {
+  return highlightedModel !== null && highlightedModel !== model;
 }
 
 function buildLeaderboardChartConfig(linkedSeries: ChartSeries[], standaloneData: ChartPoint[]) {
