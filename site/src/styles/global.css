@@ -3749,11 +3749,48 @@ h3 {
 }
 
 .table-body .table-row {
-  transition: background-color 100ms ease;
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease,
+    opacity 160ms ease;
 }
 
 .table-body .table-row:hover {
   background: color-mix(in srgb, var(--nix-blue) 5%, transparent);
+}
+
+.leaderboard-table .table-row[data-highlighted="true"] {
+  background: color-mix(in srgb, var(--agent-color) 8%, var(--panel));
+  box-shadow: inset 3px 0 0 var(--agent-color);
+}
+
+.leaderboard-table .table-row[data-dimmed="true"] {
+  filter: blur(1.4px);
+  opacity: 0.22;
+}
+
+.leaderboard-series {
+  transition:
+    filter 180ms ease,
+    opacity 180ms ease;
+}
+
+.leaderboard-series.is-dimmed {
+  filter: blur(2px);
+  opacity: 0.08;
+}
+
+.chart-legend > span,
+.chart-legend [data-dimmed="true"] {
+  transition:
+    filter 180ms ease,
+    opacity 180ms ease;
+}
+
+.chart-legend [data-dimmed="true"] {
+  filter: blur(1px);
+  opacity: 0.2;
 }
 
 .button.table-sort {
