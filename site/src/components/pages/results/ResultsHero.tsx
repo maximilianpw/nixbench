@@ -1,24 +1,30 @@
 import { StatGrid } from "@/components/benchmark/StatGrid";
-import { Badge } from "@/components/ui/badge";
-import { resultOverviewStats, topRun, passedTasks } from "@/data/benchmark";
+import { currentTopRun, passedTasks, resultOverviewStats } from "@/data/benchmark";
 
 export type ResultsHeroProps = {};
 
 export function ResultsHero({}: ResultsHeroProps = {}) {
   return (
-    <section className="results-hero">
+    <section className="results-hero" aria-labelledby="results-hero-title">
       <div className="results-hero-inner">
-        <div>
-          <Badge variant="codex">Results matrix</Badge>
-          <p className="eyebrow">June 24–July 10, 2026</p>
-          <h1>Every model run in one comparison surface.</h1>
-          <p>
-            NixBench tracks model families, effort sweeps, task outcomes, and timing across the recorded 26- and
-            29-task corpus versions.
-            {topRun ? ` The leading row is ${topRun.agent} at ${passedTasks(topRun)}/${topRun.totalTasks}.` : null}
-            {" "}Rows are single observed runs, and corpus labels remain attached because the two suites use different
-            denominators.
+        <div className="results-title-block">
+          <p className="hero-kicker">
+            <span aria-hidden="true" />
+            Results matrix · June 24–July 10, 2026
           </p>
+          <h1 id="results-hero-title">Benchmark results</h1>
+          <p className="results-statement">Twenty-nine comparison rows. Seven model families. Two corpus versions.</p>
+          <p className="results-description">
+            Compare pass rate, effort, elapsed agent time, task outcomes, and failure patterns. Every row remains tied
+            to its corpus denominator so historical and current runs are never presented as interchangeable.
+          </p>
+          {currentTopRun ? (
+            <p className="results-top-note">
+              <span>Current-corpus leader</span>
+              <strong>{currentTopRun.agent}</strong>
+              <b>{[passedTasks(currentTopRun), currentTopRun.totalTasks].join("/")}</b>
+            </p>
+          ) : null}
         </div>
         <StatGrid items={resultOverviewStats} label="Dataset summary" className="result-stat-grid" />
       </div>

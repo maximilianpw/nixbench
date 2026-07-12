@@ -37,7 +37,7 @@ export function TasksSection({}: TasksSectionProps = {}) {
         ))}
       </div>
 
-      <div className="difficulty-strip" aria-label="Difficulty distribution">
+      <div className="difficulty-strip">
         {difficultyDistribution.map(([count, description]) => (
           <Card key={count} className="distribution-card">
             <CardHeader>

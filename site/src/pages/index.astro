@@ -1,6 +1,11 @@
 ---
 import SiteLayout from "@/layouts/SiteLayout.astro";
-import { HomePage } from "@/components/pages/HomePage";
+import { LeaderboardPanel } from "@/components/charts/LeaderboardPanel";
+import { ExplainerSection } from "@/components/pages/home/ExplainerSection";
+import { HomeHero } from "@/components/pages/home/HomeHero";
+import { MethodSection } from "@/components/pages/home/MethodSection";
+import { TasksSection } from "@/components/pages/home/TasksSection";
+import { UpdatesSection } from "@/components/pages/home/UpdatesSection";
 ---
 
 <SiteLayout
@@ -14,5 +19,12 @@ import { HomePage } from "@/components/pages/HomePage";
     label: "Scoring model",
   }}
 >
-  <HomePage client:load />
+  <main id="main-content" class="app-page home-page">
+    <HomeHero />
+    <LeaderboardPanel client:visible />
+    <ExplainerSection />
+    <TasksSection />
+    <MethodSection />
+    <UpdatesSection client:visible />
+  </main>
 </SiteLayout>

@@ -27,6 +27,7 @@ const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#f4f5f2" />
     <link rel="canonical" href={canonicalUrl.toString()} />
     <meta property="og:site_name" content="NixBench" />
     <meta property="og:type" content="website" />
@@ -38,14 +39,30 @@ const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl);
     <meta name="twitter:description" content={description} />
     <title>{title}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap"
+      rel="stylesheet"
+    />
     <script is:inline>
       (() => {
-        const storedTheme = window.localStorage.getItem("nixbench-theme");
-        document.documentElement.dataset.theme = storedTheme || "light";
+        try {
+          const storedTheme = window.localStorage.getItem("nixbench-theme");
+          const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          const theme = storedTheme || preferredTheme;
+          document.documentElement.dataset.theme = theme;
+          document
+            .querySelector('meta[name="theme-color"]')
+            ?.setAttribute("content", theme === "dark" ? "#101411" : "#f4f5f2");
+        } catch {
+          document.documentElement.dataset.theme = "light";
+        }
       })();
     </script>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <AppHeader activePage={activePage} client:load />
     <slot />
     <SiteFooter {...footer} />

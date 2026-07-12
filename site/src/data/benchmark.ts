@@ -38,6 +38,9 @@ export type ResultColumn = {
   key: ModelKey;
   label: string;
   shortLabel: string;
+  corpus: "26-task corpus" | "29-task corpus";
+  effort: "xhigh" | "default";
+  runId: string;
 };
 
 export type TaskRunCell = {
@@ -55,20 +58,69 @@ export const currentCorpusTaskCount = 29;
 export const currentCorpusLabel = `${currentCorpusTaskCount}-task corpus`;
 
 export const resultColumns: ResultColumn[] = [
-  { key: "gpt55", label: "GPT-5.5", shortLabel: "5.5" },
-  { key: "gpt54", label: "GPT-5.4", shortLabel: "5.4" },
-  { key: "gpt54Mini", label: "GPT-5.4 mini", shortLabel: "mini" },
-  { key: "claudeOpus48", label: "Claude Opus 4.8", shortLabel: "opus" },
-  { key: "gpt56Sol", label: "GPT-5.6 Sol", shortLabel: "sol" },
-  { key: "gpt56Terra", label: "GPT-5.6 Terra", shortLabel: "terra" },
-  { key: "gpt56Luna", label: "GPT-5.6 Luna", shortLabel: "luna" },
+  {
+    key: "gpt55",
+    label: "GPT-5.5",
+    shortLabel: "5.5",
+    corpus: "26-task corpus",
+    effort: "xhigh",
+    runId: "20260624T182835Z-4ad8b555 (+2)",
+  },
+  {
+    key: "gpt54",
+    label: "GPT-5.4",
+    shortLabel: "5.4",
+    corpus: "26-task corpus",
+    effort: "xhigh",
+    runId: "20260624T190640Z-fa04a19c (+2)",
+  },
+  {
+    key: "gpt54Mini",
+    label: "GPT-5.4 mini",
+    shortLabel: "mini",
+    corpus: "26-task corpus",
+    effort: "xhigh",
+    runId: "20260624T194359Z-268b0abe (+2)",
+  },
+  {
+    key: "claudeOpus48",
+    label: "Claude Opus 4.8",
+    shortLabel: "opus",
+    corpus: "26-task corpus",
+    effort: "default",
+    runId: "20260624T202141Z-881ef1e9 (+2)",
+  },
+  {
+    key: "gpt56Sol",
+    label: "GPT-5.6 Sol",
+    shortLabel: "sol",
+    corpus: "29-task corpus",
+    effort: "xhigh",
+    runId: "20260709T175817Z-cb86c575",
+  },
+  {
+    key: "gpt56Terra",
+    label: "GPT-5.6 Terra",
+    shortLabel: "terra",
+    corpus: "29-task corpus",
+    effort: "xhigh",
+    runId: "20260709T175820Z-36a5f2f2",
+  },
+  {
+    key: "gpt56Luna",
+    label: "GPT-5.6 Luna",
+    shortLabel: "luna",
+    corpus: "29-task corpus",
+    effort: "xhigh",
+    runId: "20260709T175826Z-b8e5f041",
+  },
 ];
 
 export const heroStats = [
   ["tasks", String(currentCorpusTaskCount)],
   ["areas", "9"],
   ["evaluators", "29"],
-  ["scored runs", "29"],
+  ["comparison rows", "29"],
 ] as const;
 
 export const leaderboardRuns: LeaderboardRun[] = [
@@ -1227,11 +1279,14 @@ function effortLabelFor(runs: LeaderboardRun[]) {
 }
 
 export const topRun = bestRunFrom(leaderboardRuns);
+export const currentTopRun = bestRunFrom(
+  leaderboardRuns.filter((run) => run.corpus === currentCorpusLabel),
+);
 
 export const resultOverviewStats = [
   ["models", String(resultColumns.length)],
-  ["scored runs", String(leaderboardRuns.length)],
-  ["best row", topRun ? `${passedTasks(topRun)}/${topRun.totalTasks}` : "--"],
+  ["comparison rows", String(leaderboardRuns.length)],
+  ["best current row", currentTopRun ? [passedTasks(currentTopRun), currentTopRun.totalTasks].join("/") : "--"],
   ["task rows", String(taskResults.length)],
 ] as const;
 

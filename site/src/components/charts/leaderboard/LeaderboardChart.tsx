@@ -11,9 +11,16 @@ export type LeaderboardChartProps = {
   config: PlotConfig;
   linkedSeries: ChartSeries[];
   standaloneData: ChartPoint[];
+  showEffortSweep?: boolean;
 };
 
-export function LeaderboardChart({ chartData, config, linkedSeries, standaloneData }: LeaderboardChartProps) {
+export function LeaderboardChart({
+  chartData,
+  config,
+  linkedSeries,
+  standaloneData,
+  showEffortSweep = false,
+}: LeaderboardChartProps) {
   const chartConfig = buildLeaderboardChartConfig(linkedSeries, standaloneData);
   const passRateScale = buildPassRateScale(chartData);
   const xDomain = config.xKey === "passRate" ? passRateScale.domain : config.xDomain;
@@ -38,15 +45,15 @@ export function LeaderboardChart({ chartData, config, linkedSeries, standaloneDa
   return (
     <Card
       className="chart-card score-plot react-chart-frame"
-      role="group"
       aria-labelledby="leaderboard-chart-title"
       aria-describedby="leaderboard-chart-description"
     >
       <CardHeader>
-        <CardTitle id="leaderboard-chart-title">Run comparison</CardTitle>
+        <CardTitle id="leaderboard-chart-title">Row comparison</CardTitle>
         <CardDescription id="leaderboard-chart-description">
-          Each color is a model; lines connect effort from low → medium → high → xhigh → max. The pass-rate axis is
-          zoomed to the visible range.
+          {showEffortSweep
+            ? "Each color is a model; lines connect recorded effort levels. The pass-rate axis is zoomed to the visible range."
+            : "One strongest observed row per model. Switch to all effort levels to inspect every row and its efficiency curve."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -101,15 +108,15 @@ export function LeaderboardChart({ chartData, config, linkedSeries, standaloneDa
         </ChartContainer>
       </CardContent>
       <CardFooter>
-        <div className="chart-legend" aria-label="Model legend">
+        <div className="chart-legend" role="list" aria-label="Model legend">
           {legendItems.map((item) => (
-            <span key={item.key}>
+            <span key={item.key} role="listitem">
               <i
                 aria-hidden="true"
                 style={{ "--swatch": chartColor(item.key, item.color) } as CSSProperties}
               />
               <strong>{item.label}</strong>
-              <small>{item.runCount} {item.runCount === 1 ? "run" : "runs"}</small>
+              <small>{item.runCount} {item.runCount === 1 ? "row" : "rows"}</small>
             </span>
           ))}
         </div>

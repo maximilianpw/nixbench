@@ -67,6 +67,8 @@ All runs used a 240 second per-task agent timeout and the same task prompt contr
 
 This table shows the xhigh/default baseline columns used by the detailed results page.
 
+The Codex columns use the original xhigh baselines. The Claude column preserves the original default composite from `20260624T202141Z-881ef1e9` plus the two supplemental task artifacts; it is distinct from the later explicit Claude xhigh run.
+
 | Task | GPT-5.5 xhigh | GPT-5.4 xhigh | GPT-5.4 mini xhigh | Claude Opus 4.8 |
 |---|---:|---:|---:|---:|
 | `container-native-vs-oci` | FAIL | FAIL | FAIL | FAIL |

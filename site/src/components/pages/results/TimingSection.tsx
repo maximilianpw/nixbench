@@ -18,12 +18,12 @@ export function TimingSection({}: TimingSectionProps = {}) {
   return (
     <PageSection className="timing-section" labelledBy="timing-heading">
       <SectionHeader
-        eyebrow="Task duration"
-        title="Time profiles use the same model columns as the result matrix."
-        description="Focus a single model when grouped bars become too dense."
+        eyebrow="Baseline timing"
+        title="Elapsed task time for the same fixed baseline runs."
+        description="Timing follows the exact columns above: xhigh Codex runs and the historical Claude default composite, each with a 240-second per-task timeout."
         headingId="timing-heading"
       />
-      <div className="matrix-toolbar timing-toolbar" aria-label="Timing chart controls">
+      <div className="matrix-toolbar timing-toolbar">
         <ToggleGroup
           type="single"
           value={selectedModel}
@@ -46,6 +46,20 @@ export function TimingSection({}: TimingSectionProps = {}) {
           Charting <strong>{visibleColumns.length}</strong> of <strong>{resultColumns.length}</strong> model columns
         </p>
       </div>
+      <details className="timing-provenance">
+        <summary>Run provenance ({visibleColumns.length})</summary>
+        <ul>
+          {visibleColumns.map((column) => (
+            <li key={column.key}>
+              <strong>{column.label}</strong>
+              <span>
+                {column.corpus} · {column.effort}
+              </span>
+              <code>{column.runId}</code>
+            </li>
+          ))}
+        </ul>
+      </details>
       <TimingChart columns={visibleColumns} />
     </PageSection>
   );

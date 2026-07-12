@@ -1,6 +1,11 @@
 ---
 import SiteLayout from "@/layouts/SiteLayout.astro";
-import { ResultsPage } from "@/components/pages/ResultsPage";
+import { LeaderboardPanel } from "@/components/charts/LeaderboardPanel";
+import { FailureSection } from "@/components/pages/results/FailureSection";
+import { ResultsHero } from "@/components/pages/results/ResultsHero";
+import { ResultsSummary } from "@/components/pages/results/ResultsSummary";
+import { TaskResultsSection } from "@/components/pages/results/TaskResultsSection";
+import { TimingSection } from "@/components/pages/results/TimingSection";
 ---
 
 <SiteLayout
@@ -14,5 +19,12 @@ import { ResultsPage } from "@/components/pages/ResultsPage";
     label: "Back to benchmark landing page",
   }}
 >
-  <ResultsPage client:load />
+  <main id="main-content" class="app-page results-page">
+    <ResultsHero />
+    <LeaderboardPanel client:visible />
+    <ResultsSummary />
+    <TaskResultsSection client:visible />
+    <TimingSection client:visible />
+    <FailureSection />
+  </main>
 </SiteLayout>

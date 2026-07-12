@@ -3,8 +3,11 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { ChartMode } from "@/components/charts/leaderboard/types";
 
 export type CorpusFilter = "29-task corpus" | "26-task corpus" | "all";
+export type RunView = "best" | "all";
 
 export type LeaderboardControlsProps = {
+  view: RunView;
+  onViewChange: (view: RunView) => void;
   mode: ChartMode;
   onModeChange: (mode: ChartMode) => void;
   corpus: CorpusFilter;
@@ -16,6 +19,8 @@ export type LeaderboardControlsProps = {
 };
 
 export function LeaderboardControls({
+  view,
+  onViewChange,
   mode,
   onModeChange,
   corpus,
@@ -26,8 +31,24 @@ export function LeaderboardControls({
   totalRunCount,
 }: LeaderboardControlsProps) {
   return (
-    <div className="control-bar" aria-label="Run plot controls">
+    <div className="control-bar" role="group" aria-label="Run plot controls">
       <div className="control-groups">
+        <ToggleGroup
+          type="single"
+          value={view}
+          onValueChange={(value) => {
+            if (value) onViewChange(value as RunView);
+          }}
+          aria-label="Run density"
+          className="run-view-toggle"
+        >
+          <ToggleGroupItem value="best" aria-label="Show the best recorded row per model">
+            Best models
+          </ToggleGroupItem>
+          <ToggleGroupItem value="all" aria-label="Show every recorded effort level">
+            All effort levels
+          </ToggleGroupItem>
+        </ToggleGroup>
         <ToggleGroup
           type="single"
           value={corpus}
@@ -60,7 +81,12 @@ export function LeaderboardControls({
           <ToggleGroupItem value="time" aria-label="Show agent time">
             Agent time
           </ToggleGroupItem>
-          <ToggleGroupItem value="failures" aria-label="Show failures">
+          <ToggleGroupItem
+            value="failures"
+            aria-label={corpus === "all" ? "Filter to one corpus to compare failure counts" : "Show failures"}
+            disabled={corpus === "all"}
+            title={corpus === "all" ? "Failure counts require one corpus denominator" : undefined}
+          >
             Failures
           </ToggleGroupItem>
         </ToggleGroup>
@@ -69,7 +95,7 @@ export function LeaderboardControls({
         <span>
           <strong>{taskLabel}</strong> · <strong>{modelCount} models</strong>
         </span>
-        <Badge variant="muted">Runs {visibleRunCount}/{totalRunCount}</Badge>
+        <Badge variant="muted">Rows {visibleRunCount}/{totalRunCount}</Badge>
       </div>
     </div>
   );

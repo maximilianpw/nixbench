@@ -11,7 +11,10 @@ export type TimingChartProps = {
 
 function buildTimingChartConfig(columns: ResultColumn[]) {
   return Object.fromEntries(
-    columns.map((column) => [column.key, { label: column.label, color: modelColors[column.key] }]),
+    columns.map((column) => [
+      column.key,
+      { label: `${column.label} · ${column.corpus.replace("-task corpus", " tasks")} · ${column.effort}`, color: modelColors[column.key] },
+    ]),
   ) satisfies ChartConfig;
 }
 
@@ -19,7 +22,7 @@ export function TimingChart({ columns = resultColumns }: TimingChartProps = {}) 
   const timingChartConfig = buildTimingChartConfig(columns);
 
   return (
-    <div className="timing-chart react-timing-chart" role="img" aria-label="Task duration bars for model runs">
+    <div className="timing-chart react-timing-chart">
       <ChartContainer
         className="timing-chart-container"
         config={timingChartConfig}
@@ -55,7 +58,7 @@ export function TimingChart({ columns = resultColumns }: TimingChartProps = {}) 
             <Bar
               key={column.key}
               dataKey={column.key}
-              name={column.label}
+              name={`${column.label} · ${column.corpus.replace("-task corpus", " tasks")} · ${column.effort}`}
               fill={`var(--color-${column.key}, ${modelColors[column.key]})`}
               radius={0}
             />

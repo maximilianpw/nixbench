@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { type CSSProperties, useMemo, useState } from "react";
 import { ArrowUpDown } from "lucide-react";
 
+import { modelColors } from "@/components/charts/model-colors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -31,6 +32,7 @@ const effortRank = {
 export function LeaderboardTable({ runs }: LeaderboardTableProps) {
   const [sort, setSort] = useState<SortState>(defaultSort);
   const sortedRuns = useMemo(() => sortRuns(runs, sort), [runs, sort]);
+  const rankById = useMemo(() => buildRanks(runs), [runs]);
 
   const toggleSort = (key: SortKey) => {
     setSort((current) => ({
@@ -48,70 +50,111 @@ export function LeaderboardTable({ runs }: LeaderboardTableProps) {
   };
 
   return (
-    <Table
-      className="leaderboard-table"
-      containerClassName="leaderboard-table-wrap"
-      aria-label="NixBench run leaderboard"
-    >
-      <TableHeader>
-        <TableRow>
-          <TableHead scope="col" aria-sort={ariaSortFor("run")}>
-            <SortButton label="Run" sortKey="run" sort={sort} onSort={toggleSort} />
-          </TableHead>
-          <TableHead scope="col" aria-sort={ariaSortFor("effort")}>
-            <SortButton label="Effort" sortKey="effort" sort={sort} onSort={toggleSort} />
-          </TableHead>
-          <TableHead scope="col" aria-sort={ariaSortFor("passRate")}>
-            <SortButton label="Pass rate" sortKey="passRate" sort={sort} onSort={toggleSort} />
-          </TableHead>
-          <TableHead scope="col" aria-sort={ariaSortFor("score")}>
-            <SortButton label="Score" sortKey="score" sort={sort} onSort={toggleSort} />
-          </TableHead>
-          <TableHead scope="col" aria-sort={ariaSortFor("agentTimeSeconds")}>
-            <SortButton label="Agent time" sortKey="agentTimeSeconds" sort={sort} onSort={toggleSort} />
-          </TableHead>
-          <TableHead scope="col" aria-sort={ariaSortFor("failed")}>
-            <SortButton label="Failed" sortKey="failed" sort={sort} onSort={toggleSort} />
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {sortedRuns.map((run) => (
-          <TableRow key={run.id}>
-            <TableHead scope="row">
-              <span className="agent-cell">
-                <span className={`agent-mark ${run.kind}`} aria-hidden="true">
-                  {run.marker}
-                </span>
-                <span>
-                  <strong>{run.agent}</strong>
-                  <small>
-                    {run.corpus} · {run.runId}
-                  </small>
-                </span>
-              </span>
+    <>
+      <Table
+        className="leaderboard-table"
+        containerClassName="leaderboard-table-wrap"
+        aria-label="NixBench comparison leaderboard"
+      >
+        <TableHeader>
+          <TableRow>
+            <TableHead scope="col" className="rank-column">Rank</TableHead>
+            <TableHead scope="col" aria-sort={ariaSortFor("run")}>
+              <SortButton label="Run" sortKey="run" sort={sort} onSort={toggleSort} />
             </TableHead>
-            <TableCell>
-              <Badge variant="default">{run.effort ?? "default"}</Badge>
-            </TableCell>
-            <TableCell>
-              <span className="score-percent">{run.passRate}%</span>
-              <Progress value={run.passRate} aria-label={`${run.agent} pass rate`} />
-            </TableCell>
-            <TableCell>
-              {run.score} / {run.maxScore}
-            </TableCell>
-            <TableCell>{run.agentTimeLabel}</TableCell>
-            <TableCell>
-              {run.failed}
-              <small className="task-count-note">
-                {run.completedTasks}/{run.totalTasks}
-              </small>
-            </TableCell>
+            <TableHead scope="col" aria-sort={ariaSortFor("effort")}>
+              <SortButton label="Effort" sortKey="effort" sort={sort} onSort={toggleSort} />
+            </TableHead>
+            <TableHead scope="col" aria-sort={ariaSortFor("passRate")}>
+              <SortButton label="Pass rate" sortKey="passRate" sort={sort} onSort={toggleSort} />
+            </TableHead>
+            <TableHead scope="col" aria-sort={ariaSortFor("score")}>
+              <SortButton label="Score" sortKey="score" sort={sort} onSort={toggleSort} />
+            </TableHead>
+            <TableHead scope="col" aria-sort={ariaSortFor("agentTimeSeconds")}>
+              <SortButton label="Agent time" sortKey="agentTimeSeconds" sort={sort} onSort={toggleSort} />
+            </TableHead>
+            <TableHead scope="col" aria-sort={ariaSortFor("failed")}>
+              <SortButton label="Failed" sortKey="failed" sort={sort} onSort={toggleSort} />
+            </TableHead>
           </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedRuns.map((run) => (
+            <TableRow key={run.id}>
+              <TableCell className="rank-cell">#{rankById.get(run.id)}</TableCell>
+              <TableHead scope="row">
+                <span className="agent-cell">
+                  <span className={`agent-mark ${run.kind}`} style={agentMarkStyle(run)} aria-hidden="true">
+                    {run.marker}
+                  </span>
+                  <span>
+                    <strong>{run.agent}</strong>
+                    <small>
+                      {run.corpus} · {run.runId}
+                    </small>
+                  </span>
+                </span>
+              </TableHead>
+              <TableCell>
+                <Badge variant="default">{run.effort ?? "default"}</Badge>
+              </TableCell>
+              <TableCell>
+                <span className="score-percent">{run.passRate}%</span>
+                <Progress value={run.passRate} aria-label={`${run.agent} pass rate`} />
+              </TableCell>
+              <TableCell>
+                {run.score} / {run.maxScore}
+              </TableCell>
+              <TableCell>{run.agentTimeLabel}</TableCell>
+              <TableCell>
+                {run.failed}
+                <small className="task-count-note">
+                  {run.completedTasks}/{run.totalTasks}
+                </small>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <ol className="leaderboard-mobile-list" aria-label="NixBench comparison leaderboard">
+        {sortedRuns.map((run) => (
+          <li key={run.id}>
+            <div className="mobile-rank">#{rankById.get(run.id)}</div>
+            <div className="mobile-run-heading">
+              <span className={`agent-mark ${run.kind}`} style={agentMarkStyle(run)} aria-hidden="true">
+                {run.marker}
+              </span>
+              <span>
+                <strong>{run.agent}</strong>
+                <small>{run.corpus}</small>
+              </span>
+              <Badge variant="default">{run.effort ?? "default"}</Badge>
+            </div>
+            <dl>
+              <div>
+                <dt>Pass rate</dt>
+                <dd>{run.passRate}%</dd>
+              </div>
+              <div>
+                <dt>Score</dt>
+                <dd>{run.score}/{run.maxScore}</dd>
+              </div>
+              <div>
+                <dt>Agent time</dt>
+                <dd>{run.agentTimeLabel}</dd>
+              </div>
+              <div>
+                <dt>Failed</dt>
+                <dd>{run.failed}</dd>
+              </div>
+            </dl>
+            <small className="mobile-run-id">{run.runId}</small>
+          </li>
         ))}
-      </TableBody>
-    </Table>
+      </ol>
+    </>
   );
 }
 
@@ -154,6 +197,13 @@ function sortRuns(runs: LeaderboardRun[], sort: SortState) {
       return primary * direction;
     }
 
+    if (sort.key === "passRate" || sort.key === "score") {
+      const efficiencyTieBreak = compareRuns(a, b, "agentTimeSeconds");
+      if (efficiencyTieBreak !== 0) {
+        return efficiencyTieBreak;
+      }
+    }
+
     return compareRuns(a, b, "run") || compareRuns(a, b, "effort");
   });
 }
@@ -167,14 +217,31 @@ function compareRuns(a: LeaderboardRun, b: LeaderboardRun, key: SortKey) {
     case "passRate":
       return a.passRate - b.passRate;
     case "score":
-      return a.score - b.score;
+      return a.score / a.maxScore - b.score / b.maxScore;
     case "agentTimeSeconds":
       return a.agentTimeSeconds - b.agentTimeSeconds;
     case "failed":
-      return a.failed - b.failed;
+      return a.failed / a.totalTasks - b.failed / b.totalTasks;
   }
 }
 
 function effortValue(run: LeaderboardRun) {
   return run.effort ? effortRank[run.effort] : -1;
+}
+
+function agentMarkStyle(run: LeaderboardRun) {
+  return run.series ? ({ "--agent-color": modelColors[run.series] } as CSSProperties) : undefined;
+}
+
+function buildRanks(runs: LeaderboardRun[]) {
+  return new Map(
+    [...runs]
+      .sort(
+        (a, b) =>
+          b.passRate - a.passRate ||
+          a.agentTimeSeconds - b.agentTimeSeconds ||
+          a.agent.localeCompare(b.agent),
+      )
+      .map((run, index) => [run.id, index + 1]),
+  );
 }

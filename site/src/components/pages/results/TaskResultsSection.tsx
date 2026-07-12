@@ -26,13 +26,13 @@ export function TaskResultsSection({}: TaskResultsSectionProps = {}) {
   return (
     <PageSection className="task-results" labelledBy="task-results-heading">
       <SectionHeader
-        eyebrow="Per-task outcomes"
-        title="Compare the task matrix across all model columns."
-        description="Use the model switcher to focus the table when the dataset grows beyond the currently visible columns."
+        eyebrow="Baseline matrix"
+        title="Every task, shown against fixed baseline runs."
+        description="These are named comparison runs—not each model’s best row. Codex columns use xhigh effort; the historical Claude column preserves the original default composite."
         headingId="task-results-heading"
       />
 
-      <div className="matrix-toolbar" aria-label="Task matrix controls">
+      <div className="matrix-toolbar">
         <ToggleGroup
           type="single"
           value={selectedModel}
@@ -56,12 +56,21 @@ export function TaskResultsSection({}: TaskResultsSectionProps = {}) {
         </p>
       </div>
 
-      <div className="matrix-summary-grid" aria-label="Selected model task summaries">
+      <div className="baseline-context">
+        <strong>Comparison context</strong>
+        <span>Historical 26-task and current 29-task baselines · 240-second per-task timeout</span>
+        <small>Rows marked (+2) combine a 24-task run with two supplemental task artifacts.</small>
+        <a href="docs/runs/2026-06-24-model-comparison.html">Inspect run provenance</a>
+      </div>
+
+      <div className="matrix-summary-grid">
         {visibleSummaries.map((summary) => (
           <Card key={summary.key} className="matrix-summary-card">
             <CardHeader>
               <CardTitle>{summary.shortLabel}</CardTitle>
-              <CardDescription>{summary.label}</CardDescription>
+              <CardDescription>
+                {summary.label} · {summary.corpus} · {summary.effort}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="matrix-summary-score">
@@ -84,6 +93,10 @@ export function TaskResultsSection({}: TaskResultsSectionProps = {}) {
             {visibleColumns.map((column) => (
               <TableHead key={column.key} scope="col">
                 <span>{column.label}</span>
+                <small>
+                  {column.corpus} · {column.effort}
+                </small>
+                <code>{column.runId}</code>
               </TableHead>
             ))}
           </TableRow>
@@ -94,9 +107,9 @@ export function TaskResultsSection({}: TaskResultsSectionProps = {}) {
               key={task.task}
               className={taskOutcomeClass(visibleColumns.map((column) => task.results[column.key]))}
             >
-              <TableCell>
+              <TableHead scope="row">
                 <code>{task.task}</code>
-              </TableCell>
+              </TableHead>
               <TableCell>{task.area}</TableCell>
               {visibleColumns.map((column) => (
                 <TableCell key={column.key}>
