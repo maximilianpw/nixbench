@@ -11,7 +11,7 @@ export function SiteFooter({ text, href, label }: SiteFooterProps) {
     <footer className="site-footer">
       <div className="footer-shell">
         <div className="footer-brand">
-          <a className="brand" href="/index.html" aria-label="NixBench home">
+          <a className="brand" href="/" aria-label="NixBench home">
             <BrandMark />
             <span className="brand-name">NixBench</span>
           </a>
@@ -22,8 +22,8 @@ export function SiteFooter({ text, href, label }: SiteFooterProps) {
           <div>
             <span>Benchmark</span>
             <a href="/results.html">Results</a>
-            <a href="/index.html#leaderboard">Comparison rows</a>
-            <a href="/index.html#tasks">Task corpus</a>
+            <a href="/#leaderboard">Comparison rows</a>
+            <a href="/#tasks">Task corpus</a>
           </div>
           <div>
             <span>Resources</span>

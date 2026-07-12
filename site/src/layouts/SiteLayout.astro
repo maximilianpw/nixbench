@@ -1,13 +1,18 @@
 ---
 import { AppHeader } from "@/components/AppHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { serializeStructuredData, siteMetadata, type StructuredData } from "@/lib/seo";
 import "@/styles/global.css";
 
 type Props = {
   title: string;
   description: string;
-  activePage: "home" | "results" | "docs";
+  activePage?: "home" | "results" | "docs";
   canonicalPath?: string;
+  noindex?: boolean;
+  openGraphType?: "website" | "article";
+  modifiedTime?: string;
+  structuredData?: StructuredData | StructuredData[];
   footer: {
     text: string;
     href: string;
@@ -15,9 +20,24 @@ type Props = {
   };
 };
 
-const { title, description, activePage, canonicalPath, footer } = Astro.props;
+const {
+  title,
+  description,
+  activePage,
+  canonicalPath,
+  noindex = false,
+  openGraphType = "website",
+  modifiedTime,
+  structuredData = [],
+  footer,
+} = Astro.props;
 const siteUrl = Astro.site ?? new URL("https://nixbench.com");
 const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl);
+const socialImageUrl = new URL(siteMetadata.socialImagePath, siteUrl);
+const structuredDataItems = Array.isArray(structuredData) ? structuredData : [structuredData];
+const robotsContent = noindex
+  ? "noindex, follow"
+  : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
 ---
 
 <!doctype html>
@@ -26,25 +46,40 @@ const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content={robotsContent} />
     <meta name="theme-color" content="#f4f5f2" />
-    <link rel="canonical" href={canonicalUrl.toString()} />
+    <meta name="color-scheme" content="light dark" />
+    {!noindex && <link rel="canonical" href={canonicalUrl.toString()} />}
+    <link rel="sitemap" href="/sitemap.xml" />
     <meta property="og:site_name" content="NixBench" />
-    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content={openGraphType} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl.toString()} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={socialImageUrl.toString()} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={siteMetadata.socialImageAlt} />
+    {openGraphType === "article" && modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImageUrl.toString()} />
+    <meta name="twitter:image:alt" content={siteMetadata.socialImageAlt} />
     <title>{title}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap"
       rel="stylesheet"
     />
+    {structuredDataItems.map((item) => (
+      <script is:inline type="application/ld+json" set:html={serializeStructuredData(item)}></script>
+    ))}
     <script is:inline>
       (() => {
         try {

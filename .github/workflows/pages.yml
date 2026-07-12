@@ -51,9 +51,8 @@ jobs:
         run: |
           set -eu
           rm -rf _site
-          mkdir -p _site/docs
+          mkdir -p _site
           cp -R site/dist/. _site/
-          cp -R docs/. _site/docs/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4

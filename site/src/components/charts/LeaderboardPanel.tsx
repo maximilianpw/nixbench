@@ -76,7 +76,7 @@ export function LeaderboardPanel({}: LeaderboardPanelProps = {}) {
         <p className="source-note">
           Each row is one recorded run or documented composite. Corpus labels remain attached because 26- and 29-task
           scores use different denominators. See the{" "}
-          <a href="docs/runs/2026-06-24-model-comparison.html">run notes</a>.
+          <a href="/docs/runs/2026-06-24-model-comparison.html">run notes</a>.
         </p>
       </div>
     </PageSection>

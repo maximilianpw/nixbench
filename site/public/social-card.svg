@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">NixBench</title>
+  <desc id="description">AI coding agent benchmark for Nix</desc>
+  <rect width="1200" height="630" fill="#101411" />
+  <rect x="48" y="48" width="1104" height="534" rx="28" fill="#171d19" stroke="#313b34" stroke-width="2" />
+  <path d="M88 132V72h17l38 40V72h17v60h-17l-38-40v40H88Z" fill="#f6f7f4" />
+  <path d="M88 58h44v8H88z" fill="#6688ff" />
+  <text x="184" y="120" fill="#f6f7f4" font-family="Arial, sans-serif" font-size="56" font-weight="700" letter-spacing="-2">NixBench</text>
+  <rect x="88" y="178" width="92" height="6" rx="3" fill="#6688ff" />
+  <text x="88" y="286" fill="#f6f7f4" font-family="Arial, sans-serif" font-size="62" font-weight="700" letter-spacing="-1">AI coding agent benchmark</text>
+  <text x="88" y="360" fill="#f6f7f4" font-family="Arial, sans-serif" font-size="62" font-weight="700" letter-spacing="-1">for Nix</text>
+  <text x="88" y="456" fill="#abb6ad" font-family="Arial, sans-serif" font-size="27">29 objective repair tasks  ·  hidden evaluators  ·  zero LLM judges</text>
+  <text x="88" y="534" fill="#7f9aff" font-family="monospace" font-size="24">nixbench.com</text>
+</svg>
