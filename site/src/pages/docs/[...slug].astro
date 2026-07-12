@@ -7,6 +7,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import { Separator } from "@/components/ui/separator";
 import SiteLayout from "@/layouts/SiteLayout.astro";
 import { getDocs } from "@/lib/docs";
+import { breadcrumbStructuredData, siteMetadata } from "@/lib/seo";
 
 export async function getStaticPaths() {
   const docs = await getDocs();
@@ -27,13 +28,42 @@ const currentIndex = docs.findIndex((entry) => entry.slug === doc.slug);
 const previousDoc = currentIndex > 0 ? docs[currentIndex - 1] : undefined;
 const nextDoc = currentIndex >= 0 && currentIndex < docs.length - 1 ? docs[currentIndex + 1] : undefined;
 const sourceHref = `https://github.com/maximilianpw/nixbench/blob/main/${doc.sourcePath}`;
+const canonicalPath = `/docs/${doc.pageSlug}.html`;
+const canonicalUrl = new URL(canonicalPath, siteMetadata.url).toString();
+const docsStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "@id": `${canonicalUrl}#article`,
+  headline: doc.title,
+  description: doc.summary,
+  url: canonicalUrl,
+  mainEntityOfPage: canonicalUrl,
+  image: new URL(siteMetadata.socialImagePath, siteMetadata.url).toString(),
+  dateModified: siteMetadata.lastUpdated,
+  inLanguage: "en",
+  author: {
+    "@type": "Organization",
+    name: "NixBench",
+    url: siteMetadata.url,
+  },
+  isPartOf: {
+    "@id": `${siteMetadata.url}#website`,
+  },
+};
+const docsBreadcrumbs = breadcrumbStructuredData([
+  { name: "NixBench", url: siteMetadata.url },
+  { name: doc.title, url: canonicalUrl },
+]);
 ---
 
 <SiteLayout
   title={`${doc.title} | NixBench Docs`}
   description={doc.summary}
   activePage="docs"
-  canonicalPath={`/docs/${doc.pageSlug}.html`}
+  canonicalPath={canonicalPath}
+  openGraphType="article"
+  modifiedTime={siteMetadata.lastUpdated}
+  structuredData={[docsStructuredData, docsBreadcrumbs]}
   footer={{
     text: "NixBench docs are generated from <code>docs/</code> in the benchmark repository.",
     href: sourceHref,

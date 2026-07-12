@@ -14,15 +14,15 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Overview", href: "/index.html", activeOn: "home" },
+  { label: "Overview", href: "/", activeOn: "home" },
   { label: "Results", href: "/results.html", activeOn: "results" },
-  { label: "Tasks", href: "/index.html#tasks" },
+  { label: "Tasks", href: "/#tasks" },
   { label: "Methodology", href: "/docs/benchmark-design.html", activeOn: "docs" },
   { label: "GitHub", href: "https://github.com/maximilianpw/nixbench", external: true },
 ] as const;
 
 type AppHeaderProps = {
-  activePage: ActivePage;
+  activePage?: ActivePage;
 };
 
 export function AppHeader({ activePage }: AppHeaderProps) {
@@ -67,7 +67,7 @@ export function AppHeader({ activePage }: AppHeaderProps) {
   return (
     <header className="site-header">
       <div className="header-inner">
-        <a className="brand" href="/index.html" aria-label="NixBench home">
+        <a className="brand" href="/" aria-label="NixBench home">
           <BrandMark />
           <span className="brand-name">NixBench</span>
         </a>

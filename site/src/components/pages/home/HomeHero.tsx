@@ -27,14 +27,14 @@ export function HomeHero({}: HomeHeroProps = {}) {
 
         <div className="hero-intro">
           <div className="hero-copy">
-            <p className="hero-statement">Can coding agents write Nix that actually passes?</p>
+            <p className="hero-statement">Can AI coding agents write Nix that actually passes?</p>
             <p className="hero-lede">
               Objective repository-repair tasks scored by hidden shell evaluators—not by whether the output merely
               looks plausible.
             </p>
             <div className="actions" role="group" aria-label="Benchmark actions">
               <Button asChild>
-                <a href="results.html">
+                <a href="/results.html">
                   Compare results <ArrowRight data-icon="inline-end" aria-hidden="true" />
                 </a>
               </Button>

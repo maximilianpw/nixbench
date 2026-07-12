@@ -6,16 +6,59 @@ import { ResultsHero } from "@/components/pages/results/ResultsHero";
 import { ResultsSummary } from "@/components/pages/results/ResultsSummary";
 import { TaskResultsSection } from "@/components/pages/results/TaskResultsSection";
 import { TimingSection } from "@/components/pages/results/TimingSection";
+import { breadcrumbStructuredData, siteMetadata } from "@/lib/seo";
+
+const resultsUrl = new URL("/results.html", siteMetadata.url).toString();
+const resultsStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": `${resultsUrl}#dataset`,
+  name: "NixBench AI Coding Agent Benchmark Results",
+  description:
+    "Pass rates, task outcomes, timeouts, and elapsed agent time for AI coding agents evaluated on the NixBench 26-task and 29-task Nix repository-repair corpora.",
+  url: resultsUrl,
+  creator: {
+    "@type": "Organization",
+    name: "NixBench",
+    url: siteMetadata.url,
+  },
+  datePublished: "2026-06-24",
+  dateModified: siteMetadata.lastUpdated,
+  temporalCoverage: "2026-06-24/2026-07-10",
+  isAccessibleForFree: true,
+  keywords: [
+    "AI coding agents",
+    "Nix",
+    "NixOS",
+    "code generation benchmark",
+    "repository repair",
+    "model evaluation",
+  ],
+  measurementTechnique: "Agentic repository repairs scored by objective hidden shell evaluators",
+  variableMeasured: ["Task pass rate", "Task outcome", "Agent elapsed time", "Timeout count"],
+  distribution: {
+    "@type": "DataDownload",
+    contentUrl:
+      "https://raw.githubusercontent.com/maximilianpw/nixbench/main/docs/runs/2026-06-24-model-comparison.md",
+    encodingFormat: "text/markdown",
+  },
+};
+
+const resultsBreadcrumbs = breadcrumbStructuredData([
+  { name: "NixBench", url: siteMetadata.url },
+  { name: "Benchmark results", url: resultsUrl },
+]);
 ---
 
 <SiteLayout
-  title="NixBench Results | Model Comparison"
-  description="NixBench results across model families, effort sweeps, per-task outcomes, and timing on the recorded 26- and 29-task corpora."
+  title="AI Coding Agent Benchmark Results | NixBench"
+  description="Compare NixBench pass rates, per-task outcomes, reasoning-effort sweeps, timeouts, and timing across seven AI model families on 26- and 29-task Nix corpora."
   activePage="results"
   canonicalPath="/results.html"
+  structuredData={[resultsStructuredData, resultsBreadcrumbs]}
   footer={{
     text: "Raw run artifacts are local under <code>results/</code>; durable comparison notes are tracked under <code>docs/runs/</code>.",
-    href: "index.html",
+    href: "/",
     label: "Back to benchmark landing page",
   }}
 >

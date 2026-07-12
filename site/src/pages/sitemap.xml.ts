@@ -1,20 +1,7 @@
 import type { APIRoute } from "astro";
 
-const siteUrl = "https://nixbench.com";
-const lastmod = "2026-06-25";
-
-const urls = [
-  { path: "/", priority: "1.0" },
-  { path: "/results.html", priority: "0.9" },
-  { path: "/docs/benchmark-design.html", priority: "0.7" },
-  { path: "/docs/running-agents.html", priority: "0.7" },
-  { path: "/docs/task-format.html", priority: "0.6" },
-  { path: "/docs/authoring.html", priority: "0.6" },
-  { path: "/docs/scoring.html", priority: "0.6" },
-  { path: "/docs/reproducibility.html", priority: "0.6" },
-  { path: "/docs/research-derived-tasks.html", priority: "0.6" },
-  { path: "/docs/runs/2026-06-24-model-comparison.html", priority: "0.5" },
-];
+import { getDocs } from "@/lib/docs";
+import { siteMetadata } from "@/lib/seo";
 
 function escapeXml(value: string) {
   return value
@@ -25,16 +12,18 @@ function escapeXml(value: string) {
     .replaceAll("'", "&apos;");
 }
 
-export const GET: APIRoute = () => {
-  const entries = urls
-    .map(({ path, priority }) => {
-      const loc = new URL(path, siteUrl).toString();
+export const GET: APIRoute = async ({ site }) => {
+  const docs = await getDocs();
+  const paths = ["/", "/results.html", ...docs.map((doc) => `/docs/${doc.pageSlug}.html`)];
+  const baseUrl = site ?? new URL(siteMetadata.url);
+  const entries = paths
+    .map((path) => {
+      const loc = new URL(path, baseUrl).toString();
 
       return [
         "  <url>",
         `    <loc>${escapeXml(loc)}</loc>`,
-        `    <lastmod>${lastmod}</lastmod>`,
-        `    <priority>${priority}</priority>`,
+        `    <lastmod>${siteMetadata.lastUpdated}</lastmod>`,
         "  </url>",
       ].join("\n");
     })

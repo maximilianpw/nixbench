@@ -1,0 +1,27 @@
+---
+import SiteLayout from "@/layouts/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Page Not Found | NixBench"
+  description="The requested NixBench page could not be found."
+  noindex
+  footer={{
+    text: "NixBench measures AI coding agents with objective Nix repository-repair tasks.",
+    href: "/results.html",
+    label: "View benchmark results",
+  }}
+>
+  <main id="main-content" class="docs-page">
+    <section class="docs-hero" aria-labelledby="not-found-title">
+      <div class="docs-hero-inner">
+        <div class="docs-title-block">
+          <p class="eyebrow">Error 404</p>
+          <h1 id="not-found-title">Page not found.</h1>
+          <p>The page may have moved or the address may be incorrect. Return to the NixBench overview to continue.</p>
+          <p><a href="/">Go to the NixBench homepage</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+</SiteLayout>
