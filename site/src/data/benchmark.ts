@@ -1,3 +1,5 @@
+import generatedTrialRows from "@/data/benchmark-trials.json";
+
 export type AgentKind = "codex" | "claude";
 export type RunStatus = "complete";
 export type TaskStatus = "pass" | "fail";
@@ -13,13 +15,25 @@ export type ReasoningEffort = "low" | "medium" | "high" | "xhigh" | "max" | "ult
 
 export type LeaderboardRun = {
   id: string;
+  configurationId?: string;
   agent: string;
+  model?: string;
   kind: AgentKind;
   corpus: string;
   runId: string;
+  studyId?: string;
+  agentVersion?: string;
+  corpusRevision?: string;
+  host?: string;
+  network?: string;
+  platform?: string;
+  system?: string;
+  agentTimeoutSeconds?: number;
   marker: string;
   series?: ModelKey;
   effort?: ReasoningEffort;
+  trial?: number;
+  provenance?: "trial" | "composite";
   passRate: number;
   score: number;
   maxScore: number;
@@ -30,8 +44,36 @@ export type LeaderboardRun = {
   completedTasks: number;
   totalTasks: number;
   status: RunStatus;
-  current?: boolean;
-  ranked?: boolean;
+};
+
+export type Estimate = {
+  n: number;
+  mean: number;
+  min: number;
+  max: number;
+  standardDeviation?: number;
+  ci95Low?: number;
+  ci95High?: number;
+  ci95Margin?: number;
+};
+
+export type LeaderboardAggregate = {
+  id: string;
+  agent: string;
+  kind: AgentKind;
+  corpus: string;
+  marker: string;
+  series?: ModelKey;
+  effort?: ReasoningEffort;
+  taskCount: number;
+  trialCount: number;
+  trials: LeaderboardRun[];
+  passedTasks: Estimate;
+  scoreRate: Estimate;
+  agentSecondsPerTask: Estimate;
+  agentTimeSeconds: Estimate;
+  totalTimeouts: number;
+  provenance: "trial" | "composite";
 };
 
 export type ResultColumn = {
@@ -116,14 +158,7 @@ export const resultColumns: ResultColumn[] = [
   },
 ];
 
-export const heroStats = [
-  ["tasks", String(currentCorpusTaskCount)],
-  ["areas", "9"],
-  ["evaluators", "29"],
-  ["comparison rows", "29"],
-] as const;
-
-export const leaderboardRuns: LeaderboardRun[] = [
+const originalLeaderboardRuns: LeaderboardRun[] = [
   {
     id: "gpt-56-sol-low",
     agent: "GPT-5.6 Sol via Codex CLI",
@@ -543,7 +578,6 @@ export const leaderboardRuns: LeaderboardRun[] = [
     completedTasks: 26,
     totalTasks: 26,
     status: "complete",
-    current: true,
   },
   {
     id: "gpt-54-xhigh",
@@ -705,6 +739,14 @@ export const leaderboardRuns: LeaderboardRun[] = [
     totalTasks: 26,
     status: "complete",
   },
+];
+
+const generatedLeaderboardRuns = generatedTrialRows as LeaderboardRun[];
+const generatedCorpora = new Set(generatedLeaderboardRuns.map((run) => run.corpus));
+
+export const leaderboardRuns: LeaderboardRun[] = [
+  ...originalLeaderboardRuns.filter((run) => !generatedCorpora.has(run.corpus)),
+  ...generatedLeaderboardRuns,
 ];
 
 export const taskExamples = [
@@ -1257,56 +1299,162 @@ export function formatMinutes(seconds: number) {
   return Math.round((seconds / 60) * 10) / 10;
 }
 
-function compareRunQuality(a: LeaderboardRun, b: LeaderboardRun) {
-  return (
-    b.score / b.maxScore - a.score / a.maxScore ||
-    a.agentTimeSeconds - b.agentTimeSeconds ||
-    a.agent.localeCompare(b.agent)
-  );
+const tCritical95: Record<number, number> = {
+  1: 12.706,
+  2: 4.303,
+  3: 3.182,
+  4: 2.776,
+  5: 2.571,
+  6: 2.447,
+  7: 2.365,
+  8: 2.306,
+  9: 2.262,
+  10: 2.228,
+  11: 2.201,
+  12: 2.179,
+  13: 2.16,
+  14: 2.145,
+  15: 2.131,
+  16: 2.12,
+  17: 2.11,
+  18: 2.101,
+  19: 2.093,
+  20: 2.086,
+  21: 2.08,
+  22: 2.074,
+  23: 2.069,
+  24: 2.064,
+  25: 2.06,
+  26: 2.056,
+  27: 2.052,
+  28: 2.048,
+  29: 2.045,
+  30: 2.042,
+};
+
+function estimate95(values: number[], bounds: { lower?: number; upper?: number } = {}): Estimate {
+  if (values.length === 0) {
+    throw new Error("Cannot estimate an empty benchmark sample.");
+  }
+
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  if (values.length === 1) {
+    return { n: 1, mean, min: values[0], max: values[0] };
+  }
+
+  const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1);
+  const standardDeviation = Math.sqrt(variance);
+  const critical = tCritical95[values.length - 1] ?? 1.96;
+  const ci95Margin = (critical * standardDeviation) / Math.sqrt(values.length);
+  const ci95Low = Math.max(bounds.lower ?? -Infinity, mean - ci95Margin);
+  const ci95High = Math.min(bounds.upper ?? Infinity, mean + ci95Margin);
+
+  return {
+    n: values.length,
+    mean,
+    min: Math.min(...values),
+    max: Math.max(...values),
+    standardDeviation,
+    ci95Low,
+    ci95High,
+    ci95Margin,
+  };
 }
 
-function bestRunFrom(runs: LeaderboardRun[]) {
-  return [...runs].sort(compareRunQuality)[0];
+export function aggregateLeaderboardRuns(runs: LeaderboardRun[]): LeaderboardAggregate[] {
+  const groups = new Map<string, LeaderboardRun[]>();
+
+  for (const run of runs) {
+    const key = run.configurationId ?? `${run.corpus}:${run.series ?? run.id}:${run.effort ?? "default"}`;
+    const group = groups.get(key) ?? [];
+    group.push(run);
+    groups.set(key, group);
+  }
+
+  return [...groups.entries()].map(([id, trials]) => {
+    const first = trials[0];
+    const taskCount = first.totalTasks;
+
+    return {
+      id,
+      agent: first.agent,
+      kind: first.kind,
+      corpus: first.corpus,
+      marker: first.marker,
+      series: first.series,
+      effort: first.effort,
+      taskCount,
+      trialCount: trials.length,
+      trials,
+      passedTasks: estimate95(trials.map(passedTasks), { lower: 0, upper: taskCount }),
+      scoreRate: estimate95(trials.map((run) => run.score / run.maxScore), { lower: 0, upper: 1 }),
+      agentSecondsPerTask: estimate95(
+        trials.map((run) => run.agentTimeSeconds / run.totalTasks),
+        { lower: 0 },
+      ),
+      agentTimeSeconds: estimate95(trials.map((run) => run.agentTimeSeconds), { lower: 0 }),
+      totalTimeouts: trials.reduce((sum, run) => sum + run.timeouts, 0),
+      provenance: trials.some((run) => run.provenance === "composite" || run.runId.includes("(+2)"))
+        ? "composite"
+        : "trial",
+    };
+  });
 }
 
-function fastestRunFrom(runs: LeaderboardRun[]) {
-  return [...runs].sort((a, b) => a.agentTimeSeconds - b.agentTimeSeconds)[0];
-}
-
-function effortLabelFor(runs: LeaderboardRun[]) {
-  const labels = [...new Set(runs.map((run) => run.effort ?? "default"))];
+function effortLabelFor(aggregates: LeaderboardAggregate[]) {
+  const labels = [...new Set(aggregates.map((aggregate) => aggregate.effort ?? "default"))];
   return labels.length > 0 ? labels.join(", ") : "none";
 }
 
-export const topRun = bestRunFrom(leaderboardRuns);
-export const currentTopRun = bestRunFrom(
-  leaderboardRuns.filter((run) => run.corpus === currentCorpusLabel),
+export const leaderboardAggregates = aggregateLeaderboardRuns(leaderboardRuns);
+export const currentLeaderboardAggregates = leaderboardAggregates.filter(
+  (aggregate) => aggregate.corpus === currentCorpusLabel,
 );
+export const currentEvidenceSummary = {
+  configurations: currentLeaderboardAggregates.length,
+  trials: currentLeaderboardAggregates.reduce((sum, aggregate) => sum + aggregate.trialCount, 0),
+  models: new Set(currentLeaderboardAggregates.map((aggregate) => aggregate.series).filter(Boolean)).size,
+  replicatedConfigurations: currentLeaderboardAggregates.filter((aggregate) => aggregate.trialCount > 1).length,
+};
+
+export const heroStats = [
+  ["tasks", String(currentCorpusTaskCount)],
+  ["areas", String(new Set(taskResults.map((task) => task.area)).size)],
+  ["evaluators", String(currentCorpusTaskCount)],
+  ["current trials", String(currentEvidenceSummary.trials)],
+] as const;
+
+export const resultsDateRangeLabel = buildDateRangeLabel(leaderboardRuns.map((run) => run.runId));
 
 export const resultOverviewStats = [
   ["models", String(resultColumns.length)],
-  ["comparison rows", String(leaderboardRuns.length)],
-  ["best current row", currentTopRun ? [passedTasks(currentTopRun), currentTopRun.totalTasks].join("/") : "--"],
+  ["configurations", String(leaderboardAggregates.length)],
+  ["recorded trials", String(leaderboardRuns.length)],
   ["task rows", String(taskResults.length)],
 ] as const;
 
 export const modelSummaries = resultColumns.map((column) => {
-  const runs = leaderboardRuns.filter((run) => run.series === column.key);
-  const bestRun = bestRunFrom(runs);
-  const fastestRun = fastestRunFrom(runs);
-  const totalTimeouts = runs.reduce((sum, run) => sum + run.timeouts, 0);
+  const aggregates = leaderboardAggregates.filter(
+    (aggregate) => aggregate.series === column.key && aggregate.corpus === column.corpus,
+  );
+  const trialCount = aggregates.reduce((sum, aggregate) => sum + aggregate.trialCount, 0);
+  const totalTimeouts = aggregates.reduce((sum, aggregate) => sum + aggregate.totalTimeouts, 0);
+  const taskMeans = aggregates.map((aggregate) => aggregate.passedTasks.mean);
+  const secondsPerTask = aggregates.map((aggregate) => aggregate.agentSecondsPerTask.mean);
 
   return {
     ...column,
-    kind: bestRun?.kind ?? runs[0]?.kind,
-    runCount: runs.length,
-    bestRun,
-    fastestRun,
-    bestPassLabel: bestRun ? `${passedTasks(bestRun)}/${bestRun.totalTasks}` : "--",
-    bestScoreLabel: bestRun ? `${bestRun.score}/${bestRun.maxScore}` : "--",
-    bestEffortLabel: bestRun?.effort ?? "default",
-    fastestRunLabel: fastestRun?.agentTimeLabel ?? "--",
-    effortLabel: effortLabelFor(runs),
+    kind: aggregates[0]?.kind,
+    configurationCount: aggregates.length,
+    trialCount,
+    replicatedConfigurationCount: aggregates.filter((aggregate) => aggregate.trialCount > 1).length,
+    taskRangeLabel:
+      taskMeans.length > 0 ? `${Math.min(...taskMeans).toFixed(1)}–${Math.max(...taskMeans).toFixed(1)}` : "--",
+    secondsPerTaskRangeLabel:
+      secondsPerTask.length > 0
+        ? `${Math.min(...secondsPerTask).toFixed(1)}–${Math.max(...secondsPerTask).toFixed(1)}s`
+        : "--",
+    effortLabel: effortLabelFor(aggregates),
     timeoutLabel: String(totalTimeouts),
   };
 });
@@ -1330,3 +1478,23 @@ export const modelTaskSummaries = resultColumns.map((column) => {
     averageTimeLabel: averageSeconds == null ? "--" : formatDuration(averageSeconds),
   };
 });
+
+function buildDateRangeLabel(runIds: string[]) {
+  const dates = runIds
+    .map((runId) => runId.match(/^(\d{4})(\d{2})(\d{2})/))
+    .filter((match): match is RegExpMatchArray => Boolean(match))
+    .map((match) => new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  if (dates.length === 0) return "No dated runs";
+  const first = dates[0];
+  const last = dates[dates.length - 1];
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  if (first.getUTCFullYear() === last.getUTCFullYear()) {
+    if (first.getUTCMonth() === last.getUTCMonth()) {
+      return `${months[first.getUTCMonth()]} ${first.getUTCDate()}–${last.getUTCDate()}, ${last.getUTCFullYear()}`;
+    }
+    return `${months[first.getUTCMonth()]} ${first.getUTCDate()}–${months[last.getUTCMonth()]} ${last.getUTCDate()}, ${last.getUTCFullYear()}`;
+  }
+  return `${months[first.getUTCMonth()]} ${first.getUTCDate()}, ${first.getUTCFullYear()}–${months[last.getUTCMonth()]} ${last.getUTCDate()}, ${last.getUTCFullYear()}`;
+}

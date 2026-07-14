@@ -3,11 +3,9 @@ import { ArrowRight, TerminalSquare } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { StatGrid } from "@/components/benchmark/StatGrid";
 import { Button } from "@/components/ui/button";
-import { currentCorpusLabel, currentTopRun, heroStats, passedTasks } from "@/data/benchmark";
+import { currentCorpusLabel, currentEvidenceSummary, heroStats } from "@/data/benchmark";
 
-export type HomeHeroProps = {};
-
-export function HomeHero({}: HomeHeroProps = {}) {
+export function HomeHero() {
   return (
     <section className="product-hero" aria-labelledby="home-hero-title">
       <div className="product-hero-inner">
@@ -46,23 +44,21 @@ export function HomeHero({}: HomeHeroProps = {}) {
             </div>
           </div>
 
-          <aside className="hero-run-note" aria-label="Current-corpus benchmark leader">
-            <span>Current-corpus leader</span>
-            <strong>{currentTopRun?.agent ?? "No completed runs"}</strong>
-            {currentTopRun ? (
-              <p>
-                <b>{[passedTasks(currentTopRun), currentTopRun.totalTasks].join("/")}</b> pass · {currentTopRun.corpus} ·{" "}
-                {currentTopRun.effort ?? "default"} effort
-              </p>
-            ) : null}
+          <aside className="hero-run-note" aria-label="Current-corpus evidence coverage">
+            <span>Current evidence</span>
+            <strong>{currentEvidenceSummary.models} models · {currentEvidenceSummary.configurations} configurations</strong>
+            <p>
+              <b>{currentEvidenceSummary.trials}</b> recorded trials · {currentEvidenceSummary.replicatedConfigurations}/
+              {currentEvidenceSummary.configurations} configurations replicated
+            </p>
             <a href="#leaderboard">
-              Explore all 29 rows <ArrowRight aria-hidden="true" />
+              Inspect outcomes and uncertainty <ArrowRight aria-hidden="true" />
             </a>
           </aside>
         </div>
 
         <p className="hero-corpus-note">
-          Current release: <strong>{currentCorpusLabel}</strong> · one hidden evaluator per task · zero LLM judges
+          Current release: <strong>{currentCorpusLabel}</strong> · one hidden evaluator per task · uncertainty shown when repeat trials exist
         </p>
       </div>
     </section>

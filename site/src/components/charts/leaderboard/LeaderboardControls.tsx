@@ -1,54 +1,29 @@
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { ChartMode } from "@/components/charts/leaderboard/types";
 
-export type CorpusFilter = "29-task corpus" | "26-task corpus" | "all";
-export type RunView = "best" | "all";
+export type CorpusFilter = "29-task corpus" | "26-task corpus";
 
 export type LeaderboardControlsProps = {
-  view: RunView;
-  onViewChange: (view: RunView) => void;
-  mode: ChartMode;
-  onModeChange: (mode: ChartMode) => void;
   corpus: CorpusFilter;
   onCorpusChange: (corpus: CorpusFilter) => void;
   modelCount: number;
-  taskLabel: string;
-  visibleRunCount: number;
-  totalRunCount: number;
+  configurationCount: number;
+  trialCount: number;
+  replicatedConfigurationCount: number;
 };
 
 export function LeaderboardControls({
-  view,
-  onViewChange,
-  mode,
-  onModeChange,
   corpus,
   onCorpusChange,
   modelCount,
-  taskLabel,
-  visibleRunCount,
-  totalRunCount,
+  configurationCount,
+  trialCount,
+  replicatedConfigurationCount,
 }: LeaderboardControlsProps) {
   return (
-    <div className="control-bar" role="group" aria-label="Run plot controls">
+    <div className="control-bar evidence-control-bar" role="group" aria-label="Evidence plot controls">
       <div className="control-groups">
-        <ToggleGroup
-          type="single"
-          value={view}
-          onValueChange={(value) => {
-            if (value) onViewChange(value as RunView);
-          }}
-          aria-label="Run density"
-          className="run-view-toggle"
-        >
-          <ToggleGroupItem value="best" aria-label="Show the best recorded row per model">
-            Best models
-          </ToggleGroupItem>
-          <ToggleGroupItem value="all" aria-label="Show every recorded effort level">
-            All effort levels
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <span className="control-label">Corpus</span>
         <ToggleGroup
           type="single"
           value={corpus}
@@ -63,39 +38,18 @@ export function LeaderboardControls({
           <ToggleGroupItem value="26-task corpus" aria-label="Show historical 26-task corpus">
             26 historical
           </ToggleGroupItem>
-          <ToggleGroupItem value="all" aria-label="Show all corpus sizes">
-            All
-          </ToggleGroupItem>
-        </ToggleGroup>
-        <ToggleGroup
-          type="single"
-          value={mode}
-          onValueChange={(value) => {
-            if (value) onModeChange(value as ChartMode);
-          }}
-          aria-label="Chart metric"
-        >
-          <ToggleGroupItem value="score" aria-label="Show score">
-            Score
-          </ToggleGroupItem>
-          <ToggleGroupItem value="time" aria-label="Show agent time">
-            Agent time
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="failures"
-            aria-label={corpus === "all" ? "Filter to one corpus to compare failure counts" : "Show failures"}
-            disabled={corpus === "all"}
-            title={corpus === "all" ? "Failure counts require one corpus denominator" : undefined}
-          >
-            Failures
-          </ToggleGroupItem>
         </ToggleGroup>
       </div>
-      <div className="leaderboard-meta">
+      <div className="leaderboard-meta" aria-label="Visible evidence summary">
         <span>
-          <strong>{taskLabel}</strong> · <strong>{modelCount} models</strong>
+          <strong>{modelCount}</strong> models · <strong>{configurationCount}</strong> configurations
         </span>
-        <Badge variant="muted">Rows {visibleRunCount}/{totalRunCount}</Badge>
+        <Badge variant="default">
+          {trialCount} {trialCount === 1 ? "trial" : "trials"}
+        </Badge>
+        <Badge variant="muted">
+          {replicatedConfigurationCount}/{configurationCount} replicated
+        </Badge>
       </div>
     </div>
   );

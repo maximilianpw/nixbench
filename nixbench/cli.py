@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
+import subprocess
 import sys
 from pathlib import Path
 
+from .export import export_studies_for_site
 from .runner import TaskRunResult, SolutionMode, detect_nix_system, make_run_id, run_task, write_summary
+from .study import build_study_trial, count_study_trials, write_study_summary
 from .task import Task, TaskError, find_task, iter_tasks
 
 
@@ -39,7 +43,45 @@ def build_parser() -> argparse.ArgumentParser:
 
     run_all_parser = subparsers.add_parser("run-all", help="Run all benchmark tasks for the selected system.")
     add_run_options(run_all_parser)
+    run_all_parser.add_argument(
+        "--trials",
+        type=int,
+        default=1,
+        help="Repeat the full corpus this many times and write an uncertainty-aware study summary.",
+    )
+    run_all_parser.add_argument("--model", help="Model identifier recorded in the study metadata.")
+    run_all_parser.add_argument("--effort", help="Reasoning-effort label recorded in the study metadata.")
+    run_all_parser.add_argument("--series", help="Stable site series key recorded in the study metadata.")
+    run_all_parser.add_argument("--marker", help="Short chart marker recorded in the study metadata.")
+    run_all_parser.add_argument("--kind", choices=["codex", "claude"], help="Agent kind recorded in the study metadata.")
+    run_all_parser.add_argument("--label", help="Human-readable agent label recorded in the study metadata.")
+    run_all_parser.add_argument("--agent-version", help="Agent version recorded in the study metadata.")
+    run_all_parser.add_argument(
+        "--network",
+        choices=["enabled", "disabled", "unknown"],
+        default="unknown",
+        help="Agent network-access state recorded in the study metadata.",
+    )
     run_all_parser.set_defaults(func=cmd_run_all)
+
+    export_parser = subparsers.add_parser(
+        "export-site",
+        help="Export recorded study trials as checked site data.",
+    )
+    export_parser.add_argument("--output", type=Path, required=True, help="Destination JSON file.")
+    export_parser.add_argument("--task-count", type=int, help="Only export studies with this corpus size.")
+    export_parser.add_argument("--minimum-trials", type=int, default=1)
+    export_parser.add_argument("--expected-configurations", type=int)
+    export_parser.set_defaults(func=cmd_export_site)
+
+    count_parser = subparsers.add_parser(
+        "study-count",
+        help="Print the number of completed study trials for one configuration.",
+    )
+    count_parser.add_argument("--series", required=True)
+    count_parser.add_argument("--effort", required=True)
+    count_parser.add_argument("--task-count", type=int, required=True)
+    count_parser.set_defaults(func=cmd_study_count)
 
     validate_parser = subparsers.add_parser("validate", help="Run task evaluators against starter or reference solutions.")
     validate_parser.add_argument("--solution", choices=["starter", "reference"], default="reference")
@@ -112,25 +154,111 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 def cmd_run_all(args: argparse.Namespace) -> int:
     tasks = _tasks_for_execution(args)
-    run_id = make_run_id()
-    results = []
-    for task in tasks:
-        result = run_task(
-            task,
-            results_dir=args.results_dir,
-            run_id=run_id,
-            solution_mode=_solution_mode(args.solution),
-            agent_cmd=args.agent_cmd,
-            agent_timeout_seconds=args.agent_timeout_seconds,
-            keep_workdir=args.keep_workdir,
-        )
-        results.append(result)
-        _print_result(result)
+    if args.trials < 1:
+        raise ValueError("--trials must be at least 1")
 
-    summary_path = write_summary(args.results_dir, run_id, results)
-    passed = sum(1 for result in results if result.passed)
-    print(f"summary: {passed}/{len(results)} passed, wrote {summary_path}")
-    return 0 if all(result.passed for result in results) else 1
+    study_id = make_run_id()
+    study_trials = []
+    all_results: list[TaskRunResult] = []
+    metadata = {
+        key: value
+        for key, value in {
+            "label": args.label,
+            "model": args.model,
+            "effort": args.effort,
+            "series": args.series,
+            "marker": args.marker,
+            "kind": args.kind,
+            "agent_version": args.agent_version,
+            "network": args.network,
+            "solution": args.solution,
+            "system": args.system,
+            "host": platform.node(),
+            "platform": platform.platform(),
+            "corpus_revision": _git_revision(args.tasks_dir),
+            "agent_timeout_seconds": args.agent_timeout_seconds,
+        }.items()
+        if value is not None
+    }
+
+    for trial_number in range(1, args.trials + 1):
+        run_id = make_run_id()
+        print(f"trial {trial_number}/{args.trials}: run_id={run_id}")
+        results = []
+        for task in tasks:
+            result = run_task(
+                task,
+                results_dir=args.results_dir,
+                run_id=run_id,
+                solution_mode=_solution_mode(args.solution),
+                agent_cmd=args.agent_cmd,
+                agent_timeout_seconds=args.agent_timeout_seconds,
+                keep_workdir=args.keep_workdir,
+            )
+            results.append(result)
+            _print_result(result)
+            if (
+                result.agent is not None
+                and not result.agent.timed_out
+                and result.agent.returncode != 0
+            ):
+                raise ValueError(
+                    f"trial {trial_number} is invalid: agent command exited "
+                    f"{result.agent.returncode} on {result.task_id}; stopping before recording a study"
+                )
+
+        summary_path = write_summary(
+            args.results_dir,
+            run_id,
+            results,
+            metadata={**metadata, "study_id": study_id, "trial": trial_number},
+        )
+        passed = sum(1 for result in results if result.passed)
+        print(f"summary: {passed}/{len(results)} passed, wrote {summary_path}")
+        study_trials.append(build_study_trial(run_id, results))
+        all_results.extend(results)
+        study_path = write_study_summary(args.results_dir, study_id, study_trials, metadata=metadata)
+        print(f"study checkpoint: {len(study_trials)}/{args.trials} trials, wrote {study_path}")
+
+    print(f"study: {len(study_trials)} trials, wrote {study_path}")
+    return 0 if all(result.passed for result in all_results) else 1
+
+
+def cmd_export_site(args: argparse.Namespace) -> int:
+    row_count = export_studies_for_site(
+        args.results_dir,
+        args.output,
+        task_count=args.task_count,
+        minimum_trials=args.minimum_trials,
+        expected_configurations=args.expected_configurations,
+    )
+    print(f"exported {row_count} trial rows to {args.output}")
+    return 0
+
+
+def cmd_study_count(args: argparse.Namespace) -> int:
+    if args.task_count < 1:
+        raise ValueError("--task-count must be at least 1")
+    print(
+        count_study_trials(
+            args.results_dir,
+            series=args.series,
+            effort=args.effort,
+            task_count=args.task_count,
+        )
+    )
+    return 0
+
+
+def _git_revision(path: Path) -> str | None:
+    completed = subprocess.run(
+        ["git", "-C", str(path), "rev-parse", "HEAD"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    revision = completed.stdout.strip()
+    return revision if completed.returncode == 0 and revision else None
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
