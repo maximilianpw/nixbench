@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { CartesianGrid, ErrorBar, LabelList, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
+import { CartesianGrid, ErrorBar, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
 
 import { LeaderboardChartTooltip } from "@/components/charts/leaderboard/ChartTooltip";
 import {
@@ -19,6 +19,7 @@ export type LeaderboardChartProps = {
   series: ChartSeries[];
   taskCount: number;
   highlightedModel: ModelKey | null;
+  onHighlightedModelChange: (model: ModelKey | null) => void;
   view: EvidenceView;
   taskScaleMode: TaskScaleMode;
 };
@@ -28,6 +29,7 @@ export function LeaderboardChart({
   series,
   taskCount,
   highlightedModel,
+  onHighlightedModelChange,
   view,
   taskScaleMode,
 }: LeaderboardChartProps) {
@@ -90,7 +92,7 @@ export function LeaderboardChart({
               stroke="var(--muted)"
               tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
             />
-            <ZAxis dataKey="pointSize" range={[24, 150]} />
+            <ZAxis dataKey="pointSize" range={[14, 72]} />
             <ChartTooltip
               cursor={{ stroke: "var(--border-strong)", strokeDasharray: "3 4" }}
               content={<LeaderboardChartTooltip />}
@@ -135,37 +137,31 @@ export function LeaderboardChart({
                     )}
                     data={[point]}
                     fill={point.trialCount > 1 ? entry.color : "var(--panel)"}
+                    fillOpacity={isHighlighted || highlightedModel === null ? 0.88 : 0.24}
                     isAnimationActive={false}
                     name={point.label}
                     stroke={entry.color}
-                    strokeWidth={isHighlighted ? 3 : point.trialCount > 1 ? 2 : 3}
+                    strokeOpacity={isHighlighted || highlightedModel === null ? 0.9 : 0.28}
+                    strokeWidth={isHighlighted ? 2 : point.trialCount > 1 ? 1.25 : 1.75}
                   >
                     {point.trialCount > 1 ? (
                       <>
                         <ErrorBar
                           dataKey="secondsPerTaskError"
                           direction="x"
-                          stroke={entry.color}
-                          strokeWidth={isHighlighted ? 2 : 1.5}
-                          width={5}
+                          stroke={`color-mix(in srgb, ${entry.color} ${isHighlighted ? 82 : 38}%, transparent)`}
+                          strokeWidth={isHighlighted ? 1.5 : 1}
+                          width={3}
                         />
                         <ErrorBar
                           dataKey="tasksPassedError"
                           direction="y"
-                          stroke={entry.color}
-                          strokeWidth={isHighlighted ? 2 : 1.5}
-                          width={5}
+                          stroke={`color-mix(in srgb, ${entry.color} ${isHighlighted ? 82 : 38}%, transparent)`}
+                          strokeWidth={isHighlighted ? 1.5 : 1}
+                          width={3}
                         />
                       </>
                     ) : null}
-                    <LabelList
-                      dataKey="marker"
-                      fill="var(--muted)"
-                      fontFamily="var(--mono)"
-                      fontSize={10}
-                      offset={9}
-                      position="top"
-                    />
                   </Scatter>
                 );
               }),
@@ -192,15 +188,19 @@ export function LeaderboardChart({
               const model = entry.aggregates[0]?.series;
 
               return (
-                <span
+                <button
                   key={entry.key}
                   role="listitem"
+                  type="button"
+                  aria-pressed={highlightedModel === model}
+                  aria-label={highlightedModel === model ? "Show all models" : `Isolate ${entry.label}`}
                   data-dimmed={isModelDimmed(highlightedModel, model) || undefined}
+                  onClick={() => onHighlightedModelChange(highlightedModel === model ? null : (model ?? null))}
                 >
                   <i aria-hidden="true" style={{ "--swatch": entry.color } as CSSProperties} />
                   <strong>{entry.label}</strong>
                   <small>{entry.aggregates.length} cfg · {entry.trials.length} trials</small>
-                </span>
+                </button>
               );
             })}
           </div>

@@ -5498,6 +5498,18 @@ h3 {
   margin: 0.35rem 0.75rem 0;
 }
 
+.evidence-plot .recharts-cartesian-grid line {
+  stroke: color-mix(in srgb, var(--grid-line) 52%, transparent);
+}
+
+.evidence-plot .leaderboard-series {
+  transition: opacity 160ms ease;
+}
+
+.evidence-plot .leaderboard-series.is-dimmed {
+  opacity: 0.24;
+}
+
 .evidence-footer {
   display: grid;
   width: 100%;
@@ -5573,6 +5585,29 @@ h3 {
 .evidence-footer .chart-legend {
   border-top: 1px solid var(--border);
   font-size: 0.7rem;
+}
+
+.evidence-footer .chart-legend button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.36rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.15rem 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.evidence-footer .chart-legend button[data-dimmed="true"] {
+  opacity: 0.38;
+}
+
+.evidence-footer .chart-legend button:hover,
+.evidence-footer .chart-legend button[aria-pressed="true"] {
+  opacity: 1;
 }
 
 .evidence-tooltip {

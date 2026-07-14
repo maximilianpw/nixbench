@@ -42,7 +42,7 @@ function buildAggregatePoint(aggregate: LeaderboardAggregate, color: string): Ag
       aggregate.agentSecondsPerTask.ci95Low,
       aggregate.agentSecondsPerTask.ci95High,
     ),
-    pointSize: 150,
+    pointSize: 72,
     color,
     label: `${aggregate.agent} · ${aggregate.effort ?? "default"} · n=${aggregate.trialCount}`,
   };
@@ -69,7 +69,7 @@ function buildTrialPoints(aggregate: LeaderboardAggregate, color: string): Trial
     taskCount: run.totalTasks,
     tasksPassed: passedTasks(run),
     secondsPerTask: run.agentTimeSeconds / run.totalTasks,
-    pointSize: 24,
+    pointSize: 14,
     agentTimeLabel: run.agentTimeLabel,
     failed: run.failed,
     timeouts: run.timeouts,

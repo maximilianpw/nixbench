@@ -71,6 +71,7 @@ export function LeaderboardPanel() {
           series={series}
           taskCount={aggregates[0]?.taskCount ?? 0}
           highlightedModel={highlightedModel}
+          onHighlightedModelChange={setHighlightedModel}
           view={view}
           taskScaleMode={taskScaleMode}
         />
