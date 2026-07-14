@@ -5,15 +5,22 @@ import { LeaderboardChartTooltip } from "@/components/charts/leaderboard/ChartTo
 import type { ChartSeries } from "@/components/charts/leaderboard/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart";
-import type { LeaderboardAggregate } from "@/data/benchmark";
+import type { LeaderboardAggregate, ModelKey } from "@/data/benchmark";
+import { cn } from "@/lib/utils";
 
 export type LeaderboardChartProps = {
   aggregates: LeaderboardAggregate[];
   series: ChartSeries[];
   taskCount: number;
+  highlightedModel: ModelKey | null;
 };
 
-export function LeaderboardChart({ aggregates, series, taskCount }: LeaderboardChartProps) {
+export function LeaderboardChart({
+  aggregates,
+  series,
+  taskCount,
+  highlightedModel,
+}: LeaderboardChartProps) {
   const chartConfig = Object.fromEntries(
     series.map((entry) => [entry.key, { label: entry.label, color: entry.color }]),
   ) satisfies ChartConfig;
@@ -71,62 +78,77 @@ export function LeaderboardChart({ aggregates, series, taskCount }: LeaderboardC
               content={<LeaderboardChartTooltip />}
             />
 
-            {series.map((entry) => (
-              <Scatter
-                key={`${entry.key}-trials`}
-                data={entry.trials.map((trial) => ({
-                  ...trial,
-                  secondsPerTaskMean: trial.secondsPerTask,
-                  tasksPassedMean: trial.tasksPassed,
-                }))}
-                fill={entry.color}
-                fillOpacity={0.2}
-                isAnimationActive={false}
-                name={`${entry.label} trials`}
-                stroke={entry.color}
-                strokeOpacity={0.32}
-              />
-            ))}
+            {series.map((entry) => {
+              const model = entry.aggregates[0]?.series;
+              return (
+                <Scatter
+                  key={`${entry.key}-trials`}
+                  className={cn(
+                    "leaderboard-series",
+                    isModelDimmed(highlightedModel, model) && "is-dimmed",
+                  )}
+                  data={entry.trials.map((trial) => ({
+                    ...trial,
+                    secondsPerTaskMean: trial.secondsPerTask,
+                    tasksPassedMean: trial.tasksPassed,
+                  }))}
+                  fill={entry.color}
+                  fillOpacity={highlightedModel === model ? 0.3 : 0.2}
+                  isAnimationActive={false}
+                  name={`${entry.label} trials`}
+                  stroke={entry.color}
+                  strokeOpacity={highlightedModel === model ? 0.52 : 0.32}
+                />
+              );
+            })}
 
             {series.flatMap((entry) =>
-              entry.aggregates.map((point) => (
-                <Scatter
-                  key={point.id}
-                  data={[point]}
-                  fill={point.trialCount > 1 ? entry.color : "var(--panel)"}
-                  isAnimationActive={false}
-                  name={point.label}
-                  stroke={entry.color}
-                  strokeWidth={point.trialCount > 1 ? 2 : 3}
-                >
-                  {point.trialCount > 1 ? (
-                    <>
-                      <ErrorBar
-                        dataKey="secondsPerTaskError"
-                        direction="x"
-                        stroke={entry.color}
-                        strokeWidth={1.5}
-                        width={5}
-                      />
-                      <ErrorBar
-                        dataKey="tasksPassedError"
-                        direction="y"
-                        stroke={entry.color}
-                        strokeWidth={1.5}
-                        width={5}
-                      />
-                    </>
-                  ) : null}
-                  <LabelList
-                    dataKey="marker"
-                    fill="var(--muted)"
-                    fontFamily="var(--mono)"
-                    fontSize={10}
-                    offset={9}
-                    position="top"
-                  />
-                </Scatter>
-              )),
+              entry.aggregates.map((point) => {
+                const isHighlighted = highlightedModel === point.series;
+
+                return (
+                  <Scatter
+                    key={point.id}
+                    className={cn(
+                      "leaderboard-series",
+                      isModelDimmed(highlightedModel, point.series) && "is-dimmed",
+                    )}
+                    data={[point]}
+                    fill={point.trialCount > 1 ? entry.color : "var(--panel)"}
+                    isAnimationActive={false}
+                    name={point.label}
+                    stroke={entry.color}
+                    strokeWidth={isHighlighted ? 3 : point.trialCount > 1 ? 2 : 3}
+                  >
+                    {point.trialCount > 1 ? (
+                      <>
+                        <ErrorBar
+                          dataKey="secondsPerTaskError"
+                          direction="x"
+                          stroke={entry.color}
+                          strokeWidth={isHighlighted ? 2 : 1.5}
+                          width={5}
+                        />
+                        <ErrorBar
+                          dataKey="tasksPassedError"
+                          direction="y"
+                          stroke={entry.color}
+                          strokeWidth={isHighlighted ? 2 : 1.5}
+                          width={5}
+                        />
+                      </>
+                    ) : null}
+                    <LabelList
+                      dataKey="marker"
+                      fill="var(--muted)"
+                      fontFamily="var(--mono)"
+                      fontSize={10}
+                      offset={9}
+                      position="top"
+                    />
+                  </Scatter>
+                );
+              }),
             )}
           </ScatterChart>
         </ChartContainer>
@@ -140,18 +162,30 @@ export function LeaderboardChart({ aggregates, series, taskCount }: LeaderboardC
             <small>Marks use each model&apos;s color and configuration code.</small>
           </div>
           <div className="chart-legend" role="list" aria-label="Model legend">
-            {series.map((entry) => (
-              <span key={entry.key} role="listitem">
-                <i aria-hidden="true" style={{ "--swatch": entry.color } as CSSProperties} />
-                <strong>{entry.label}</strong>
-                <small>{entry.aggregates.length} cfg · {entry.trials.length} trials</small>
-              </span>
-            ))}
+            {series.map((entry) => {
+              const model = entry.aggregates[0]?.series;
+
+              return (
+                <span
+                  key={entry.key}
+                  role="listitem"
+                  data-dimmed={isModelDimmed(highlightedModel, model) || undefined}
+                >
+                  <i aria-hidden="true" style={{ "--swatch": entry.color } as CSSProperties} />
+                  <strong>{entry.label}</strong>
+                  <small>{entry.aggregates.length} cfg · {entry.trials.length} trials</small>
+                </span>
+              );
+            })}
           </div>
         </div>
       </CardFooter>
     </Card>
   );
+}
+
+function isModelDimmed(highlightedModel: ModelKey | null, model: ModelKey | undefined) {
+  return highlightedModel !== null && highlightedModel !== model;
 }
 
 function buildSecondsScale(aggregates: LeaderboardAggregate[]) {

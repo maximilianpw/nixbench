@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatDuration, type LeaderboardAggregate } from "@/data/benchmark";
+import { formatDuration, type LeaderboardAggregate, type ModelKey } from "@/data/benchmark";
 
 export type LeaderboardTableProps = {
   aggregates: LeaderboardAggregate[];
+  highlightedModel: ModelKey | null;
+  onHighlightedModelChange: (model: ModelKey | null) => void;
 };
 
 type SortKey = "configuration" | "effort" | "trialCount" | "tasksPassed" | "secondsPerTask" | "timeouts";
@@ -19,7 +21,11 @@ type SortState = { key: SortKey; direction: SortDirection };
 const defaultSort: SortState = { key: "tasksPassed", direction: "desc" };
 const effortRank = { low: 0, medium: 1, high: 2, xhigh: 3, max: 4, ultra: 5 } as const;
 
-export function LeaderboardTable({ aggregates }: LeaderboardTableProps) {
+export function LeaderboardTable({
+  aggregates,
+  highlightedModel,
+  onHighlightedModelChange,
+}: LeaderboardTableProps) {
   const [sort, setSort] = useState<SortState>(defaultSort);
   const sortedAggregates = useMemo(() => sortAggregates(aggregates, sort), [aggregates, sort]);
 
@@ -65,9 +71,15 @@ export function LeaderboardTable({ aggregates }: LeaderboardTableProps) {
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody onPointerLeave={() => onHighlightedModelChange(null)}>
           {sortedAggregates.map((aggregate) => (
-            <TableRow key={aggregate.id}>
+            <TableRow
+              key={aggregate.id}
+              data-highlighted={highlightedModel === aggregate.series || undefined}
+              data-dimmed={(highlightedModel !== null && highlightedModel !== aggregate.series) || undefined}
+              style={agentMarkStyle(aggregate)}
+              onPointerEnter={() => onHighlightedModelChange(aggregate.series ?? null)}
+            >
               <TableHead scope="row">
                 <span className="agent-cell">
                   <span className={`agent-mark ${aggregate.kind}`} style={agentMarkStyle(aggregate)} aria-hidden="true">

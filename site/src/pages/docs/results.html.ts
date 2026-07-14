@@ -8,7 +8,7 @@ export const GET: APIRoute = () =>
       "  <head>",
       '    <meta charset="utf-8" />',
       '    <meta http-equiv="refresh" content="0; url=/results.html" />',
-      '    <link rel="canonical" href="/results.html" />',
+      '    <link rel="canonical" href="https://nixbench.com/results.html" />',
       "    <title>Redirecting to NixBench Results</title>",
       "  </head>",
       "  <body>",

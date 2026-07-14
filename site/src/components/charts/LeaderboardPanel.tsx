@@ -9,10 +9,11 @@ import {
   type CorpusFilter,
 } from "@/components/charts/leaderboard/LeaderboardControls";
 import { LeaderboardTable } from "@/components/charts/leaderboard/LeaderboardTable";
-import { currentCorpusLabel, leaderboardAggregates } from "@/data/benchmark";
+import { currentCorpusLabel, leaderboardAggregates, type ModelKey } from "@/data/benchmark";
 
 export function LeaderboardPanel() {
   const [corpus, setCorpus] = useState<CorpusFilter>("29-task corpus");
+  const [highlightedModel, setHighlightedModel] = useState<ModelKey | null>(null);
   const aggregates = useMemo(
     () => leaderboardAggregates.filter((aggregate) => aggregate.corpus === corpus),
     [corpus],
@@ -33,6 +34,11 @@ export function LeaderboardPanel() {
     };
   }, [aggregates, corpus]);
 
+  function changeCorpus(nextCorpus: CorpusFilter) {
+    setCorpus(nextCorpus);
+    setHighlightedModel(null);
+  }
+
   return (
     <PageSection id="leaderboard" className="leaderboard-section" labelledBy="leaderboard-heading">
       <SectionHeader
@@ -46,21 +52,30 @@ export function LeaderboardPanel() {
       <div className="leaderboard-panel">
         <LeaderboardControls
           corpus={corpus}
-          onCorpusChange={setCorpus}
+          onCorpusChange={changeCorpus}
           modelCount={series.length}
           configurationCount={aggregates.length}
           trialCount={trialCount}
           replicatedConfigurationCount={replicatedConfigurationCount}
         />
-        <LeaderboardChart aggregates={aggregates} series={series} taskCount={aggregates[0]?.taskCount ?? 0} />
-        <LeaderboardTable aggregates={aggregates} />
+        <LeaderboardChart
+          aggregates={aggregates}
+          series={series}
+          taskCount={aggregates[0]?.taskCount ?? 0}
+          highlightedModel={highlightedModel}
+        />
+        <LeaderboardTable
+          aggregates={aggregates}
+          highlightedModel={highlightedModel}
+          onHighlightedModelChange={setHighlightedModel}
+        />
 
         <p className="source-note">
           Corpora are intentionally separated. Time is normalized per task, axes begin at zero, and no line implies that
           higher effort is a continuous or monotonic treatment. See the{" "}
-          <a href="docs/reproducibility.html">reproducibility method</a>
+          <a href="/docs/reproducibility.html">reproducibility method</a>
           {corpus === currentCorpusLabel ? ". Raw run IDs are shown in trial tooltips." : (
-            <> and <a href="docs/runs/2026-06-24-model-comparison.html">historical run provenance</a>.</>
+            <> and <a href="/docs/runs/2026-06-24-model-comparison.html">historical run provenance</a>.</>
           )}
         </p>
         {currentProvenance ? (

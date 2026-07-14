@@ -6,16 +6,31 @@ import { HomeHero } from "@/components/pages/home/HomeHero";
 import { MethodSection } from "@/components/pages/home/MethodSection";
 import { TasksSection } from "@/components/pages/home/TasksSection";
 import { UpdatesSection } from "@/components/pages/home/UpdatesSection";
+import { siteMetadata, websiteStructuredData } from "@/lib/seo";
+
+const projectStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "@id": `${siteMetadata.url}#project`,
+  name: "NixBench",
+  description: siteMetadata.description,
+  url: siteMetadata.url,
+  codeRepository: "https://github.com/maximilianpw/nixbench",
+  programmingLanguage: ["Nix", "Python", "TypeScript"],
+  runtimePlatform: "Nix",
+  isAccessibleForFree: true,
+};
 ---
 
 <SiteLayout
-  title="NixBench | Agentic Nix Benchmark"
-  description="NixBench measures AI coding agents on objective, hidden-evaluator Nix repair tasks."
+  title="NixBench: AI Coding Agent Benchmark for Nix"
+  description="Compare AI coding agents on 29 Nix and NixOS repository-repair tasks scored by objective hidden evaluators, with reproducible results and no LLM judges."
   activePage="home"
   canonicalPath="/"
+  structuredData={[websiteStructuredData, projectStructuredData]}
   footer={{
     text: "NixBench records objective agent runs under <code>results/&lt;run-id&gt;/</code>.",
-    href: "docs/scoring.html",
+    href: "/docs/scoring.html",
     label: "Scoring model",
   }}
 >
