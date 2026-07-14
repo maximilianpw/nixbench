@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { CartesianGrid, ErrorBar, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
+import { CartesianGrid, ErrorBar, LabelList, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
 
 import { LeaderboardChartTooltip } from "@/components/charts/leaderboard/ChartTooltip";
 import {
@@ -50,7 +50,8 @@ export function LeaderboardChart({
           <div>
             <CardTitle id="leaderboard-chart-title">Configuration means, with uncertainty</CardTitle>
             <CardDescription id="leaderboard-chart-description">
-              Mean tasks passed against mean agent seconds per task. Whiskers are 95% Student&apos;s t intervals.{" "}
+              Mean tasks passed against mean agent seconds per task. Paths connect ordered effort configurations;
+              select a model to reveal its 95% Student&apos;s t intervals and effort labels.{" "}
               {taskScaleMode === "focused"
                 ? `The task axis focuses on ${yScale.domain[0]}–${yScale.domain[1]} to make the observed differences legible.`
                 : "The task axis shows the full zero-based context."}{" "}
@@ -98,6 +99,38 @@ export function LeaderboardChart({
               content={<LeaderboardChartTooltip />}
             />
 
+            {series.map((entry) => {
+              const model = entry.aggregates[0]?.series;
+              const isHighlighted = highlightedModel === model;
+
+              return (
+                <Scatter
+                  key={`${entry.key}-trajectory`}
+                  className={cn(
+                    "effort-trajectory",
+                    isModelDimmed(highlightedModel, model) && "is-dimmed",
+                    isHighlighted && "is-highlighted",
+                  )}
+                  data={orderByEffort(entry.aggregates)}
+                  fill={entry.color}
+                  isAnimationActive={false}
+                  legendType="none"
+                  line={{
+                    stroke: entry.color,
+                    strokeLinecap: "round",
+                    strokeLinejoin: "round",
+                    strokeOpacity: isHighlighted ? 0.9 : highlightedModel === null ? 0.42 : 0.12,
+                    strokeWidth: isHighlighted ? 2 : 1.25,
+                  }}
+                  lineJointType="linear"
+                  lineType="joint"
+                  name={`${entry.label} ordered effort path`}
+                  shape={<HiddenTrajectoryPoint />}
+                  tooltipType="none"
+                />
+              );
+            })}
+
             {view === "trials"
               ? series.map((entry) => {
                   const model = entry.aggregates[0]?.series;
@@ -144,7 +177,7 @@ export function LeaderboardChart({
                     strokeOpacity={isHighlighted || highlightedModel === null ? 0.9 : 0.28}
                     strokeWidth={isHighlighted ? 2 : point.trialCount > 1 ? 1.25 : 1.75}
                   >
-                    {point.trialCount > 1 ? (
+                    {point.trialCount > 1 && isHighlighted ? (
                       <>
                         <ErrorBar
                           dataKey="secondsPerTaskError"
@@ -162,6 +195,16 @@ export function LeaderboardChart({
                         />
                       </>
                     ) : null}
+                    {isHighlighted ? (
+                      <LabelList
+                        dataKey="effort"
+                        fill="var(--ink)"
+                        fontFamily="var(--mono)"
+                        fontSize={10}
+                        offset={9}
+                        position="top"
+                      />
+                    ) : null}
                   </Scatter>
                 );
               }),
@@ -172,14 +215,19 @@ export function LeaderboardChart({
       <CardFooter>
         <div className="evidence-footer">
           <div className="evidence-key" aria-label="Evidence mark key">
-            <span><i className="mean-mark" aria-hidden="true" />Replicated mean + 95% CI</span>
+            <span>
+              <i className={highlightedModel ? "mean-mark" : "trajectory-mark"} aria-hidden="true" />
+              {highlightedModel ? "Selected mean + 95% CI" : "Ordered effort path + mean"}
+            </span>
             <span><i className="single-mark" aria-hidden="true" />Single observation or legacy composite; no CI</span>
             {view === "trials" ? (
               <span><i className="trial-mark" aria-hidden="true" />Individual trial</span>
             ) : null}
             <small>
               {view === "summary"
-                ? "Showing means only. Choose All trials to reveal every observation."
+                ? highlightedModel
+                  ? "Selected model shows effort labels and uncertainty."
+                  : "Select a model below to reveal effort labels and uncertainty."
                 : "Marks use each model's color and configuration code."}
             </small>
           </div>
@@ -212,6 +260,24 @@ export function LeaderboardChart({
 
 function isModelDimmed(highlightedModel: ModelKey | null, model: ModelKey | undefined) {
   return highlightedModel !== null && highlightedModel !== model;
+}
+
+function HiddenTrajectoryPoint() {
+  return <g aria-hidden="true" />;
+}
+
+const effortOrder: Record<string, number> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+  xhigh: 3,
+  max: 4,
+};
+
+function orderByEffort(points: ChartSeries["aggregates"]) {
+  return [...points].sort(
+    (left, right) => (effortOrder[left.effort ?? ""] ?? 99) - (effortOrder[right.effort ?? ""] ?? 99),
+  );
 }
 
 function buildSecondsScale(aggregates: LeaderboardAggregate[]) {

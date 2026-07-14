@@ -47,7 +47,7 @@ export function LeaderboardPanel() {
     <PageSection id="leaderboard" className="leaderboard-section" labelledBy="leaderboard-heading">
       <SectionHeader
         title="Compare the signal first. Inspect the scatter second."
-        description="Configuration means and confidence intervals lead the view. Individual trials remain one click away when you want to inspect the underlying variation."
+        description="Ordered effort paths lead the view. Select a model for uncertainty and effort labels, or reveal every trial to inspect the underlying variation."
         headingId="leaderboard-heading"
         compact
       />
@@ -82,7 +82,8 @@ export function LeaderboardPanel() {
 
         <p className="source-note">
           Corpora are intentionally separated and time is normalized per task. The focused y-axis is explicitly labelled;
-          Full scale restores the zero baseline. No line implies that higher effort is a continuous or monotonic treatment.
+          Full scale restores the zero baseline. Lines show configuration order from lower to higher effort; they do not
+          imply continuous scaling or monotonic treatment.
           See the{" "}
           <a href="/docs/reproducibility.html">reproducibility method</a>
           {corpus === currentCorpusLabel ? ". Raw run IDs are shown in trial tooltips." : (
