@@ -46,7 +46,6 @@ export function LeaderboardPanel() {
   return (
     <PageSection id="leaderboard" className="leaderboard-section" labelledBy="leaderboard-heading">
       <SectionHeader
-        eyebrow="Benchmark evidence"
         title="Compare the signal first. Inspect the scatter second."
         description="Configuration means and confidence intervals lead the view. Individual trials remain one click away when you want to inspect the underlying variation."
         headingId="leaderboard-heading"

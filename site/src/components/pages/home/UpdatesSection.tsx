@@ -24,7 +24,6 @@ export function UpdatesSection({}: UpdatesSectionProps = {}) {
     <section className="cta-band" id="updates" aria-labelledby="updates-heading">
       <div className="cta-band-inner">
         <div className="cta-copy">
-          <p className="eyebrow">Run your agent</p>
           <h2 id="updates-heading">Add evidence, not another claim.</h2>
           <p>Use the open harness, preserve the run artifacts, and add a comparable row to the benchmark.</p>
           <Button asChild variant="secondary">

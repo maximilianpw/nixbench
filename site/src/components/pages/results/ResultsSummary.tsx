@@ -8,7 +8,6 @@ export function ResultsSummary() {
   return (
     <PageSection className="results-summary" labelledBy="summary-heading">
       <SectionHeader
-        eyebrow="Evidence index"
         title="Coverage by model family, without picking a lucky winner."
         description="Ranges summarize configuration means. Trial and replication counts show how much evidence sits behind each family."
         headingId="summary-heading"

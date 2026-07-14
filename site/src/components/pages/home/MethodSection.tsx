@@ -9,7 +9,6 @@ export function MethodSection({}: MethodSectionProps = {}) {
     <section className="method-band" aria-labelledby="method-heading">
       <div className="section method-section">
         <SectionHeader
-          eyebrow="Methodology"
           title="The agent edits a worktree. The evaluator scores the result."
           description="A simple, inspectable protocol separates generation from evaluation."
           headingId="method-heading"

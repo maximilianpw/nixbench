@@ -13,10 +13,6 @@ export function HomeHero() {
           <div className="hero-identity">
             <BrandMark className="hero-symbol" />
             <div>
-              <p className="hero-kicker">
-                <span aria-hidden="true" />
-                Open benchmark for agentic Nix
-              </p>
               <h1 id="home-hero-title">NixBench</h1>
             </div>
           </div>

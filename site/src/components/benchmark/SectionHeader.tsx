@@ -9,7 +9,6 @@ export type SectionHeaderAction = {
 };
 
 export type SectionHeaderProps = {
-  eyebrow: string;
   title: string;
   description?: string;
   action?: SectionHeaderAction;
@@ -17,11 +16,10 @@ export type SectionHeaderProps = {
   compact?: boolean;
 };
 
-export function SectionHeader({ eyebrow, title, description, action, headingId, compact }: SectionHeaderProps) {
+export function SectionHeader({ title, description, action, headingId, compact }: SectionHeaderProps) {
   return (
     <div className={cn("section-heading", compact && "compact")}>
       <div>
-        <p className="eyebrow">{eyebrow}</p>
         <h2 id={headingId}>{title}</h2>
         {description ? <p className="section-description">{description}</p> : null}
       </div>

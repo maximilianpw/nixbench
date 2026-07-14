@@ -1,7 +1,6 @@
 ---
 import { ArrowLeft, ArrowRight, BookOpenText, FileText } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -74,13 +73,11 @@ const docsBreadcrumbs = breadcrumbStructuredData([
     <section class="docs-hero" aria-labelledby="docs-title">
       <div class="docs-hero-inner">
         <div class="docs-title-block">
-          <Badge variant={doc.group === "Run Notes" ? "codex" : "muted"}>{doc.group}</Badge>
           <h1 id="docs-title">{doc.title}</h1>
           <p>{doc.summary}</p>
         </div>
         <Card className="docs-context-card">
           <CardHeader>
-            <Badge variant="default">Source</Badge>
             <h2 class="card-title">{doc.sourcePath}</h2>
             <CardDescription>Static HTML generated from the repository markdown.</CardDescription>
           </CardHeader>
@@ -135,7 +132,6 @@ const docsBreadcrumbs = breadcrumbStructuredData([
           {previousDoc && (
             <Card className="docs-neighbor-card">
               <CardHeader>
-                <Badge variant="muted">Previous</Badge>
                 <CardTitle>{previousDoc.title}</CardTitle>
                 <CardDescription>{previousDoc.summary}</CardDescription>
               </CardHeader>
@@ -152,7 +148,6 @@ const docsBreadcrumbs = breadcrumbStructuredData([
           {nextDoc && (
             <Card className="docs-neighbor-card">
               <CardHeader>
-                <Badge variant="muted">Next</Badge>
                 <CardTitle>{nextDoc.title}</CardTitle>
                 <CardDescription>{nextDoc.summary}</CardDescription>
               </CardHeader>

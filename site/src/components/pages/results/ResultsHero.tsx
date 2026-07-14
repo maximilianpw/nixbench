@@ -1,15 +1,11 @@
 import { StatGrid } from "@/components/benchmark/StatGrid";
-import { currentEvidenceSummary, resultOverviewStats, resultsDateRangeLabel } from "@/data/benchmark";
+import { currentEvidenceSummary, resultOverviewStats } from "@/data/benchmark";
 
 export function ResultsHero() {
   return (
     <section className="results-hero" aria-labelledby="results-hero-title">
       <div className="results-hero-inner">
         <div className="results-title-block">
-          <p className="hero-kicker">
-            <span aria-hidden="true" />
-            Results evidence · {resultsDateRangeLabel}
-          </p>
           <h1 id="results-hero-title">Benchmark results</h1>
           <p className="results-statement">Configuration means, individual trials, and honest uncertainty.</p>
           <p className="results-description">

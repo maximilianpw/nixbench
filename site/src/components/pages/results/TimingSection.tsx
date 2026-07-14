@@ -18,7 +18,6 @@ export function TimingSection({}: TimingSectionProps = {}) {
   return (
     <PageSection className="timing-section" labelledBy="timing-heading">
       <SectionHeader
-        eyebrow="Baseline timing"
         title="Elapsed task time for the same fixed baseline runs."
         description="Timing follows the exact columns above: xhigh Codex runs and the historical Claude default composite, each with a 240-second per-task timeout."
         headingId="timing-heading"

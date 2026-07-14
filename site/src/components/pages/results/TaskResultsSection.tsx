@@ -26,7 +26,6 @@ export function TaskResultsSection({}: TaskResultsSectionProps = {}) {
   return (
     <PageSection className="task-results" labelledBy="task-results-heading">
       <SectionHeader
-        eyebrow="Baseline matrix"
         title="Every task, shown against fixed baseline runs."
         description="These are named comparison runs—not each model’s best row. Codex columns use xhigh effort; the historical Claude column preserves the original default composite."
         headingId="task-results-heading"
