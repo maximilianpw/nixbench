@@ -2,102 +2,75 @@ import { useMemo, useState } from "react";
 
 import { PageSection } from "@/components/benchmark/PageSection";
 import { SectionHeader } from "@/components/benchmark/SectionHeader";
-import { buildChartPoint, buildSeries, chartModes } from "@/components/charts/leaderboard/chart-data";
+import { buildEvidenceSeries } from "@/components/charts/leaderboard/chart-data";
 import { LeaderboardChart } from "@/components/charts/leaderboard/LeaderboardChart";
 import {
   LeaderboardControls,
   type CorpusFilter,
-  type RunView,
 } from "@/components/charts/leaderboard/LeaderboardControls";
 import { LeaderboardTable } from "@/components/charts/leaderboard/LeaderboardTable";
-import type { ChartMode } from "@/components/charts/leaderboard/types";
-import { leaderboardRuns, type LeaderboardRun } from "@/data/benchmark";
+import { currentCorpusLabel, leaderboardAggregates } from "@/data/benchmark";
 
-export type LeaderboardPanelProps = {};
-
-export function LeaderboardPanel({}: LeaderboardPanelProps = {}) {
-  const [mode, setMode] = useState<ChartMode>("score");
+export function LeaderboardPanel() {
   const [corpus, setCorpus] = useState<CorpusFilter>("29-task corpus");
-  const [view, setView] = useState<RunView>("best");
-  const corpusRuns = useMemo(
-    () => (corpus === "all" ? leaderboardRuns : leaderboardRuns.filter((run) => run.corpus === corpus)),
+  const aggregates = useMemo(
+    () => leaderboardAggregates.filter((aggregate) => aggregate.corpus === corpus),
     [corpus],
   );
-  const filteredRuns = useMemo(
-    () => (view === "best" ? bestRunsByModel(corpusRuns) : corpusRuns),
-    [corpusRuns, view],
-  );
-  const chartData = useMemo(() => filteredRuns.map(buildChartPoint), [filteredRuns]);
-  const { linkedSeries, standaloneData } = useMemo(() => buildSeries(chartData), [chartData]);
-  const config = chartModes[mode];
-  const modelCount = new Set(filteredRuns.map((run) => run.series).filter(Boolean)).size;
-  const taskLabel =
-    corpus === "all" ? "26 & 29 tasks" : [filteredRuns[0]?.totalTasks ?? 0, "tasks"].join(" ");
-
-  function changeCorpus(nextCorpus: CorpusFilter) {
-    setCorpus(nextCorpus);
-    if (nextCorpus === "all" && mode === "failures") {
-      setMode("score");
-    }
-  }
+  const series = useMemo(() => buildEvidenceSeries(aggregates), [aggregates]);
+  const trialCount = aggregates.reduce((sum, aggregate) => sum + aggregate.trialCount, 0);
+  const replicatedConfigurationCount = aggregates.filter((aggregate) => aggregate.trialCount > 1).length;
+  const currentProvenance = useMemo(() => {
+    if (corpus !== currentCorpusLabel) return null;
+    const trials = aggregates.flatMap((aggregate) => aggregate.trials);
+    const first = trials[0];
+    if (!first?.agentVersion || !first.corpusRevision || !first.host || !first.network) return null;
+    return {
+      agentVersion: first.agentVersion,
+      corpusRevision: first.corpusRevision,
+      host: first.host,
+      network: first.network,
+    };
+  }, [aggregates, corpus]);
 
   return (
     <PageSection id="leaderboard" className="leaderboard-section" labelledBy="leaderboard-heading">
       <SectionHeader
-        eyebrow="Benchmark results"
-        title="Leaderboard"
-        description="Filter by corpus, compare efficiency, then sort every comparison row by the metric that matters."
+        eyebrow="Benchmark evidence"
+        title="Outcomes with their uncertainty attached."
+        description="Large points are configuration means; faint points are individual corpus trials. Confidence bars appear only when repeated trials make an estimate possible."
         headingId="leaderboard-heading"
         compact
       />
 
       <div className="leaderboard-panel">
         <LeaderboardControls
-          mode={mode}
-          onModeChange={setMode}
           corpus={corpus}
-          onCorpusChange={changeCorpus}
-          view={view}
-          onViewChange={setView}
-          modelCount={modelCount}
-          taskLabel={taskLabel}
-          visibleRunCount={filteredRuns.length}
-          totalRunCount={corpusRuns.length}
+          onCorpusChange={setCorpus}
+          modelCount={series.length}
+          configurationCount={aggregates.length}
+          trialCount={trialCount}
+          replicatedConfigurationCount={replicatedConfigurationCount}
         />
-        <LeaderboardChart
-          chartData={chartData}
-          config={config}
-          linkedSeries={linkedSeries}
-          standaloneData={standaloneData}
-          showEffortSweep={view === "all"}
-        />
-        <LeaderboardTable runs={filteredRuns} />
+        <LeaderboardChart aggregates={aggregates} series={series} taskCount={aggregates[0]?.taskCount ?? 0} />
+        <LeaderboardTable aggregates={aggregates} />
 
         <p className="source-note">
-          Each row is one recorded run or documented composite. Corpus labels remain attached because 26- and 29-task
-          scores use different denominators. See the{" "}
-          <a href="docs/runs/2026-06-24-model-comparison.html">run notes</a>.
+          Corpora are intentionally separated. Time is normalized per task, axes begin at zero, and no line implies that
+          higher effort is a continuous or monotonic treatment. See the{" "}
+          <a href="docs/reproducibility.html">reproducibility method</a>
+          {corpus === currentCorpusLabel ? ". Raw run IDs are shown in trial tooltips." : (
+            <> and <a href="docs/runs/2026-06-24-model-comparison.html">historical run provenance</a>.</>
+          )}
         </p>
+        {currentProvenance ? (
+          <p className="source-note provenance-note">
+            Current trial environment: <code>{currentProvenance.agentVersion}</code> · host{" "}
+            <code>{currentProvenance.host}</code> · corpus <code>{currentProvenance.corpusRevision.slice(0, 12)}</code> ·
+            network <code>{currentProvenance.network}</code>.
+          </p>
+        ) : null}
       </div>
     </PageSection>
   );
-}
-
-function bestRunsByModel(runs: LeaderboardRun[]) {
-  const bestRuns = new Map<string, LeaderboardRun>();
-
-  for (const run of runs) {
-    const key = run.series ?? run.id;
-    const current = bestRuns.get(key);
-
-    if (
-      !current ||
-      run.passRate > current.passRate ||
-      (run.passRate === current.passRate && run.agentTimeSeconds < current.agentTimeSeconds)
-    ) {
-      bestRuns.set(key, run);
-    }
-  }
-
-  return [...bestRuns.values()];
 }

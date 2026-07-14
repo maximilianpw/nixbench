@@ -6,33 +6,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { LeaderboardRun } from "@/data/benchmark";
+import { formatDuration, type LeaderboardAggregate } from "@/data/benchmark";
 
 export type LeaderboardTableProps = {
-  runs: LeaderboardRun[];
+  aggregates: LeaderboardAggregate[];
 };
 
-type SortKey = "run" | "effort" | "passRate" | "score" | "agentTimeSeconds" | "failed";
+type SortKey = "configuration" | "effort" | "trialCount" | "tasksPassed" | "secondsPerTask" | "timeouts";
 type SortDirection = "asc" | "desc";
-type SortState = {
-  key: SortKey;
-  direction: SortDirection;
-};
+type SortState = { key: SortKey; direction: SortDirection };
 
-const defaultSort: SortState = { key: "passRate", direction: "desc" };
-const effortRank = {
-  low: 0,
-  medium: 1,
-  high: 2,
-  xhigh: 3,
-  max: 4,
-  ultra: 5,
-} as const;
+const defaultSort: SortState = { key: "tasksPassed", direction: "desc" };
+const effortRank = { low: 0, medium: 1, high: 2, xhigh: 3, max: 4, ultra: 5 } as const;
 
-export function LeaderboardTable({ runs }: LeaderboardTableProps) {
+export function LeaderboardTable({ aggregates }: LeaderboardTableProps) {
   const [sort, setSort] = useState<SortState>(defaultSort);
-  const sortedRuns = useMemo(() => sortRuns(runs, sort), [runs, sort]);
-  const rankById = useMemo(() => buildRanks(runs), [runs]);
+  const sortedAggregates = useMemo(() => sortAggregates(aggregates, sort), [aggregates, sort]);
 
   const toggleSort = (key: SortKey) => {
     setSort((current) => ({
@@ -42,115 +31,112 @@ export function LeaderboardTable({ runs }: LeaderboardTableProps) {
   };
 
   const ariaSortFor = (key: SortKey) => {
-    if (sort.key !== key) {
-      return undefined;
-    }
-
+    if (sort.key !== key) return undefined;
     return sort.direction === "asc" ? "ascending" : "descending";
   };
 
   return (
     <>
       <Table
-        className="leaderboard-table"
+        className="leaderboard-table evidence-table"
         containerClassName="leaderboard-table-wrap"
-        aria-label="NixBench comparison leaderboard"
+        aria-label="NixBench configuration evidence"
       >
         <TableHeader>
           <TableRow>
-            <TableHead scope="col" className="rank-column">Rank</TableHead>
-            <TableHead scope="col" aria-sort={ariaSortFor("run")}>
-              <SortButton label="Run" sortKey="run" sort={sort} onSort={toggleSort} />
+            <TableHead scope="col" aria-sort={ariaSortFor("configuration")}>
+              <SortButton label="Configuration" sortKey="configuration" sort={sort} onSort={toggleSort} />
             </TableHead>
             <TableHead scope="col" aria-sort={ariaSortFor("effort")}>
               <SortButton label="Effort" sortKey="effort" sort={sort} onSort={toggleSort} />
             </TableHead>
-            <TableHead scope="col" aria-sort={ariaSortFor("passRate")}>
-              <SortButton label="Pass rate" sortKey="passRate" sort={sort} onSort={toggleSort} />
+            <TableHead scope="col" aria-sort={ariaSortFor("trialCount")}>
+              <SortButton label="Evidence" sortKey="trialCount" sort={sort} onSort={toggleSort} />
             </TableHead>
-            <TableHead scope="col" aria-sort={ariaSortFor("score")}>
-              <SortButton label="Score" sortKey="score" sort={sort} onSort={toggleSort} />
+            <TableHead scope="col" aria-sort={ariaSortFor("tasksPassed")}>
+              <SortButton label="Mean tasks" sortKey="tasksPassed" sort={sort} onSort={toggleSort} />
             </TableHead>
-            <TableHead scope="col" aria-sort={ariaSortFor("agentTimeSeconds")}>
-              <SortButton label="Agent time" sortKey="agentTimeSeconds" sort={sort} onSort={toggleSort} />
+            <TableHead scope="col">95% CI / observed</TableHead>
+            <TableHead scope="col" aria-sort={ariaSortFor("secondsPerTask")}>
+              <SortButton label="Seconds / task" sortKey="secondsPerTask" sort={sort} onSort={toggleSort} />
             </TableHead>
-            <TableHead scope="col" aria-sort={ariaSortFor("failed")}>
-              <SortButton label="Failed" sortKey="failed" sort={sort} onSort={toggleSort} />
+            <TableHead scope="col" aria-sort={ariaSortFor("timeouts")}>
+              <SortButton label="Timeouts" sortKey="timeouts" sort={sort} onSort={toggleSort} />
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedRuns.map((run) => (
-            <TableRow key={run.id}>
-              <TableCell className="rank-cell">#{rankById.get(run.id)}</TableCell>
+          {sortedAggregates.map((aggregate) => (
+            <TableRow key={aggregate.id}>
               <TableHead scope="row">
                 <span className="agent-cell">
-                  <span className={`agent-mark ${run.kind}`} style={agentMarkStyle(run)} aria-hidden="true">
-                    {run.marker}
+                  <span className={`agent-mark ${aggregate.kind}`} style={agentMarkStyle(aggregate)} aria-hidden="true">
+                    {aggregate.marker}
                   </span>
                   <span>
-                    <strong>{run.agent}</strong>
-                    <small>
-                      {run.corpus} · {run.runId}
-                    </small>
+                    <strong>{aggregate.agent}</strong>
+                    <small>{aggregate.corpus} · {aggregate.trialCount} recorded {aggregate.trialCount === 1 ? "trial" : "trials"}</small>
                   </span>
                 </span>
               </TableHead>
+              <TableCell><Badge variant="default">{aggregate.effort ?? "default"}</Badge></TableCell>
               <TableCell>
-                <Badge variant="default">{run.effort ?? "default"}</Badge>
+                <Badge variant={aggregate.trialCount > 1 ? "pass" : "muted"}>
+                  {aggregate.provenance === "composite"
+                    ? "legacy composite"
+                    : aggregate.trialCount > 1
+                      ? `n=${aggregate.trialCount}`
+                      : "single run"}
+                </Badge>
               </TableCell>
               <TableCell>
-                <span className="score-percent">{run.passRate}%</span>
-                <Progress value={run.passRate} aria-label={`${run.agent} pass rate`} />
+                <span className="score-percent">{aggregate.passedTasks.mean.toFixed(1)} / {aggregate.taskCount}</span>
+                <Progress
+                  value={(aggregate.passedTasks.mean / aggregate.taskCount) * 100}
+                  aria-label={`${aggregate.agent} ${aggregate.effort ?? "default"} mean tasks passed`}
+                />
               </TableCell>
               <TableCell>
-                {run.score} / {run.maxScore}
+                <span className="interval-cell">
+                  <strong>{formatInterval(aggregate)}</strong>
+                  <small>observed {aggregate.passedTasks.min.toFixed(0)}–{aggregate.passedTasks.max.toFixed(0)}</small>
+                </span>
               </TableCell>
-              <TableCell>{run.agentTimeLabel}</TableCell>
               <TableCell>
-                {run.failed}
-                <small className="task-count-note">
-                  {run.completedTasks}/{run.totalTasks}
-                </small>
+                <span className="interval-cell">
+                  <strong>{aggregate.agentSecondsPerTask.mean.toFixed(1)}s</strong>
+                  <small>{formatDuration(aggregate.agentTimeSeconds.mean)} / corpus</small>
+                </span>
               </TableCell>
+              <TableCell>{aggregate.totalTimeouts}</TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
 
-      <ol className="leaderboard-mobile-list" aria-label="NixBench comparison leaderboard">
-        {sortedRuns.map((run) => (
-          <li key={run.id}>
-            <div className="mobile-rank">#{rankById.get(run.id)}</div>
+      <ol className="leaderboard-mobile-list evidence-mobile-list" aria-label="NixBench configuration evidence">
+        {sortedAggregates.map((aggregate) => (
+          <li key={aggregate.id}>
             <div className="mobile-run-heading">
-              <span className={`agent-mark ${run.kind}`} style={agentMarkStyle(run)} aria-hidden="true">
-                {run.marker}
+              <span className={`agent-mark ${aggregate.kind}`} style={agentMarkStyle(aggregate)} aria-hidden="true">
+                {aggregate.marker}
               </span>
               <span>
-                <strong>{run.agent}</strong>
-                <small>{run.corpus}</small>
+                <strong>{aggregate.agent}</strong>
+                <small>{aggregate.corpus}</small>
               </span>
-              <Badge variant="default">{run.effort ?? "default"}</Badge>
+              <Badge variant="default">{aggregate.effort ?? "default"}</Badge>
             </div>
             <dl>
               <div>
-                <dt>Pass rate</dt>
-                <dd>{run.passRate}%</dd>
+                <dt>Evidence</dt>
+                <dd>{aggregate.provenance === "composite" ? "composite" : aggregate.trialCount === 1 ? "single run" : `n=${aggregate.trialCount}`}</dd>
               </div>
-              <div>
-                <dt>Score</dt>
-                <dd>{run.score}/{run.maxScore}</dd>
-              </div>
-              <div>
-                <dt>Agent time</dt>
-                <dd>{run.agentTimeLabel}</dd>
-              </div>
-              <div>
-                <dt>Failed</dt>
-                <dd>{run.failed}</dd>
-              </div>
+              <div><dt>Mean tasks</dt><dd>{aggregate.passedTasks.mean.toFixed(1)}/{aggregate.taskCount}</dd></div>
+              <div><dt>95% CI</dt><dd>{formatInterval(aggregate)}</dd></div>
+              <div><dt>Seconds / task</dt><dd>{aggregate.agentSecondsPerTask.mean.toFixed(1)}s</dd></div>
             </dl>
-            <small className="mobile-run-id">{run.runId}</small>
+            <small className="mobile-run-id">Observed {aggregate.passedTasks.min.toFixed(0)}–{aggregate.passedTasks.max.toFixed(0)} tasks · {aggregate.totalTimeouts} timeouts</small>
           </li>
         ))}
       </ol>
@@ -170,15 +156,13 @@ function SortButton({
   onSort: (key: SortKey) => void;
 }) {
   const isActive = sort.key === sortKey;
-  const directionLabel = isActive ? sort.direction : "unsorted";
-
   return (
     <Button
       variant="ghost"
       size="sm"
       type="button"
       className="table-sort"
-      aria-label={`Sort by ${label}, ${directionLabel}`}
+      aria-label={`Sort by ${label}, ${isActive ? sort.direction : "unsorted"}`}
       data-active={isActive || undefined}
       onClick={() => onSort(sortKey)}
     >
@@ -188,60 +172,45 @@ function SortButton({
   );
 }
 
-function sortRuns(runs: LeaderboardRun[], sort: SortState) {
-  return [...runs].sort((a, b) => {
+function sortAggregates(aggregates: LeaderboardAggregate[], sort: SortState) {
+  return [...aggregates].sort((a, b) => {
     const direction = sort.direction === "asc" ? 1 : -1;
-    const primary = compareRuns(a, b, sort.key);
-
-    if (primary !== 0) {
-      return primary * direction;
+    const primary = compareAggregates(a, b, sort.key);
+    if (primary !== 0) return primary * direction;
+    if (sort.key === "tasksPassed") {
+      return compareAggregates(a, b, "secondsPerTask");
     }
-
-    if (sort.key === "passRate" || sort.key === "score") {
-      const efficiencyTieBreak = compareRuns(a, b, "agentTimeSeconds");
-      if (efficiencyTieBreak !== 0) {
-        return efficiencyTieBreak;
-      }
-    }
-
-    return compareRuns(a, b, "run") || compareRuns(a, b, "effort");
+    return compareAggregates(a, b, "configuration") || compareAggregates(a, b, "effort");
   });
 }
 
-function compareRuns(a: LeaderboardRun, b: LeaderboardRun, key: SortKey) {
+function compareAggregates(a: LeaderboardAggregate, b: LeaderboardAggregate, key: SortKey) {
   switch (key) {
-    case "run":
-      return `${a.agent} ${a.runId}`.localeCompare(`${b.agent} ${b.runId}`);
+    case "configuration":
+      return a.agent.localeCompare(b.agent);
     case "effort":
       return effortValue(a) - effortValue(b);
-    case "passRate":
-      return a.passRate - b.passRate;
-    case "score":
-      return a.score / a.maxScore - b.score / b.maxScore;
-    case "agentTimeSeconds":
-      return a.agentTimeSeconds - b.agentTimeSeconds;
-    case "failed":
-      return a.failed / a.totalTasks - b.failed / b.totalTasks;
+    case "trialCount":
+      return a.trialCount - b.trialCount;
+    case "tasksPassed":
+      return a.passedTasks.mean - b.passedTasks.mean;
+    case "secondsPerTask":
+      return a.agentSecondsPerTask.mean - b.agentSecondsPerTask.mean;
+    case "timeouts":
+      return a.totalTimeouts - b.totalTimeouts;
   }
 }
 
-function effortValue(run: LeaderboardRun) {
-  return run.effort ? effortRank[run.effort] : -1;
+function effortValue(aggregate: LeaderboardAggregate) {
+  return aggregate.effort ? effortRank[aggregate.effort] : -1;
 }
 
-function agentMarkStyle(run: LeaderboardRun) {
-  return run.series ? ({ "--agent-color": modelColors[run.series] } as CSSProperties) : undefined;
+function agentMarkStyle(aggregate: LeaderboardAggregate) {
+  return aggregate.series ? ({ "--agent-color": modelColors[aggregate.series] } as CSSProperties) : undefined;
 }
 
-function buildRanks(runs: LeaderboardRun[]) {
-  return new Map(
-    [...runs]
-      .sort(
-        (a, b) =>
-          b.passRate - a.passRate ||
-          a.agentTimeSeconds - b.agentTimeSeconds ||
-          a.agent.localeCompare(b.agent),
-      )
-      .map((run, index) => [run.id, index + 1]),
-  );
+function formatInterval(aggregate: LeaderboardAggregate) {
+  const low = aggregate.passedTasks.ci95Low;
+  const high = aggregate.passedTasks.ci95High;
+  return low == null || high == null ? "unavailable" : `${low.toFixed(1)}–${high.toFixed(1)}`;
 }

@@ -214,7 +214,13 @@ def _build_command_envs(
     return agent_env, evaluator_env
 
 
-def write_summary(results_dir: Path, run_id: str, results: list[TaskRunResult]) -> Path:
+def write_summary(
+    results_dir: Path,
+    run_id: str,
+    results: list[TaskRunResult],
+    *,
+    metadata: dict[str, Any] | None = None,
+) -> Path:
     run_dir = results_dir / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     total_score = sum(result.score for result in results)
@@ -226,6 +232,7 @@ def write_summary(results_dir: Path, run_id: str, results: list[TaskRunResult]) 
         "failed": sum(1 for result in results if not result.passed),
         "score": total_score,
         "max_score": total_max,
+        "metadata": metadata or {},
         "tasks": [result.to_json() for result in results],
     }
     summary_path = run_dir / "summary.json"

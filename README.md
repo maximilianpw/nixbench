@@ -119,6 +119,22 @@ python3 bench.py run-all \
   --agent-cmd 'your-agent-command-here'
 ```
 
+For publishable comparisons, repeat the full corpus and record the model metadata. The study summary reports means, observed ranges, and 95% Student's t intervals:
+
+```sh
+python3 bench.py run-all \
+  --trials 5 \
+  --model gpt-5.6-sol \
+  --series gpt56Sol \
+  --effort high \
+  --kind codex \
+  --marker SH \
+  --label "GPT-5.6 Sol via Codex CLI" \
+  --agent-version "$(codex --version)" \
+  --network unknown \
+  --agent-cmd 'your-agent-command-here'
+```
+
 ## Running With Codex
 
 Example Codex command:
@@ -126,7 +142,7 @@ Example Codex command:
 ```sh
 python3 bench.py run-all \
   --agent-timeout-seconds 240 \
-  --agent-cmd 'codex -a never exec --ephemeral --skip-git-repo-check --sandbox workspace-write "You are in a temporary NixBench benchmark task workspace. Read NIXBENCH_PROMPT.md, then edit the local starter files to satisfy it. Only modify files in this directory. Do not inspect hidden evaluator files or the original task directory. Run local checks if useful, then stop."'
+  --agent-cmd 'codex exec --ephemeral --skip-git-repo-check --sandbox workspace-write "You are in a temporary NixBench benchmark task workspace. Read NIXBENCH_PROMPT.md, then edit the local starter files to satisfy it. Only modify files in this directory. Do not inspect hidden evaluator files or the original task directory. Run local checks if useful, then stop."'
 ```
 
 The agent command is executed inside a copied starter directory. The hidden evaluator is outside that directory and runs only after the agent exits.
@@ -321,7 +337,7 @@ alejandra flake.nix tasks/*/starter/*.nix tasks/*/reference/*.nix
 
 Current limitations:
 
-- The corpus is still small enough that repeated runs are needed before treating a score as stable.
+- The corpus is still small enough that its built-in repeated studies and confidence intervals are needed before treating a score as stable.
 - Scoring is mostly pass/fail.
 - No leaderboard service exists yet.
 - The harness does not isolate agents with containers or VMs.
@@ -332,7 +348,6 @@ Good next steps:
 - Add real-build packaging tasks behind an optional slow profile.
 - Add partial-credit evaluators.
 - Add a result report generator.
-- Add repeated-run support for measuring variance.
 - Add corpus versioning and task deprecation policy.
 
 ## Documentation

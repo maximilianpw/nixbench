@@ -1,30 +1,43 @@
-import type { LeaderboardRun, ModelKey } from "@/data/benchmark";
+import type { AgentKind, LeaderboardAggregate, ModelKey, ReasoningEffort } from "@/data/benchmark";
 
-export type ChartMode = "score" | "time" | "failures";
-
-export type ChartPoint = LeaderboardRun & {
-  agentMinutes: number;
+export type AggregateChartPoint = LeaderboardAggregate & {
+  datumType: "aggregate";
+  tasksPassedMean: number;
+  secondsPerTaskMean: number;
+  tasksPassedError: [number, number];
+  secondsPerTaskError: [number, number];
+  pointSize: number;
+  color: string;
   label: string;
+};
+
+export type TrialChartPoint = {
+  datumType: "trial";
+  id: string;
+  configurationId: string;
+  agent: string;
+  kind: AgentKind;
+  corpus: string;
+  runId: string;
+  series?: ModelKey;
+  effort?: ReasoningEffort;
+  trial: number;
+  taskCount: number;
+  tasksPassed: number;
+  secondsPerTask: number;
+  pointSize: number;
+  agentTimeLabel: string;
+  failed: number;
+  timeouts: number;
   color: string;
 };
+
+export type EvidenceDatum = AggregateChartPoint | TrialChartPoint;
 
 export type ChartSeries = {
-  key: ModelKey;
+  key: string;
   label: string;
   color: string;
-  points: ChartPoint[];
-};
-
-export type ChartConfig = {
-  label: string;
-  xKey: keyof ChartPoint;
-  yKey: keyof ChartPoint;
-  xLabel: string;
-  yLabel: string;
-  xDomain: [number, number];
-  yDomain: [number, number];
-  xTicks: number[];
-  yTicks: number[];
-  xFormatter: (value: number) => string;
-  yFormatter: (value: number) => string;
+  aggregates: AggregateChartPoint[];
+  trials: TrialChartPoint[];
 };

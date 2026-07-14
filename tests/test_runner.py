@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import Mock, call, patch
 
 from nixbench.runner import _read_score, _run_shell_command, run_task, write_summary
+from nixbench.study import build_study_trial, count_study_trials, estimate_95, write_study_summary
 from nixbench.task import load_task
 
 
@@ -463,6 +464,97 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(summary["score"], 10)
             self.assertEqual(summary["max_score"], 20)
             self.assertEqual([task["passed"] for task in summary["tasks"]], [True, False])
+
+    def test_study_summary_reports_small_sample_uncertainty(self) -> None:
+        estimate = estimate_95([19, 22, 22, 21, 22], lower_bound=0, upper_bound=29)
+
+        self.assertEqual(estimate["n"], 5)
+        self.assertAlmostEqual(estimate["mean"], 21.2)
+        self.assertAlmostEqual(estimate["standard_deviation"], 1.303840481, places=8)
+        self.assertLess(estimate["ci95_low"], estimate["mean"])
+        self.assertGreater(estimate["ci95_high"], estimate["mean"])
+
+    def test_single_trial_has_no_confidence_interval(self) -> None:
+        estimate = estimate_95([22], lower_bound=0, upper_bound=29)
+
+        self.assertEqual(estimate["mean"], 22)
+        self.assertIsNone(estimate["standard_deviation"])
+        self.assertIsNone(estimate["ci95_low"])
+        self.assertIsNone(estimate["ci95_high"])
+        self.assertIsNone(estimate["ci95_margin"])
+
+    def test_write_study_summary_aggregates_independent_trials(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            results_dir = root / "results"
+            reference = run_task(
+                task,
+                results_dir=results_dir,
+                run_id="reference",
+                solution_mode="reference",
+            )
+            starter = run_task(
+                task,
+                results_dir=results_dir,
+                run_id="starter",
+                solution_mode="starter",
+            )
+            trials = [
+                build_study_trial("reference", [reference]),
+                build_study_trial("starter", [starter]),
+            ]
+
+            summary_path = write_study_summary(
+                results_dir,
+                "study",
+                trials,
+                metadata={"model": "toy-model", "effort": "high"},
+            )
+            summary = json.loads(summary_path.read_text())
+
+            self.assertEqual(summary["schema_version"], 1)
+            self.assertEqual(summary["trial_count"], 2)
+            self.assertEqual(summary["task_count"], 1)
+            self.assertEqual(summary["metadata"]["model"], "toy-model")
+            self.assertEqual(summary["estimates"]["passed_tasks"]["mean"], 0.5)
+            self.assertEqual([trial["run_id"] for trial in summary["trials"]], ["reference", "starter"])
+
+    def test_count_study_trials_filters_by_configuration(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            results_dir = Path(temp)
+            studies = [
+                ("sol-low-a", "gpt56Sol", "low", 29, 2, True),
+                ("sol-low-b", "gpt56Sol", "low", 29, 3, True),
+                ("sol-low-unpublished", "gpt56Sol", "low", 29, 7, False),
+                ("sol-high", "gpt56Sol", "high", 29, 4, True),
+                ("sol-low-old", "gpt56Sol", "low", 26, 5, True),
+            ]
+            for study_id, series, effort, task_count, trial_count, publish in studies:
+                path = results_dir / "studies" / study_id / "summary.json"
+                path.parent.mkdir(parents=True)
+                path.write_text(
+                    json.dumps(
+                        {
+                            "metadata": {
+                                "series": series,
+                                "effort": effort,
+                                "publish": publish,
+                            },
+                            "task_count": task_count,
+                            "trial_count": trial_count,
+                        }
+                    )
+                )
+
+            count = count_study_trials(
+                results_dir,
+                series="gpt56Sol",
+                effort="low",
+                task_count=29,
+            )
+
+            self.assertEqual(count, 5)
 
     def test_diff_artifacts_do_not_follow_symlinks(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
