@@ -2,7 +2,13 @@ import type { CSSProperties } from "react";
 import { CartesianGrid, ErrorBar, LabelList, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
 
 import { LeaderboardChartTooltip } from "@/components/charts/leaderboard/ChartTooltip";
+import {
+  buildTaskScale,
+  type TaskScaleMode,
+} from "@/components/charts/leaderboard/chart-scale";
+import type { EvidenceView } from "@/components/charts/leaderboard/LeaderboardControls";
 import type { ChartSeries } from "@/components/charts/leaderboard/types";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart";
 import type { LeaderboardAggregate, ModelKey } from "@/data/benchmark";
@@ -13,6 +19,8 @@ export type LeaderboardChartProps = {
   series: ChartSeries[];
   taskCount: number;
   highlightedModel: ModelKey | null;
+  view: EvidenceView;
+  taskScaleMode: TaskScaleMode;
 };
 
 export function LeaderboardChart({
@@ -20,12 +28,14 @@ export function LeaderboardChart({
   series,
   taskCount,
   highlightedModel,
+  view,
+  taskScaleMode,
 }: LeaderboardChartProps) {
   const chartConfig = Object.fromEntries(
     series.map((entry) => [entry.key, { label: entry.label, color: entry.color }]),
   ) satisfies ChartConfig;
   const xScale = buildSecondsScale(aggregates);
-  const yTicks = buildTaskTicks(taskCount);
+  const yScale = buildTaskScale(aggregates, taskCount, taskScaleMode);
 
   return (
     <Card
@@ -36,13 +46,21 @@ export function LeaderboardChart({
       <CardHeader>
         <div className="evidence-card-heading">
           <div>
-            <CardTitle id="leaderboard-chart-title">Configuration means across corpus trials</CardTitle>
+            <CardTitle id="leaderboard-chart-title">Configuration means, with uncertainty</CardTitle>
             <CardDescription id="leaderboard-chart-description">
-              Mean tasks passed against mean agent seconds per task. Both axes start at zero; whiskers are 95%
-              Student&apos;s t intervals.
+              Mean tasks passed against mean agent seconds per task. Whiskers are 95% Student&apos;s t intervals.{" "}
+              {taskScaleMode === "focused"
+                ? `The task axis focuses on ${yScale.domain[0]}–${yScale.domain[1]} to make the observed differences legible.`
+                : "The task axis shows the full zero-based context."}{" "}
+              {view === "summary"
+                ? "Individual trials are hidden in this summary view."
+                : "Faint points are individual trials."}
             </CardDescription>
           </div>
           <div className="evidence-axis-note" aria-label="Chart axis summary">
+            <Badge variant="muted">
+              {taskScaleMode === "focused" ? "Focused" : "Full"}: {yScale.domain[0]}–{yScale.domain[1]} tasks
+            </Badge>
             <span>↑ more tasks</span>
             <span>← less time</span>
           </div>
@@ -64,9 +82,9 @@ export function LeaderboardChart({
             />
             <YAxis
               dataKey="tasksPassedMean"
-              domain={[0, taskCount]}
+              domain={yScale.domain}
               tickFormatter={(value) => String(value)}
-              ticks={yTicks}
+              ticks={yScale.ticks}
               type="number"
               label={{ value: `Mean tasks passed / ${taskCount}`, position: "insideTopLeft", offset: -18 }}
               stroke="var(--muted)"
@@ -78,29 +96,31 @@ export function LeaderboardChart({
               content={<LeaderboardChartTooltip />}
             />
 
-            {series.map((entry) => {
-              const model = entry.aggregates[0]?.series;
-              return (
-                <Scatter
-                  key={`${entry.key}-trials`}
-                  className={cn(
-                    "leaderboard-series",
-                    isModelDimmed(highlightedModel, model) && "is-dimmed",
-                  )}
-                  data={entry.trials.map((trial) => ({
-                    ...trial,
-                    secondsPerTaskMean: trial.secondsPerTask,
-                    tasksPassedMean: trial.tasksPassed,
-                  }))}
-                  fill={entry.color}
-                  fillOpacity={highlightedModel === model ? 0.3 : 0.2}
-                  isAnimationActive={false}
-                  name={`${entry.label} trials`}
-                  stroke={entry.color}
-                  strokeOpacity={highlightedModel === model ? 0.52 : 0.32}
-                />
-              );
-            })}
+            {view === "trials"
+              ? series.map((entry) => {
+                  const model = entry.aggregates[0]?.series;
+                  return (
+                    <Scatter
+                      key={`${entry.key}-trials`}
+                      className={cn(
+                        "leaderboard-series",
+                        isModelDimmed(highlightedModel, model) && "is-dimmed",
+                      )}
+                      data={entry.trials.map((trial) => ({
+                        ...trial,
+                        secondsPerTaskMean: trial.secondsPerTask,
+                        tasksPassedMean: trial.tasksPassed,
+                      }))}
+                      fill={entry.color}
+                      fillOpacity={highlightedModel === model ? 0.3 : 0.2}
+                      isAnimationActive={false}
+                      name={`${entry.label} trials`}
+                      stroke={entry.color}
+                      strokeOpacity={highlightedModel === model ? 0.52 : 0.32}
+                    />
+                  );
+                })
+              : null}
 
             {series.flatMap((entry) =>
               entry.aggregates.map((point) => {
@@ -158,8 +178,14 @@ export function LeaderboardChart({
           <div className="evidence-key" aria-label="Evidence mark key">
             <span><i className="mean-mark" aria-hidden="true" />Replicated mean + 95% CI</span>
             <span><i className="single-mark" aria-hidden="true" />Single observation or legacy composite; no CI</span>
-            <span><i className="trial-mark" aria-hidden="true" />Individual trial</span>
-            <small>Marks use each model&apos;s color and configuration code.</small>
+            {view === "trials" ? (
+              <span><i className="trial-mark" aria-hidden="true" />Individual trial</span>
+            ) : null}
+            <small>
+              {view === "summary"
+                ? "Showing means only. Choose All trials to reveal every observation."
+                : "Marks use each model's color and configuration code."}
+            </small>
           </div>
           <div className="chart-legend" role="list" aria-label="Model legend">
             {series.map((entry) => {
@@ -202,13 +228,4 @@ function buildSecondsScale(aggregates: LeaderboardAggregate[]) {
     ticks.push(tick);
   }
   return { upper, ticks };
-}
-
-function buildTaskTicks(taskCount: number) {
-  const ticks: number[] = [];
-  for (let tick = 0; tick < taskCount; tick += 5) {
-    if (taskCount - tick > 2) ticks.push(tick);
-  }
-  ticks.push(taskCount);
-  return ticks;
 }

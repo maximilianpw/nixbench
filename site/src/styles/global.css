@@ -5447,7 +5447,20 @@ h3 {
 }
 
 .evidence-control-bar {
-  align-items: center;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
+}
+
+.evidence-control-options {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem 1.25rem;
+}
+
+.evidence-control-options .control-groups {
+  gap: 0.4rem;
 }
 
 .evidence-card-heading {
@@ -5465,6 +5478,12 @@ h3 {
   font-family: var(--mono);
   font-size: 0.7rem;
   text-align: right;
+}
+
+.evidence-axis-note .badge {
+  justify-self: end;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
 }
 
 .evidence-plot {
@@ -5608,14 +5627,25 @@ h3 {
 
   .evidence-axis-note {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 1rem;
     text-align: left;
+  }
+
+  .evidence-axis-note .badge {
+    margin: 0;
   }
 }
 
 @media (max-width: 680px) {
   .evidence-control-bar {
     align-items: stretch;
+  }
+
+  .evidence-control-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .evidence-chart-shell {
@@ -5636,6 +5666,12 @@ h3 {
   .evidence-mobile-list dl,
   .evidence-mobile-list .mobile-run-id {
     grid-column: 1;
+  }
+}
+
+@media (max-width: 430px) {
+  .evidence-control-options {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

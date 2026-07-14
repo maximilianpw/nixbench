@@ -3,16 +3,20 @@ import { useMemo, useState } from "react";
 import { PageSection } from "@/components/benchmark/PageSection";
 import { SectionHeader } from "@/components/benchmark/SectionHeader";
 import { buildEvidenceSeries } from "@/components/charts/leaderboard/chart-data";
+import type { TaskScaleMode } from "@/components/charts/leaderboard/chart-scale";
 import { LeaderboardChart } from "@/components/charts/leaderboard/LeaderboardChart";
 import {
   LeaderboardControls,
   type CorpusFilter,
+  type EvidenceView,
 } from "@/components/charts/leaderboard/LeaderboardControls";
 import { LeaderboardTable } from "@/components/charts/leaderboard/LeaderboardTable";
 import { currentCorpusLabel, leaderboardAggregates, type ModelKey } from "@/data/benchmark";
 
 export function LeaderboardPanel() {
   const [corpus, setCorpus] = useState<CorpusFilter>("29-task corpus");
+  const [view, setView] = useState<EvidenceView>("summary");
+  const [taskScaleMode, setTaskScaleMode] = useState<TaskScaleMode>("focused");
   const [highlightedModel, setHighlightedModel] = useState<ModelKey | null>(null);
   const aggregates = useMemo(
     () => leaderboardAggregates.filter((aggregate) => aggregate.corpus === corpus),
@@ -43,8 +47,8 @@ export function LeaderboardPanel() {
     <PageSection id="leaderboard" className="leaderboard-section" labelledBy="leaderboard-heading">
       <SectionHeader
         eyebrow="Benchmark evidence"
-        title="Outcomes with their uncertainty attached."
-        description="Large points are configuration means; faint points are individual corpus trials. Confidence bars appear only when repeated trials make an estimate possible."
+        title="Compare the signal first. Inspect the scatter second."
+        description="Configuration means and confidence intervals lead the view. Individual trials remain one click away when you want to inspect the underlying variation."
         headingId="leaderboard-heading"
         compact
       />
@@ -53,6 +57,10 @@ export function LeaderboardPanel() {
         <LeaderboardControls
           corpus={corpus}
           onCorpusChange={changeCorpus}
+          view={view}
+          onViewChange={setView}
+          taskScaleMode={taskScaleMode}
+          onTaskScaleModeChange={setTaskScaleMode}
           modelCount={series.length}
           configurationCount={aggregates.length}
           trialCount={trialCount}
@@ -63,6 +71,8 @@ export function LeaderboardPanel() {
           series={series}
           taskCount={aggregates[0]?.taskCount ?? 0}
           highlightedModel={highlightedModel}
+          view={view}
+          taskScaleMode={taskScaleMode}
         />
         <LeaderboardTable
           aggregates={aggregates}
@@ -71,8 +81,9 @@ export function LeaderboardPanel() {
         />
 
         <p className="source-note">
-          Corpora are intentionally separated. Time is normalized per task, axes begin at zero, and no line implies that
-          higher effort is a continuous or monotonic treatment. See the{" "}
+          Corpora are intentionally separated and time is normalized per task. The focused y-axis is explicitly labelled;
+          Full scale restores the zero baseline. No line implies that higher effort is a continuous or monotonic treatment.
+          See the{" "}
           <a href="/docs/reproducibility.html">reproducibility method</a>
           {corpus === currentCorpusLabel ? ". Raw run IDs are shown in trial tooltips." : (
             <> and <a href="/docs/runs/2026-06-24-model-comparison.html">historical run provenance</a>.</>
