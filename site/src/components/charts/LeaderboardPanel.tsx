@@ -28,14 +28,19 @@ export function LeaderboardPanel() {
   const currentProvenance = useMemo(() => {
     if (corpus !== currentCorpusLabel) return null;
     const trials = aggregates.flatMap((aggregate) => aggregate.trials);
-    const first = trials[0];
-    if (!first?.agentVersion || !first.corpusRevision || !first.host || !first.network) return null;
-    return {
-      agentVersion: first.agentVersion,
-      corpusRevision: first.corpusRevision,
-      host: first.host,
-      network: first.network,
-    };
+    const agentVersions = [...new Set(trials.map((trial) => trial.agentVersion).filter(Boolean))];
+    const corpusRevisions = [...new Set(trials.map((trial) => trial.corpusRevision).filter(Boolean))];
+    const hosts = [...new Set(trials.map((trial) => trial.host).filter(Boolean))];
+    const networks = [...new Set(trials.map((trial) => trial.network).filter(Boolean))];
+    const timeoutBudgets = [
+      ...new Set(
+        trials
+          .map((trial) => trial.agentTimeoutSeconds)
+          .filter((seconds): seconds is number => seconds != null),
+      ),
+    ].sort((left, right) => left - right);
+    if (!agentVersions.length || !corpusRevisions.length || !hosts.length || !networks.length) return null;
+    return { agentVersions, corpusRevisions, hosts, networks, timeoutBudgets };
   }, [aggregates, corpus]);
 
   function changeCorpus(nextCorpus: CorpusFilter) {
@@ -86,15 +91,41 @@ export function LeaderboardPanel() {
           imply continuous scaling or monotonic treatment.
           See the{" "}
           <a href="/docs/reproducibility.html">reproducibility method</a>
-          {corpus === currentCorpusLabel ? ". Raw run IDs are shown in trial tooltips." : (
+          {corpus === currentCorpusLabel ? (
+            <> and <a href="/docs/runs/2026-08-08-local-opencode-models.html">local OpenCode run provenance</a>. Raw run IDs are shown in trial tooltips.</>
+          ) : (
             <> and <a href="/docs/runs/2026-06-24-model-comparison.html">historical run provenance</a>.</>
           )}
         </p>
         {currentProvenance ? (
           <p className="source-note provenance-note">
-            Current trial environment: <code>{currentProvenance.agentVersion}</code> · host{" "}
-            <code>{currentProvenance.host}</code> · corpus <code>{currentProvenance.corpusRevision.slice(0, 12)}</code> ·
-            network <code>{currentProvenance.network}</code>.
+            Current trial environments:{" "}
+            {currentProvenance.agentVersions.length === 1 ? (
+              <code>{currentProvenance.agentVersions[0]}</code>
+            ) : (
+              `${currentProvenance.agentVersions.length} agent versions`
+            )}{" "}
+            · {currentProvenance.hosts.length === 1 ? (
+              <>host <code>{currentProvenance.hosts[0]}</code></>
+            ) : (
+              `${currentProvenance.hosts.length} hosts`
+            )}{" "}
+            · {currentProvenance.corpusRevisions.length === 1 ? (
+              <>corpus <code>{currentProvenance.corpusRevisions[0]?.slice(0, 12)}</code></>
+            ) : (
+              `${currentProvenance.corpusRevisions.length} repository revisions`
+            )}{" "}
+            · {currentProvenance.networks.length === 1 ? (
+              <>network <code>{currentProvenance.networks[0]}</code></>
+            ) : (
+              `${currentProvenance.networks.length} network states`
+            )}{" "}
+            · timeout budgets{" "}
+            {currentProvenance.timeoutBudgets.length > 0 ? (
+              <code>{currentProvenance.timeoutBudgets.map((seconds) => `${seconds}s`).join(", ")}</code>
+            ) : (
+              "unrecorded"
+            )}.
           </p>
         ) : null}
       </div>

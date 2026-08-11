@@ -3,6 +3,7 @@ import { CartesianGrid, ErrorBar, LabelList, Scatter, ScatterChart, XAxis, YAxis
 
 import { LeaderboardChartTooltip } from "@/components/charts/leaderboard/ChartTooltip";
 import {
+  buildSecondsScale,
   buildTaskScale,
   type TaskScaleMode,
 } from "@/components/charts/leaderboard/chart-scale";
@@ -55,6 +56,9 @@ export function LeaderboardChart({
               {taskScaleMode === "focused"
                 ? `The task axis focuses on ${yScale.domain[0]}–${yScale.domain[1]} to make the observed differences legible.`
                 : "The task axis shows the full zero-based context."}{" "}
+              {xScale.scale === "log"
+                ? "The time axis uses logarithmic spacing because observed runtimes span more than one order of magnitude."
+                : "The time axis uses linear spacing."}{" "}
               {view === "summary"
                 ? "Individual trials are hidden in this summary view."
                 : "Faint points are individual trials."}
@@ -64,6 +68,7 @@ export function LeaderboardChart({
             <Badge variant="muted">
               {taskScaleMode === "focused" ? "Focused" : "Full"}: {yScale.domain[0]}–{yScale.domain[1]} tasks
             </Badge>
+            <Badge variant="muted">{xScale.scale === "log" ? "Log" : "Linear"} time axis</Badge>
             <span>↑ more tasks</span>
             <span>← less time</span>
           </div>
@@ -75,7 +80,8 @@ export function LeaderboardChart({
             <CartesianGrid stroke="var(--grid-line)" strokeDasharray="3 5" />
             <XAxis
               dataKey="secondsPerTaskMean"
-              domain={[0, xScale.upper]}
+              domain={xScale.domain}
+              scale={xScale.scale}
               tickFormatter={(value) => `${value}s`}
               ticks={xScale.ticks}
               type="number"
@@ -247,7 +253,9 @@ export function LeaderboardChart({
                 >
                   <i aria-hidden="true" style={{ "--swatch": entry.color } as CSSProperties} />
                   <strong>{entry.label}</strong>
-                  <small>{entry.aggregates.length} cfg · {entry.trials.length} trials</small>
+                  <small>
+                    {entry.aggregates.length} cfg · {entry.aggregates.reduce((sum, aggregate) => sum + aggregate.trialCount, 0)} trials
+                  </small>
                 </button>
               );
             })}
@@ -267,6 +275,7 @@ function HiddenTrajectoryPoint() {
 }
 
 const effortOrder: Record<string, number> = {
+  default: -1,
   low: 0,
   medium: 1,
   high: 2,
@@ -278,20 +287,4 @@ function orderByEffort(points: ChartSeries["aggregates"]) {
   return [...points].sort(
     (left, right) => (effortOrder[left.effort ?? ""] ?? 99) - (effortOrder[right.effort ?? ""] ?? 99),
   );
-}
-
-function buildSecondsScale(aggregates: LeaderboardAggregate[]) {
-  const observedUpper = aggregates.reduce((maximum, aggregate) => {
-    const high = Math.max(
-      aggregate.agentSecondsPerTask.max,
-      aggregate.agentSecondsPerTask.ci95High ?? 0,
-    );
-    return Math.max(maximum, high);
-  }, 0);
-  const upper = Math.max(60, Math.ceil(observedUpper / 30) * 30);
-  const ticks: number[] = [];
-  for (let tick = 0; tick <= upper; tick += 30) {
-    ticks.push(tick);
-  }
-  return { upper, ticks };
 }

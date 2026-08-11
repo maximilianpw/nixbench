@@ -22,6 +22,7 @@ export function LeaderboardChartTooltip({ active, payload }: ChartTooltipProps) 
           <TooltipRow label="Tasks passed" value={`${datum.tasksPassed}/${datum.taskCount}`} />
           <TooltipRow label="Seconds / task" value={`${datum.secondsPerTask.toFixed(1)}s`} />
           <TooltipRow label="Corpus time" value={datum.agentTimeLabel} />
+          <TooltipRow label="Per-task timeout" value={formatTimeoutBudget(datum.agentTimeoutSeconds)} />
           <TooltipRow label="Timeouts" value={String(datum.timeouts)} />
         </dl>
         <code>{datum.runId}</code>
@@ -42,6 +43,7 @@ export function LeaderboardChartTooltip({ active, payload }: ChartTooltipProps) 
         <TooltipRow label="Observed" value={`${datum.passedTasks.min.toFixed(0)}–${datum.passedTasks.max.toFixed(0)} tasks`} />
         <TooltipRow label="Seconds / task" value={`${datum.agentSecondsPerTask.mean.toFixed(1)}s`} />
         <TooltipRow label="Mean corpus time" value={formatDuration(datum.agentTimeSeconds.mean)} />
+        <TooltipRow label="Per-task timeout" value={formatTimeoutBudget(datum.agentTimeoutSeconds)} />
         <TooltipRow label="Timeouts" value={String(datum.totalTimeouts)} />
       </dl>
       {datum.provenance === "composite" ? (
@@ -60,6 +62,10 @@ function TooltipRow({ label, value }: { label: string; value: string }) {
       <dd>{value}</dd>
     </div>
   );
+}
+
+function formatTimeoutBudget(seconds?: number) {
+  return seconds == null ? "Unrecorded" : formatDuration(seconds);
 }
 
 function formatInterval(low?: number, high?: number) {

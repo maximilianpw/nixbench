@@ -301,6 +301,70 @@ class ExportTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "duplicate run IDs"):
                 export_studies_for_site(root, root / "out.json")
 
+    def test_merges_new_trials_into_existing_site_data(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            first_path = root / "studies" / "first" / "summary.json"
+            first_path.parent.mkdir(parents=True)
+            first_path.write_text(
+                json.dumps(
+                    {
+                        "task_count": 29,
+                        "metadata": self.site_metadata(),
+                        "trials": [self.trial("run-1")],
+                    }
+                )
+            )
+            output = root / "site.json"
+            export_studies_for_site(root, output)
+
+            first = json.loads(first_path.read_text())
+            first["metadata"]["publish"] = False
+            first_path.write_text(json.dumps(first))
+            second_path = root / "studies" / "second" / "summary.json"
+            second_path.parent.mkdir(parents=True)
+            second_metadata = {**self.site_metadata(), "series": "localModel"}
+            second_trial = {**self.trial("run-2"), "agent_time_seconds": 3661}
+            second_path.write_text(
+                json.dumps(
+                    {
+                        "task_count": 29,
+                        "metadata": second_metadata,
+                        "trials": [second_trial],
+                    }
+                )
+            )
+
+            count = export_studies_for_site(root, output, merge_existing=True)
+            rows = json.loads(output.read_text())
+
+            self.assertEqual(count, 2)
+            self.assertEqual([row["runId"] for row in rows], ["run-1", "run-2"])
+            self.assertEqual(rows[1]["agentTimeLabel"], "1h 01m 01s")
+
+    def test_merge_replaces_a_run_when_its_configuration_metadata_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            summary_path = root / "studies" / "study" / "summary.json"
+            summary_path.parent.mkdir(parents=True)
+            summary = {
+                "task_count": 29,
+                "metadata": self.site_metadata(),
+                "trials": [self.trial("same-run")],
+            }
+            summary_path.write_text(json.dumps(summary))
+            output = root / "site.json"
+            export_studies_for_site(root, output)
+
+            summary["metadata"]["effort"] = "default"
+            summary_path.write_text(json.dumps(summary))
+            count = export_studies_for_site(root, output, merge_existing=True)
+            rows = json.loads(output.read_text())
+
+            self.assertEqual(count, 1)
+            self.assertEqual(rows[0]["configurationId"], "gptTest-default-29")
+            self.assertEqual(rows[0]["runId"], "same-run")
+
     @staticmethod
     def site_metadata() -> dict[str, str]:
         return {

@@ -27,6 +27,7 @@ export type TrialChartPoint = {
   secondsPerTask: number;
   pointSize: number;
   agentTimeLabel: string;
+  agentTimeoutSeconds?: number;
   failed: number;
   timeouts: number;
   color: string;

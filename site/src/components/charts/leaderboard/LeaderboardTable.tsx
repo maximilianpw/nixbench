@@ -19,7 +19,7 @@ type SortDirection = "asc" | "desc";
 type SortState = { key: SortKey; direction: SortDirection };
 
 const defaultSort: SortState = { key: "tasksPassed", direction: "desc" };
-const effortRank = { low: 0, medium: 1, high: 2, xhigh: 3, max: 4, ultra: 5 } as const;
+const effortRank = { default: -1, low: 0, medium: 1, high: 2, xhigh: 3, max: 4, ultra: 5 } as const;
 
 export function LeaderboardTable({
   aggregates,
@@ -87,7 +87,10 @@ export function LeaderboardTable({
                   </span>
                   <span>
                     <strong>{aggregate.agent}</strong>
-                    <small>{aggregate.corpus} · {aggregate.trialCount} recorded {aggregate.trialCount === 1 ? "trial" : "trials"}</small>
+                    <small>
+                      {aggregate.corpus} · {aggregate.trialCount} recorded {aggregate.trialCount === 1 ? "trial" : "trials"}
+                      {aggregate.agentTimeoutSeconds == null ? "" : ` · ${formatDuration(aggregate.agentTimeoutSeconds)} timeout`}
+                    </small>
                   </span>
                 </span>
               </TableHead>
@@ -135,7 +138,10 @@ export function LeaderboardTable({
               </span>
               <span>
                 <strong>{aggregate.agent}</strong>
-                <small>{aggregate.corpus}</small>
+                <small>
+                  {aggregate.corpus}
+                  {aggregate.agentTimeoutSeconds == null ? "" : ` · ${formatDuration(aggregate.agentTimeoutSeconds)} timeout`}
+                </small>
               </span>
               <Badge variant="default">{aggregate.effort ?? "default"}</Badge>
             </div>

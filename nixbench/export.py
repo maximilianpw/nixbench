@@ -27,6 +27,7 @@ def export_studies_for_site(
     task_count: int | None = None,
     minimum_trials: int = 1,
     expected_configurations: int | None = None,
+    merge_existing: bool = False,
 ) -> int:
     if minimum_trials < 1:
         raise ValueError("minimum_trials must be at least 1")
@@ -176,6 +177,19 @@ def export_studies_for_site(
             f"configurations below minimum_trials={minimum_trials}: {detail}"
         )
 
+    if merge_existing and output_path.exists():
+        rows = _merge_existing_rows(output_path, rows)
+        duplicate_run_ids = sorted(
+            run_id
+            for run_id, count in Counter(row["runId"] for row in rows).items()
+            if count > 1
+        )
+        if duplicate_run_ids:
+            raise ValueError(
+                "duplicate run IDs after merging existing output: "
+                + ", ".join(duplicate_run_ids)
+            )
+
     rows.sort(
         key=lambda row: (row["corpus"], row["series"], row["effort"], row["runId"])
     )
@@ -188,6 +202,31 @@ def export_studies_for_site(
         json.dumps(rows, indent=2, sort_keys=True, allow_nan=False) + "\n"
     )
     return len(rows)
+
+
+def _merge_existing_rows(
+    output_path: Path, incoming_rows: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    try:
+        existing = json.loads(output_path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"cannot read existing site data {output_path}: {exc}") from exc
+    if not isinstance(existing, list) or not all(isinstance(row, dict) for row in existing):
+        raise ValueError(f"existing site data {output_path} must be an array of objects")
+
+    incoming_run_ids = {row["runId"] for row in incoming_rows}
+    rows_by_id: dict[str, dict[str, Any]] = {}
+    for index, row in enumerate(existing):
+        row_id = _nonempty_string(row.get("id"), f"{output_path}: row {index}: id")
+        run_id = _nonempty_string(row.get("runId"), f"{output_path}: row {index}: runId")
+        if run_id in incoming_run_ids:
+            continue
+        if row_id in rows_by_id:
+            raise ValueError(f"duplicate row ID in existing site data: {row_id}")
+        rows_by_id[row_id] = row
+    for row in incoming_rows:
+        rows_by_id[row["id"]] = row
+    return list(rows_by_id.values())
 
 
 def _nonempty_string(value: object, label: str) -> str:
@@ -217,4 +256,7 @@ def _nonnegative_number(value: object, label: str) -> float:
 def _format_duration(seconds: float) -> str:
     rounded = round(seconds)
     minutes, remainder = divmod(rounded, 60)
-    return f"{minutes}m {remainder:02d}s"
+    if minutes < 60:
+        return f"{minutes}m {remainder:02d}s"
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours}h {minutes:02d}m {remainder:02d}s"

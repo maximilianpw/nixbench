@@ -71,6 +71,7 @@ function buildTrialPoints(aggregate: LeaderboardAggregate, color: string): Trial
     secondsPerTask: run.agentTimeSeconds / run.totalTasks,
     pointSize: 14,
     agentTimeLabel: run.agentTimeLabel,
+    agentTimeoutSeconds: run.agentTimeoutSeconds,
     failed: run.failed,
     timeouts: run.timeouts,
     color,

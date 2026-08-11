@@ -245,6 +245,8 @@ class CliTests(unittest.TestCase):
                 "toy-model",
                 "--effort",
                 "high",
+                "--kind",
+                "opencode",
             )
 
             self.assertEqual(returncode, 0)
@@ -257,6 +259,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(study["trial_count"], 2)
             self.assertEqual(study["metadata"]["model"], "toy-model")
             self.assertEqual(study["metadata"]["effort"], "high")
+            self.assertEqual(study["metadata"]["kind"], "opencode")
 
     def test_run_all_rejects_zero_trials(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

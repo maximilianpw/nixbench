@@ -61,10 +61,24 @@ python3 bench.py --results-dir results export-site \
   --task-count 29 \
   --minimum-trials 5 \
   --expected-configurations 14 \
+  --merge-existing \
   --output site/src/data/benchmark-trials.json
 ```
 
 The publication gate fails without modifying the output when a configuration is missing or has fewer than the required trials.
+
+When the local results archive contains only newly collected studies, merge those checked rows into the existing site dataset instead of replacing prior evidence:
+
+```sh
+python3 bench.py --results-dir results export-site \
+  --task-count 29 \
+  --minimum-trials 1 \
+  --expected-configurations 2 \
+  --merge-existing \
+  --output site/src/data/benchmark-trials.json
+```
+
+The trial and configuration gates apply to the studies being imported; `--merge-existing` then replaces matching row IDs and preserves unrelated checked rows. Keep the original run and study summaries in the results archive so an imported row remains independently auditable.
 
 ## Codex
 

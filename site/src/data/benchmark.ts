@@ -1,6 +1,6 @@
 import generatedTrialRows from "@/data/benchmark-trials.json";
 
-export type AgentKind = "codex" | "claude";
+export type AgentKind = "codex" | "claude" | "opencode";
 export type RunStatus = "complete";
 export type TaskStatus = "pass" | "fail";
 export type ModelKey =
@@ -10,8 +10,10 @@ export type ModelKey =
   | "claudeOpus48"
   | "gpt56Sol"
   | "gpt56Terra"
-  | "gpt56Luna";
-export type ReasoningEffort = "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
+  | "gpt56Luna"
+  | "gemma4Local"
+  | "bonsai27Local";
+export type ReasoningEffort = "default" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
 
 export type LeaderboardRun = {
   id: string;
@@ -67,6 +69,7 @@ export type LeaderboardAggregate = {
   effort?: ReasoningEffort;
   taskCount: number;
   trialCount: number;
+  agentTimeoutSeconds?: number;
   trials: LeaderboardRun[];
   passedTasks: Estimate;
   scoreRate: Estimate;
@@ -155,6 +158,20 @@ export const resultColumns: ResultColumn[] = [
     corpus: "29-task corpus",
     effort: "xhigh",
     runId: "20260709T175826Z-b8e5f041",
+  },
+];
+
+const modelIndexColumns: Array<Pick<ResultColumn, "key" | "label" | "corpus">> = [
+  ...resultColumns,
+  {
+    key: "gemma4Local",
+    label: "Gemma 4 26B-A4B QAT Q4_0",
+    corpus: "29-task corpus",
+  },
+  {
+    key: "bonsai27Local",
+    label: "Ternary Bonsai 27B Q2_0",
+    corpus: "29-task corpus",
   },
 ];
 
@@ -1286,13 +1303,19 @@ export function passedTasks(run: LeaderboardRun) {
 }
 
 export function formatDuration(seconds: number) {
-  if (seconds >= 60) {
-    const minutes = Math.floor(seconds / 60);
-    const remainder = Math.round(seconds % 60);
+  const rounded = Math.round(seconds);
+  if (rounded >= 3600) {
+    const hours = Math.floor(rounded / 3600);
+    const minutes = Math.floor((rounded % 3600) / 60);
+    return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
+  }
+  if (rounded >= 60) {
+    const minutes = Math.floor(rounded / 60);
+    const remainder = rounded % 60;
     return remainder === 0 ? `${minutes}m` : `${minutes}m ${remainder}s`;
   }
 
-  return `${Math.round(seconds)}s`;
+  return `${rounded}s`;
 }
 
 export function formatMinutes(seconds: number) {
@@ -1385,6 +1408,7 @@ export function aggregateLeaderboardRuns(runs: LeaderboardRun[]): LeaderboardAgg
       effort: first.effort,
       taskCount,
       trialCount: trials.length,
+      agentTimeoutSeconds: first.agentTimeoutSeconds,
       trials,
       passedTasks: estimate95(trials.map(passedTasks), { lower: 0, upper: taskCount }),
       scoreRate: estimate95(trials.map((run) => run.score / run.maxScore), { lower: 0, upper: 1 }),
@@ -1427,13 +1451,13 @@ export const heroStats = [
 export const resultsDateRangeLabel = buildDateRangeLabel(leaderboardRuns.map((run) => run.runId));
 
 export const resultOverviewStats = [
-  ["models", String(resultColumns.length)],
+  ["models", String(modelIndexColumns.length)],
   ["configurations", String(leaderboardAggregates.length)],
   ["recorded trials", String(leaderboardRuns.length)],
   ["task rows", String(taskResults.length)],
 ] as const;
 
-export const modelSummaries = resultColumns.map((column) => {
+export const modelSummaries = modelIndexColumns.map((column) => {
   const aggregates = leaderboardAggregates.filter(
     (aggregate) => aggregate.series === column.key && aggregate.corpus === column.corpus,
   );

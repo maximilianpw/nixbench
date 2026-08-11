@@ -20,6 +20,8 @@
   --fail: #c44940;
   --claude: #b56d2d;
   --codex: #5277c3;
+  --opencode: #667d25;
+  --gemma: #a33f78;
 
   --radius: 8px;
   --radius-sm: 5px;
@@ -932,6 +934,10 @@ tbody tr:hover {
 
 .agent-mark.claude {
   --agent-color: var(--claude);
+}
+
+.agent-mark.opencode {
+  --agent-color: var(--opencode);
 }
 
 .score-percent {
@@ -2837,6 +2843,8 @@ tbody tr:hover {
   --fail: #b23d35;
   --claude: #ae5a2f;
   --codex: #286fca;
+  --opencode: #667d25;
+  --gemma: #a33f78;
   --radius: 3px;
   --radius-sm: 2px;
   --shell: clamp(1rem, 4vw, 2rem);
@@ -2867,6 +2875,8 @@ html[data-theme="dark"] {
   --fail: #f08278;
   --claude: #e29368;
   --codex: #74b2ff;
+  --opencode: #b4cc62;
+  --gemma: #ee8cbd;
 }
 
 html {

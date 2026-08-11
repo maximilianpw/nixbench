@@ -53,7 +53,11 @@ def build_parser() -> argparse.ArgumentParser:
     run_all_parser.add_argument("--effort", help="Reasoning-effort label recorded in the study metadata.")
     run_all_parser.add_argument("--series", help="Stable site series key recorded in the study metadata.")
     run_all_parser.add_argument("--marker", help="Short chart marker recorded in the study metadata.")
-    run_all_parser.add_argument("--kind", choices=["codex", "claude"], help="Agent kind recorded in the study metadata.")
+    run_all_parser.add_argument(
+        "--kind",
+        choices=["codex", "claude", "opencode"],
+        help="Agent kind recorded in the study metadata.",
+    )
     run_all_parser.add_argument("--label", help="Human-readable agent label recorded in the study metadata.")
     run_all_parser.add_argument("--agent-version", help="Agent version recorded in the study metadata.")
     run_all_parser.add_argument(
@@ -72,6 +76,11 @@ def build_parser() -> argparse.ArgumentParser:
     export_parser.add_argument("--task-count", type=int, help="Only export studies with this corpus size.")
     export_parser.add_argument("--minimum-trials", type=int, default=1)
     export_parser.add_argument("--expected-configurations", type=int)
+    export_parser.add_argument(
+        "--merge-existing",
+        action="store_true",
+        help="Merge exported trials into an existing output file by row ID.",
+    )
     export_parser.set_defaults(func=cmd_export_site)
 
     count_parser = subparsers.add_parser(
@@ -231,6 +240,7 @@ def cmd_export_site(args: argparse.Namespace) -> int:
         task_count=args.task_count,
         minimum_trials=args.minimum_trials,
         expected_configurations=args.expected_configurations,
+        merge_existing=args.merge_existing,
     )
     print(f"exported {row_count} trial rows to {args.output}")
     return 0
