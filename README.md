@@ -359,3 +359,4 @@ Good next steps:
 - [Scoring](docs/scoring.md)
 - [Reproducibility](docs/reproducibility.md)
 - [2026-06-24 Model Comparison Runs](docs/runs/2026-06-24-model-comparison.md)
+- [2026-09-10 Astra via isolated Pi](docs/runs/2026-09-10-astra-pi-isolated.md)

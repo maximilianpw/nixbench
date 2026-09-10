@@ -55,7 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_all_parser.add_argument("--marker", help="Short chart marker recorded in the study metadata.")
     run_all_parser.add_argument(
         "--kind",
-        choices=["codex", "claude", "opencode"],
+        choices=["codex", "claude", "opencode", "pi"],
         help="Agent kind recorded in the study metadata.",
     )
     run_all_parser.add_argument("--label", help="Human-readable agent label recorded in the study metadata.")

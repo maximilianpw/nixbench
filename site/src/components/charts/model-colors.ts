@@ -10,4 +10,5 @@ export const modelColors = {
   gpt56Luna: "color-mix(in srgb, var(--pass) 72%, var(--nix-blue))",
   gemma4Local: "var(--gemma)",
   bonsai27Local: "var(--opencode)",
+  gpt6AstraPi: "var(--cyan)",
 } satisfies Record<ModelKey, string>;

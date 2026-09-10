@@ -38,6 +38,32 @@ test("includes the local OpenCode benchmark trials", () => {
   }
 });
 
+test("records only the three complete isolated Astra Pi trials", () => {
+  const rows = trialRows.filter((row) => row.series === "gpt6AstraPi");
+  assert.equal(rows.length, 3);
+
+  for (const [effort, score, seconds] of [
+    ["low", 2200, 861.183],
+    ["medium", 2300, 894.588],
+    ["high", 2200, 1067.777],
+  ]) {
+    const row = rows.find((candidate) => candidate.effort === effort);
+    assert.ok(row, `${effort} should have a recorded trial`);
+    assert.equal(row.kind, "pi");
+    assert.equal(row.model, "gpt-6-astra");
+    assert.equal(row.score, score);
+    assert.equal(row.maxScore, 2900);
+    assert.equal(row.agentTimeSeconds, seconds);
+    assert.equal(row.agentTimeoutSeconds, 240);
+    assert.equal(row.completedTasks, 29);
+    assert.equal(row.timeouts, 0);
+    assert.equal(row.provenance, "trial");
+  }
+
+  assert.ok(!trialRows.some((row) => row.runId === "20260910T090054Z-09486029"),
+    "extra-high router failures must not become a complete leaderboard trial");
+});
+
 test("benchmark trial IDs and run IDs remain unique", () => {
   const ids = trialRows.map((row) => row.id);
   const runIds = trialRows.map((row) => row.runId);

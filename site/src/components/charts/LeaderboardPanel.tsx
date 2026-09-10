@@ -92,7 +92,9 @@ export function LeaderboardPanel() {
           See the{" "}
           <a href="/docs/reproducibility.html">reproducibility method</a>
           {corpus === currentCorpusLabel ? (
-            <> and <a href="/docs/runs/2026-08-08-local-opencode-models.html">local OpenCode run provenance</a>. Raw run IDs are shown in trial tooltips.</>
+            <>, <a href="/docs/runs/2026-08-08-local-opencode-models.html">local OpenCode run provenance</a>,
+              and <a href="/docs/runs/2026-09-10-astra-pi-isolated.html">isolated Astra/Pi run provenance</a>.
+              Raw run IDs are shown in trial tooltips.</>
           ) : (
             <> and <a href="/docs/runs/2026-06-24-model-comparison.html">historical run provenance</a>.</>
           )}

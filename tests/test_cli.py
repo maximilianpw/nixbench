@@ -7,11 +7,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from nixbench.cli import main
+from nixbench.cli import build_parser, main
 from tests.test_runner import make_toy_task
 
 
 class CliTests(unittest.TestCase):
+    def test_run_all_accepts_pi_agent_kind(self) -> None:
+        args = build_parser().parse_args(["run-all", "--kind", "pi"])
+        self.assertEqual(args.kind, "pi")
+
     def test_validate_accepts_failing_starter_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

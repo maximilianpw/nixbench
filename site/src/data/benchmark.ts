@@ -1,6 +1,6 @@
 import generatedTrialRows from "@/data/benchmark-trials.json";
 
-export type AgentKind = "codex" | "claude" | "opencode";
+export type AgentKind = "codex" | "claude" | "opencode" | "pi";
 export type RunStatus = "complete";
 export type TaskStatus = "pass" | "fail";
 export type ModelKey =
@@ -12,7 +12,8 @@ export type ModelKey =
   | "gpt56Terra"
   | "gpt56Luna"
   | "gemma4Local"
-  | "bonsai27Local";
+  | "bonsai27Local"
+  | "gpt6AstraPi";
 export type ReasoningEffort = "default" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
 
 export type LeaderboardRun = {
@@ -163,6 +164,11 @@ export const resultColumns: ResultColumn[] = [
 
 const modelIndexColumns: Array<Pick<ResultColumn, "key" | "label" | "corpus">> = [
   ...resultColumns,
+  {
+    key: "gpt6AstraPi",
+    label: "GPT-6 Astra via Pi, no skills",
+    corpus: "29-task corpus",
+  },
   {
     key: "gemma4Local",
     label: "Gemma 4 26B-A4B QAT Q4_0",
