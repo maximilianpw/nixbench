@@ -818,32 +818,26 @@ export const difficultyDistribution = [
 ] as const;
 
 export const methodSteps = [
-  ["copy", "Starter files and the prompt enter a clean temporary workdir."],
-  ["edit", "The agent reads NIXBENCH_PROMPT.md and modifies only local files."],
-  ["check", "A hidden shell evaluator scores the final tree after the agent exits."],
-  ["record", "Logs, timing, score JSON, and the final diff are written under results/."],
+  ["prepare", "Copy the starter repository and task into a clean temporary worktree."],
+  ["edit", "Let the agent inspect the repository and modify only local files."],
+  ["evaluate", "Run the hidden checks and save the score, logs, timing, and final diff."],
 ] as const;
 
 export const explainerCards = [
   {
-    kicker: "contamination",
-    title: "Original repair tasks",
-    description: "Tasks are written for this corpus rather than lifted from merged patches, which keeps the answer out of the visible prompt.",
+    kicker: "execution",
+    title: "Executed, not judged",
+    description: "Shell evaluators test the final repository behavior. No language model decides whether an answer looks correct.",
   },
   {
     kicker: "scope",
-    title: "Nix-specific failure surfaces",
-    description: "The corpus covers flakes, modules, overlays, derivations, fetchers, Home Manager, shell escaping, and package contracts.",
-  },
-  {
-    kicker: "verification",
-    title: "Hand-written checks",
-    description: "Each task has a shell evaluator that checks behavior with small fake package sets and libraries instead of relying on LLM judging.",
+    title: "Built for Nix",
+    description: "Tasks cover flakes, modules, overlays, derivations, fetchers, Home Manager, escaping, and package contracts.",
   },
   {
     kicker: "artifacts",
-    title: "Diff-backed runs",
-    description: "Every run records logs, timings, pass state, score JSON, and the final diff so failures can be inspected after the benchmark ends.",
+    title: "Reproducible runs",
+    description: "Every run keeps its logs, timing, score, and final diff so results can be inspected and repeated.",
   },
 ];
 

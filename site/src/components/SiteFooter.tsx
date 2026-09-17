@@ -1,3 +1,5 @@
+import { ArrowUpRight, FolderGit2 } from "lucide-react";
+
 import { BrandMark } from "@/components/BrandMark";
 
 type SiteFooterProps = {
@@ -15,22 +17,18 @@ export function SiteFooter({ text, href, label }: SiteFooterProps) {
             <BrandMark />
             <span className="brand-name">NixBench</span>
           </a>
-          <p>Objective evaluation for agent-written Nix.</p>
+          <p>An open benchmark for AI-written Nix.</p>
         </div>
 
         <nav className="footer-links" aria-label="Footer">
-          <div>
-            <span>Benchmark</span>
-            <a href="/results.html">Results</a>
-            <a href="/#leaderboard">Comparison rows</a>
-            <a href="/#tasks">Task corpus</a>
-          </div>
-          <div>
-            <span>Resources</span>
-            <a href="/docs/benchmark-design.html">Methodology</a>
-            <a href="/docs/running-agents.html">Run guide</a>
-            <a href="https://github.com/maximilianpw/nixbench">GitHub</a>
-          </div>
+          <a href="/results.html">Results</a>
+          <a href="/docs/benchmark-design.html">Method</a>
+          <a href="/docs/running-agents.html">Run guide</a>
+          <a className="footer-project-link" href="https://github.com/maximilianpw/nixbench">
+            <FolderGit2 aria-hidden="true" />
+            GitHub
+            <ArrowUpRight aria-hidden="true" />
+          </a>
         </nav>
       </div>
 

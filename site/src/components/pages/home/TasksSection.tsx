@@ -9,16 +9,17 @@ export function TasksSection({}: TasksSectionProps = {}) {
   return (
     <PageSection id="tasks" className="tasks-section" labelledBy="tasks-heading">
       <SectionHeader
-        title={`${currentCorpusTaskCount} small repositories, one hidden evaluator each.`}
+        title={`${currentCorpusTaskCount} repository-repair tasks`}
+        description="Representative tasks cover modules, flakes, packaging, fetchers, overlays, and shell integration."
         headingId="tasks-heading"
         action={{
           href: "https://github.com/maximilianpw/nixbench#what-it-measures",
-          label: `All ${currentCorpusTaskCount} tasks`,
+          label: "Browse every task",
         }}
       />
 
       <div className="task-grid">
-        {taskExamples.map((task) => (
+        {taskExamples.slice(0, 3).map((task) => (
           <Card key={task.title} className="task-card">
             <CardHeader>
               <CardTitle>{task.title}</CardTitle>

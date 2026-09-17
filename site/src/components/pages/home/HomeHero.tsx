@@ -1,6 +1,5 @@
-import { ArrowRight, TerminalSquare } from "lucide-react";
+import { ArrowRight, ArrowUpRight, FolderGit2 } from "lucide-react";
 
-import { BrandMark } from "@/components/BrandMark";
 import { StatGrid } from "@/components/benchmark/StatGrid";
 import { Button } from "@/components/ui/button";
 import { currentCorpusLabel, currentEvidenceSummary, heroStats } from "@/data/benchmark";
@@ -9,52 +8,48 @@ export function HomeHero() {
   return (
     <section className="product-hero" aria-labelledby="home-hero-title">
       <div className="product-hero-inner">
-        <div className="hero-lockup">
-          <div className="hero-identity">
-            <BrandMark className="hero-symbol" />
-            <div>
-              <h1 id="home-hero-title">NixBench</h1>
-            </div>
+        <div className="hero-copy">
+          <a className="hero-kicker" href="https://github.com/maximilianpw/nixbench">
+            <FolderGit2 aria-hidden="true" />
+            Open-source benchmark
+            <ArrowUpRight aria-hidden="true" />
+          </a>
+          <h1 id="home-hero-title">Can AI agents write Nix that actually passes?</h1>
+          <p className="hero-lede">
+            NixBench measures coding agents on small repository repairs. Every answer is scored by a hidden shell
+            evaluator—not by whether it merely looks plausible.
+          </p>
+          <div className="actions" role="group" aria-label="Benchmark actions">
+            <Button asChild>
+              <a href="/results.html">
+                View results <ArrowRight data-icon="inline-end" aria-hidden="true" />
+              </a>
+            </Button>
+            <Button asChild variant="secondary">
+              <a href="https://github.com/maximilianpw/nixbench">
+                View project <ArrowUpRight data-icon="inline-end" aria-hidden="true" />
+              </a>
+            </Button>
           </div>
-          <StatGrid items={heroStats} label="Current benchmark statistics" className="hero-stat-grid" />
         </div>
 
-        <div className="hero-intro">
-          <div className="hero-copy">
-            <p className="hero-statement">Can AI coding agents write Nix that actually passes?</p>
-            <p className="hero-lede">
-              Objective repository-repair tasks scored by hidden shell evaluators—not by whether the output merely
-              looks plausible.
-            </p>
-            <div className="actions" role="group" aria-label="Benchmark actions">
-              <Button asChild>
-                <a href="/results.html">
-                  Compare results <ArrowRight data-icon="inline-end" aria-hidden="true" />
-                </a>
-              </Button>
-              <Button asChild variant="secondary">
-                <a href="https://github.com/maximilianpw/nixbench#quick-start">
-                  Run locally <TerminalSquare data-icon="inline-end" aria-hidden="true" />
-                </a>
-              </Button>
-            </div>
-          </div>
-
-          <aside className="hero-run-note" aria-label="Current-corpus evidence coverage">
+        <aside className="hero-evidence" aria-label="Current benchmark evidence">
+          <StatGrid items={heroStats} label="Current benchmark statistics" className="hero-stat-grid" />
+          <div className="hero-evidence-note">
             <span>Current evidence</span>
-            <strong>{currentEvidenceSummary.models} models · {currentEvidenceSummary.configurations} configurations</strong>
             <p>
-              <b>{currentEvidenceSummary.trials}</b> recorded trials · {currentEvidenceSummary.replicatedConfigurations}/
-              {currentEvidenceSummary.configurations} configurations replicated
+              {currentEvidenceSummary.models} models · {currentEvidenceSummary.configurations} configurations · {currentEvidenceSummary.trials} trials
             </p>
             <a href="#leaderboard">
-              Inspect outcomes and uncertainty <ArrowRight aria-hidden="true" />
+              Inspect the data <ArrowRight aria-hidden="true" />
             </a>
-          </aside>
-        </div>
+          </div>
+        </aside>
 
         <p className="hero-corpus-note">
-          Current release: <strong>{currentCorpusLabel}</strong> · one hidden evaluator per task · uncertainty shown when repeat trials exist
+          <strong>{currentCorpusLabel}</strong>
+          <span>One hidden evaluator per task</span>
+          <span>Uncertainty shown for repeated trials</span>
         </p>
       </div>
     </section>

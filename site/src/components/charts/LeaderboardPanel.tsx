@@ -51,8 +51,8 @@ export function LeaderboardPanel() {
   return (
     <PageSection id="leaderboard" className="leaderboard-section" labelledBy="leaderboard-heading">
       <SectionHeader
-        title="Compare the signal first. Inspect the scatter second."
-        description="Ordered effort paths lead the view. Select a model for uncertainty and effort labels, or reveal every trial to inspect the underlying variation."
+        title="Benchmark results"
+        description="Compare pass rates, runtime, and repeated trials across models and agent configurations."
         headingId="leaderboard-heading"
         compact
       />
@@ -85,51 +85,34 @@ export function LeaderboardPanel() {
           onHighlightedModelChange={setHighlightedModel}
         />
 
-        <p className="source-note">
-          Corpora are intentionally separated and time is normalized per task. The focused y-axis is explicitly labelled;
-          Full scale restores the zero baseline. Lines show configuration order from lower to higher effort; they do not
-          imply continuous scaling or monotonic treatment.
-          See the{" "}
-          <a href="/docs/reproducibility.html">reproducibility method</a>
-          {corpus === currentCorpusLabel ? (
-            <>, <a href="/docs/runs/2026-08-08-local-opencode-models.html">local OpenCode run provenance</a>,
-              and <a href="/docs/runs/2026-09-10-astra-pi-isolated.html">isolated Astra/Pi run provenance</a>.
-              Raw run IDs are shown in trial tooltips.</>
-          ) : (
-            <> and <a href="/docs/runs/2026-06-24-model-comparison.html">historical run provenance</a>.</>
-          )}
-        </p>
-        {currentProvenance ? (
-          <p className="source-note provenance-note">
-            Current trial environments:{" "}
-            {currentProvenance.agentVersions.length === 1 ? (
-              <code>{currentProvenance.agentVersions[0]}</code>
-            ) : (
-              `${currentProvenance.agentVersions.length} agent versions`
-            )}{" "}
-            · {currentProvenance.hosts.length === 1 ? (
-              <>host <code>{currentProvenance.hosts[0]}</code></>
-            ) : (
-              `${currentProvenance.hosts.length} hosts`
-            )}{" "}
-            · {currentProvenance.corpusRevisions.length === 1 ? (
-              <>corpus <code>{currentProvenance.corpusRevisions[0]?.slice(0, 12)}</code></>
-            ) : (
-              `${currentProvenance.corpusRevisions.length} repository revisions`
-            )}{" "}
-            · {currentProvenance.networks.length === 1 ? (
-              <>network <code>{currentProvenance.networks[0]}</code></>
-            ) : (
-              `${currentProvenance.networks.length} network states`
-            )}{" "}
-            · timeout budgets{" "}
-            {currentProvenance.timeoutBudgets.length > 0 ? (
-              <code>{currentProvenance.timeoutBudgets.map((seconds) => `${seconds}s`).join(", ")}</code>
-            ) : (
-              "unrecorded"
-            )}.
-          </p>
-        ) : null}
+        <details className="data-notes">
+          <summary>About this data</summary>
+          <div>
+            <p className="source-note">
+              Corpora are kept separate and runtime is normalized per task. Lines connect configurations from lower to
+              higher effort; they do not imply continuous or monotonic scaling. See the{" "}
+              <a href="/docs/reproducibility.html">reproducibility method</a>
+              {corpus === currentCorpusLabel ? (
+                <>, <a href="/docs/runs/2026-08-08-local-opencode-models.html">OpenCode run provenance</a>,
+                  and <a href="/docs/runs/2026-09-10-astra-pi-isolated.html">Astra/Pi run provenance</a>.
+                  Raw run IDs appear in trial tooltips.</>
+              ) : (
+                <> and <a href="/docs/runs/2026-06-24-model-comparison.html">historical run provenance</a>.</>
+              )}
+            </p>
+            {currentProvenance ? (
+              <p className="source-note provenance-note">
+                Environments: {currentProvenance.agentVersions.length} agent version(s) · {currentProvenance.hosts.length} host(s) ·{" "}
+                {currentProvenance.corpusRevisions.length} repository revision(s) · {currentProvenance.networks.length} network state(s) · timeout budgets{" "}
+                {currentProvenance.timeoutBudgets.length > 0 ? (
+                  <code>{currentProvenance.timeoutBudgets.map((seconds) => `${seconds}s`).join(", ")}</code>
+                ) : (
+                  "unrecorded"
+                )}.
+              </p>
+            ) : null}
+          </div>
+        </details>
       </div>
     </PageSection>
   );

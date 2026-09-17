@@ -1,4 +1,4 @@
-import { ArrowUpRight, Menu, Moon, Sun, X } from "lucide-react";
+import { ArrowUpRight, FolderGit2, Menu, Moon, Sun, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { BrandMark } from "@/components/BrandMark";
@@ -14,11 +14,9 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Overview", href: "/", activeOn: "home" },
   { label: "Results", href: "/results.html", activeOn: "results" },
   { label: "Tasks", href: "/#tasks" },
-  { label: "Methodology", href: "/docs/benchmark-design.html", activeOn: "docs" },
-  { label: "GitHub", href: "https://github.com/maximilianpw/nixbench", external: true },
+  { label: "Method", href: "/docs/benchmark-design.html", activeOn: "docs" },
 ] as const;
 
 type AppHeaderProps = {
@@ -90,7 +88,10 @@ export function AppHeader({ activePage }: AppHeaderProps) {
             </a>
           ))}
           <Button asChild size="sm" className="nav-run">
-            <a href="https://github.com/maximilianpw/nixbench#quick-start">Run NixBench</a>
+            <a href="https://github.com/maximilianpw/nixbench">
+              <FolderGit2 data-icon="inline-start" aria-hidden="true" />
+              Project <ArrowUpRight data-icon="inline-end" aria-hidden="true" />
+            </a>
           </Button>
         </nav>
 

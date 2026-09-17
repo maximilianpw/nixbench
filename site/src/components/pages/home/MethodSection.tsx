@@ -9,8 +9,8 @@ export function MethodSection({}: MethodSectionProps = {}) {
     <section className="method-band" aria-labelledby="method-heading">
       <div className="section method-section">
         <SectionHeader
-          title="The agent edits a worktree. The evaluator scores the result."
-          description="A simple, inspectable protocol separates generation from evaluation."
+          title="How NixBench works"
+          description="One repeatable process separates the agent from the evaluator."
           headingId="method-heading"
           action={{ href: "docs/running-agents.html", label: "Read the protocol" }}
         />

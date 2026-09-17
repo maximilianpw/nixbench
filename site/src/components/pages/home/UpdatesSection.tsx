@@ -24,11 +24,11 @@ export function UpdatesSection({}: UpdatesSectionProps = {}) {
     <section className="cta-band" id="updates" aria-labelledby="updates-heading">
       <div className="cta-band-inner">
         <div className="cta-copy">
-          <h2 id="updates-heading">Add evidence, not another claim.</h2>
-          <p>Use the open harness, preserve the run artifacts, and add a comparable row to the benchmark.</p>
+          <h2 id="updates-heading">Run the benchmark yourself</h2>
+          <p>Use the open-source harness to test another model, reproduce a result, or inspect every task.</p>
           <Button asChild variant="secondary">
             <a href="https://github.com/maximilianpw/nixbench#running-with-codex">
-              Open the run guide <ArrowRight data-icon="inline-end" aria-hidden="true" />
+              Read the run guide <ArrowRight data-icon="inline-end" aria-hidden="true" />
             </a>
           </Button>
         </div>

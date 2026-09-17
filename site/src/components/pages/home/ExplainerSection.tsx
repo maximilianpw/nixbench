@@ -8,10 +8,10 @@ export function ExplainerSection({}: ExplainerSectionProps = {}) {
   return (
     <PageSection className="explainer-section" labelledBy="why-heading">
       <div className="narrative">
-        <h2 id="why-heading">Plausible Nix often fails at evaluation time.</h2>
+        <h2 id="why-heading">Why trust the results?</h2>
         <p>
-          The benchmark gives agents a copied starter tree, a prompt, and no access to the hidden evaluator. It rewards
-          final worktree behavior, not a fluent explanation of what the code should do.
+          Agents see the repository and task, but not the evaluator. Their final code must pass the same executable
+          checks to earn a score.
         </p>
       </div>
       <div className="insight-grid">
