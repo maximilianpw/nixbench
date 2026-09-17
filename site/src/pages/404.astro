@@ -12,15 +12,12 @@ import SiteLayout from "@/layouts/SiteLayout.astro";
     label: "View benchmark results",
   }}
 >
-  <main id="main-content" class="docs-page">
-    <section class="docs-hero" aria-labelledby="not-found-title">
-      <div class="docs-hero-inner">
-        <div class="docs-title-block">
-          <h1 id="not-found-title">Page not found.</h1>
-          <p>The page may have moved or the address may be incorrect. Return to the NixBench overview to continue.</p>
-          <p><a href="/">Go to the NixBench homepage</a></p>
-        </div>
-      </div>
+  <main id="main-content" class="content-shell py-24 sm:py-32">
+    <section class="max-w-2xl" aria-labelledby="not-found-title">
+      <p class="eyebrow">404</p>
+      <h1 id="not-found-title" class="mt-4 text-5xl font-semibold tracking-tight">Page not found.</h1>
+      <p class="mt-5 text-lg leading-8 text-muted-foreground">The page may have moved or the address may be incorrect. Return to the NixBench overview to continue.</p>
+      <p class="mt-8"><a class="font-semibold text-nix-blue" href="/">Go to the NixBench homepage</a></p>
     </section>
   </main>
 </SiteLayout>

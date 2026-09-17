@@ -22,9 +22,9 @@ export function TimingChart({ columns = resultColumns }: TimingChartProps = {}) 
   const timingChartConfig = buildTimingChartConfig(columns);
 
   return (
-    <div className="timing-chart react-timing-chart">
+    <div className="overflow-x-auto rounded-lg border bg-card p-3 sm:p-6">
       <ChartContainer
-        className="timing-chart-container"
+        className="h-[760px] min-w-[720px]"
         config={timingChartConfig}
         initialDimension={{ width: 900, height: 760 }}
       >
@@ -39,15 +39,15 @@ export function TimingChart({ columns = resultColumns }: TimingChartProps = {}) 
             type="number"
             domain={[0, 240]}
             tickFormatter={(value) => `${value}s`}
-            stroke="var(--muted)"
-            tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
+            stroke="var(--muted-foreground)"
+            tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "IBM Plex Mono" }}
           />
           <YAxis
             dataKey="task"
             type="category"
             width={138}
-            stroke="var(--muted)"
-            tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
+            stroke="var(--muted-foreground)"
+            tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "IBM Plex Mono" }}
           />
           <ChartTooltip
             content={<TimingTooltip />}

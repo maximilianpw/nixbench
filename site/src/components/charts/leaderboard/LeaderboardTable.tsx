@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowUpDown } from "lucide-react";
 
 import { modelColors } from "@/components/charts/model-colors";
@@ -18,7 +18,7 @@ type SortKey = "configuration" | "effort" | "trialCount" | "tasksPassed" | "seco
 type SortDirection = "asc" | "desc";
 type SortState = { key: SortKey; direction: SortDirection };
 
-const defaultSort: SortState = { key: "tasksPassed", direction: "desc" };
+const defaultSort: SortState = { key: "configuration", direction: "asc" };
 const effortRank = { default: -1, low: 0, medium: 1, high: 2, xhigh: 3, max: 4, ultra: 5 } as const;
 
 export function LeaderboardTable({
@@ -28,6 +28,7 @@ export function LeaderboardTable({
 }: LeaderboardTableProps) {
   const [sort, setSort] = useState<SortState>(defaultSort);
   const sortedAggregates = useMemo(() => sortAggregates(aggregates, sort), [aggregates, sort]);
+  const mobileGroups = useMemo(() => groupAggregatesByModel(aggregates), [aggregates]);
 
   const toggleSort = (key: SortKey) => {
     setSort((current) => ({
@@ -44,8 +45,8 @@ export function LeaderboardTable({
   return (
     <>
       <Table
-        className="leaderboard-table evidence-table"
-        containerClassName="leaderboard-table-wrap"
+        className="min-w-[980px]"
+        containerClassName="hidden md:block"
         aria-label="NixBench configuration evidence"
       >
         <TableHeader>
@@ -77,19 +78,17 @@ export function LeaderboardTable({
               key={aggregate.id}
               data-highlighted={highlightedModel === aggregate.series || undefined}
               data-dimmed={(highlightedModel !== null && highlightedModel !== aggregate.series) || undefined}
-              style={agentMarkStyle(aggregate)}
               onPointerEnter={() => onHighlightedModelChange(aggregate.series ?? null)}
             >
               <TableHead scope="row">
-                <span className="agent-cell">
-                  <span className={`agent-mark ${aggregate.kind}`} style={agentMarkStyle(aggregate)} aria-hidden="true">
+                <span className="flex min-w-64 items-center gap-3">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-md border font-mono text-xs font-bold" style={{ borderColor: agentColor(aggregate), color: agentColor(aggregate) }} aria-hidden="true">
                     {aggregate.marker}
                   </span>
-                  <span>
-                    <strong>{aggregate.agent}</strong>
-                    <small>
-                      {aggregate.corpus} · {aggregate.trialCount} recorded {aggregate.trialCount === 1 ? "trial" : "trials"}
-                      {aggregate.agentTimeoutSeconds == null ? "" : ` · ${formatDuration(aggregate.agentTimeoutSeconds)} timeout`}
+                  <span className="flex flex-col text-left normal-case tracking-normal">
+                    <strong className="font-sans text-sm text-foreground">{primaryAgentName(aggregate.agent)}</strong>
+                    <small className="font-sans text-xs font-normal text-muted-foreground">
+                      {agentDetails(aggregate.agent)}{agentDetails(aggregate.agent) ? " · " : ""}{aggregate.trialCount} recorded {aggregate.trialCount === 1 ? "run" : "runs"}
                     </small>
                   </span>
                 </span>
@@ -105,22 +104,22 @@ export function LeaderboardTable({
                 </Badge>
               </TableCell>
               <TableCell>
-                <span className="score-percent">{aggregate.passedTasks.mean.toFixed(1)} / {aggregate.taskCount}</span>
+                <span className="mb-2 block font-mono text-xs font-semibold tabular-nums">{aggregate.passedTasks.mean.toFixed(1)} / {aggregate.taskCount}</span>
                 <Progress
                   value={(aggregate.passedTasks.mean / aggregate.taskCount) * 100}
                   aria-label={`${aggregate.agent} ${aggregate.effort ?? "default"} mean tasks passed`}
                 />
               </TableCell>
               <TableCell>
-                <span className="interval-cell">
-                  <strong>{formatInterval(aggregate)}</strong>
-                  <small>observed {aggregate.passedTasks.min.toFixed(0)}–{aggregate.passedTasks.max.toFixed(0)}</small>
+                <span className="flex flex-col">
+                  <strong className="font-mono text-xs tabular-nums">{formatInterval(aggregate)}</strong>
+                  <small className="text-muted-foreground">observed {aggregate.passedTasks.min.toFixed(0)}–{aggregate.passedTasks.max.toFixed(0)}</small>
                 </span>
               </TableCell>
               <TableCell>
-                <span className="interval-cell">
-                  <strong>{aggregate.agentSecondsPerTask.mean.toFixed(1)}s</strong>
-                  <small>{formatDuration(aggregate.agentTimeSeconds.mean)} / corpus</small>
+                <span className="flex flex-col">
+                  <strong className="font-mono text-xs tabular-nums">{aggregate.agentSecondsPerTask.mean.toFixed(1)}s</strong>
+                  <small className="text-muted-foreground">{formatDuration(aggregate.agentTimeSeconds.mean)} / corpus</small>
                 </span>
               </TableCell>
               <TableCell>{aggregate.totalTimeouts}</TableCell>
@@ -129,32 +128,34 @@ export function LeaderboardTable({
         </TableBody>
       </Table>
 
-      <ol className="leaderboard-mobile-list evidence-mobile-list" aria-label="NixBench configuration evidence">
-        {sortedAggregates.map((aggregate) => (
-          <li key={aggregate.id}>
-            <div className="mobile-run-heading">
-              <span className={`agent-mark ${aggregate.kind}`} style={agentMarkStyle(aggregate)} aria-hidden="true">
-                {aggregate.marker}
+      <ol className="grid gap-4 md:hidden" aria-label="NixBench results grouped by model">
+        {mobileGroups.map((group) => (
+          <li className="overflow-hidden rounded-lg border bg-card" key={group.key}>
+            <div className="flex items-center gap-3 border-b bg-muted/40 p-4">
+              <span className="flex size-8 items-center justify-center rounded-md border font-mono text-xs font-bold" style={{ borderColor: agentColor(group.aggregates[0]), color: agentColor(group.aggregates[0]) }} aria-hidden="true">
+                {group.aggregates[0].marker.slice(0, 1)}
               </span>
-              <span>
-                <strong>{aggregate.agent}</strong>
-                <small>
-                  {aggregate.corpus}
-                  {aggregate.agentTimeoutSeconds == null ? "" : ` · ${formatDuration(aggregate.agentTimeoutSeconds)} timeout`}
-                </small>
+              <span className="flex flex-col">
+                <strong>{primaryAgentName(group.aggregates[0].agent)}</strong>
+                <small className="text-muted-foreground">{agentDetails(group.aggregates[0].agent) || group.aggregates[0].corpus}</small>
               </span>
-              <Badge variant="default">{aggregate.effort ?? "default"}</Badge>
             </div>
-            <dl>
-              <div>
-                <dt>Evidence</dt>
-                <dd>{aggregate.provenance === "composite" ? "composite" : aggregate.trialCount === 1 ? "single run" : `n=${aggregate.trialCount}`}</dd>
-              </div>
-              <div><dt>Mean tasks</dt><dd>{aggregate.passedTasks.mean.toFixed(1)}/{aggregate.taskCount}</dd></div>
-              <div><dt>95% CI</dt><dd>{formatInterval(aggregate)}</dd></div>
-              <div><dt>Seconds / task</dt><dd>{aggregate.agentSecondsPerTask.mean.toFixed(1)}s</dd></div>
-            </dl>
-            <small className="mobile-run-id">Observed {aggregate.passedTasks.min.toFixed(0)}–{aggregate.passedTasks.max.toFixed(0)} tasks · {aggregate.totalTimeouts} timeouts</small>
+            <ul className="divide-y">
+              {group.aggregates.map((aggregate) => (
+                <li className="grid grid-cols-2 gap-3 p-4 xs:grid-cols-4" key={aggregate.id}>
+                  <Badge variant="default">{aggregate.effort ?? "default"}</Badge>
+                  <span className="flex flex-col"><strong className="font-mono text-sm">{aggregate.passedTasks.mean.toFixed(1)}/{aggregate.taskCount}</strong><small className="text-muted-foreground">tasks</small></span>
+                  <span className="flex flex-col"><strong className="font-mono text-sm">{aggregate.agentSecondsPerTask.mean.toFixed(1)}s</strong><small className="text-muted-foreground">per task</small></span>
+                  <Badge variant={aggregate.trialCount > 1 ? "pass" : "muted"}>
+                    {evidenceLabel(aggregate)}
+                  </Badge>
+                  <small className="col-span-2 text-muted-foreground xs:col-span-4">
+                    {aggregate.trialCount > 1 ? `95% CI ${formatInterval(aggregate)}` : `Observed ${aggregate.passedTasks.min.toFixed(0)} tasks`}
+                    {` · ${aggregate.totalTimeouts} timeouts`}
+                  </small>
+                </li>
+              ))}
+            </ul>
           </li>
         ))}
       </ol>
@@ -179,7 +180,7 @@ function SortButton({
       variant="ghost"
       size="sm"
       type="button"
-      className="table-sort"
+      className="-ml-3 text-muted-foreground data-[active=true]:text-foreground"
       aria-label={`Sort by ${label}, ${isActive ? sort.direction : "unsorted"}`}
       data-active={isActive || undefined}
       onClick={() => onSort(sortKey)}
@@ -223,8 +224,39 @@ function effortValue(aggregate: LeaderboardAggregate) {
   return aggregate.effort ? effortRank[aggregate.effort] : -1;
 }
 
-function agentMarkStyle(aggregate: LeaderboardAggregate) {
-  return aggregate.series ? ({ "--agent-color": modelColors[aggregate.series] } as CSSProperties) : undefined;
+function groupAggregatesByModel(aggregates: LeaderboardAggregate[]) {
+  const groups = new Map<string, LeaderboardAggregate[]>();
+  for (const aggregate of aggregates) {
+    const key = aggregate.series ?? aggregate.agent;
+    const group = groups.get(key) ?? [];
+    group.push(aggregate);
+    groups.set(key, group);
+  }
+
+  return [...groups.entries()]
+    .map(([key, entries]) => ({
+      key,
+      aggregates: entries.sort((left, right) => effortValue(left) - effortValue(right)),
+    }))
+    .sort((left, right) => primaryAgentName(left.aggregates[0].agent).localeCompare(primaryAgentName(right.aggregates[0].agent)));
+}
+
+function evidenceLabel(aggregate: LeaderboardAggregate) {
+  if (aggregate.provenance === "composite") return "legacy composite";
+  return aggregate.trialCount > 1 ? `${aggregate.trialCount} runs` : "single run";
+}
+
+function primaryAgentName(agent: string) {
+  return agent.split(" via ")[0];
+}
+
+function agentDetails(agent: string) {
+  const [, details] = agent.split(" via ", 2);
+  return details ? `via ${details}` : "";
+}
+
+function agentColor(aggregate: LeaderboardAggregate) {
+  return aggregate.series ? modelColors[aggregate.series] : "var(--muted-foreground)";
 }
 
 function formatInterval(aggregate: LeaderboardAggregate) {

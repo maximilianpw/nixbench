@@ -62,9 +62,13 @@ const resultsBreadcrumbs = breadcrumbStructuredData([
     label: "Back to benchmark landing page",
   }}
 >
-  <main id="main-content" class="app-page results-page">
+  <main id="main-content">
     <ResultsHero />
-    <LeaderboardPanel client:visible />
+    <LeaderboardPanel
+      headingTitle="Compare current configurations"
+      headingDescription="Filter by model or evidence strength, then compare tasks solved with normalized time per task."
+      client:visible
+    />
     <ResultsSummary />
     <TaskResultsSection client:visible />
     <TimingSection client:visible />

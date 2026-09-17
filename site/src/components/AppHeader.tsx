@@ -63,15 +63,15 @@ export function AppHeader({ activePage }: AppHeaderProps) {
   const themeLabel = ["Switch to", nextTheme, "theme"].join(" ");
 
   return (
-    <header className="site-header">
-      <div className="header-inner">
-        <a className="brand" href="/" aria-label="NixBench home">
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="content-shell flex h-16 items-center gap-4">
+        <a className="flex items-center gap-2 font-semibold no-underline" href="/" aria-label="NixBench home">
           <BrandMark />
-          <span className="brand-name">NixBench</span>
+          <span>NixBench</span>
         </a>
 
         <nav
-          className="nav-links"
+          className="ml-auto hidden items-center gap-1 md:flex data-[open=true]:absolute data-[open=true]:inset-x-0 data-[open=true]:top-16 data-[open=true]:flex data-[open=true]:flex-col data-[open=true]:items-stretch data-[open=true]:border-b data-[open=true]:bg-background data-[open=true]:p-4 md:data-[open=true]:static md:data-[open=true]:flex-row md:data-[open=true]:border-0 md:data-[open=true]:p-0"
           id="primary-navigation"
           aria-label="Primary"
           data-open={menuOpen || undefined}
@@ -81,13 +81,14 @@ export function AppHeader({ activePage }: AppHeaderProps) {
               key={item.label}
               href={item.href}
               aria-current={item.activeOn === activePage ? "page" : undefined}
+              className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-muted-foreground no-underline hover:bg-muted hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:shadow-[inset_0_-2px_0_var(--nix-blue)]"
               onClick={() => setMenuOpen(false)}
             >
               {item.label}
-              {item.external ? <ArrowUpRight className="nav-external-icon" aria-hidden="true" /> : null}
+              {item.external ? <ArrowUpRight className="ml-1 size-3.5" aria-hidden="true" /> : null}
             </a>
           ))}
-          <Button asChild size="sm" className="nav-run">
+          <Button asChild size="sm">
             <a href="https://github.com/maximilianpw/nixbench">
               <FolderGit2 data-icon="inline-start" aria-hidden="true" />
               Project <ArrowUpRight data-icon="inline-end" aria-hidden="true" />
@@ -95,9 +96,9 @@ export function AppHeader({ activePage }: AppHeaderProps) {
           </Button>
         </nav>
 
-        <div className="header-controls">
+        <div className="ml-auto flex items-center gap-1 md:ml-0">
           <Button
-            className="theme-toggle"
+            className="ml-0 md:ml-2"
             type="button"
             variant="ghost"
             size="icon"
@@ -113,7 +114,7 @@ export function AppHeader({ activePage }: AppHeaderProps) {
           </Button>
           <Button
             ref={menuButtonRef}
-            className="menu-toggle"
+            className="md:hidden"
             type="button"
             variant="ghost"
             size="icon"

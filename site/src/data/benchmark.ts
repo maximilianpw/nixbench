@@ -1445,9 +1445,9 @@ export const heroStats = [
 export const resultsDateRangeLabel = buildDateRangeLabel(leaderboardRuns.map((run) => run.runId));
 
 export const resultOverviewStats = [
-  ["models", String(modelIndexColumns.length)],
-  ["configurations", String(leaderboardAggregates.length)],
-  ["recorded trials", String(leaderboardRuns.length)],
+  ["all models", String(modelIndexColumns.length)],
+  ["all configurations", String(leaderboardAggregates.length)],
+  ["all recorded runs", String(leaderboardRuns.length)],
   ["task rows", String(taskResults.length)],
 ] as const;
 

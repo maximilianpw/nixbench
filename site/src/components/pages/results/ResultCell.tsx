@@ -8,7 +8,7 @@ export type ResultCellProps = {
 export function ResultCell({ cell }: ResultCellProps) {
   if (!cell) {
     return (
-      <span className="result-cell missing">
+      <span className="flex min-w-24 items-center justify-between gap-2 opacity-60">
         <StatusBadge status="missing" />
         <span>--</span>
       </span>
@@ -16,7 +16,7 @@ export function ResultCell({ cell }: ResultCellProps) {
   }
 
   return (
-    <span className="result-cell">
+    <span className="flex min-w-24 items-center justify-between gap-2 font-mono text-xs tabular-nums">
       <StatusBadge status={cell.status} />
       <span>{cell.seconds == null ? "..." : `${cell.seconds.toFixed(1)}s`}</span>
     </span>

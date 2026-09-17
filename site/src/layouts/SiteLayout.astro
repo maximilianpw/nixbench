@@ -2,7 +2,7 @@
 import { AppHeader } from "@/components/AppHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { serializeStructuredData, siteMetadata, type StructuredData } from "@/lib/seo";
-import "@/styles/global.css";
+import "@/styles/index.css";
 
 type Props = {
   title: string;
@@ -97,7 +97,7 @@ const robotsContent = noindex
     </script>
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Skip to content</a>
+    <a class="fixed left-4 top-4 z-[100] -translate-y-24 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-transform focus:translate-y-0" href="#main-content">Skip to content</a>
     <AppHeader activePage={activePage} client:load />
     <slot />
     <SiteFooter {...footer} />

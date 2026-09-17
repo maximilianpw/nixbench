@@ -1,25 +1,14 @@
 ---
 import { ArrowLeft, ArrowRight, BookOpenText, FileText } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import SiteLayout from "@/layouts/SiteLayout.astro";
 import { getDocs } from "@/lib/docs";
 import { breadcrumbStructuredData, siteMetadata } from "@/lib/seo";
 
 export async function getStaticPaths() {
   const docs = await getDocs();
-
-  return docs.map((doc) => ({
-    params: {
-      slug: doc.pageSlug,
-    },
-    props: {
-      doc,
-      docs,
-    },
-  }));
+  return docs.map((doc) => ({ params: { slug: doc.pageSlug }, props: { doc, docs } }));
 }
 
 const { doc, docs } = Astro.props;
@@ -29,140 +18,49 @@ const nextDoc = currentIndex >= 0 && currentIndex < docs.length - 1 ? docs[curre
 const sourceHref = `https://github.com/maximilianpw/nixbench/blob/main/${doc.sourcePath}`;
 const canonicalPath = `/docs/${doc.pageSlug}.html`;
 const canonicalUrl = new URL(canonicalPath, siteMetadata.url).toString();
-const docsStructuredData = {
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "@id": `${canonicalUrl}#article`,
-  headline: doc.title,
-  description: doc.summary,
-  url: canonicalUrl,
-  mainEntityOfPage: canonicalUrl,
-  image: new URL(siteMetadata.socialImagePath, siteMetadata.url).toString(),
-  dateModified: siteMetadata.lastUpdated,
-  inLanguage: "en",
-  author: {
-    "@type": "Organization",
-    name: "NixBench",
-    url: siteMetadata.url,
-  },
-  isPartOf: {
-    "@id": `${siteMetadata.url}#website`,
-  },
-};
-const docsBreadcrumbs = breadcrumbStructuredData([
-  { name: "NixBench", url: siteMetadata.url },
-  { name: doc.title, url: canonicalUrl },
-]);
+const docsStructuredData = { "@context": "https://schema.org", "@type": "TechArticle", "@id": `${canonicalUrl}#article`, headline: doc.title, description: doc.summary, url: canonicalUrl, mainEntityOfPage: canonicalUrl, image: new URL(siteMetadata.socialImagePath, siteMetadata.url).toString(), dateModified: siteMetadata.lastUpdated, inLanguage: "en", author: { "@type": "Organization", name: "NixBench", url: siteMetadata.url }, isPartOf: { "@id": `${siteMetadata.url}#website` } };
+const docsBreadcrumbs = breadcrumbStructuredData([{ name: "NixBench", url: siteMetadata.url }, { name: doc.title, url: canonicalUrl }]);
 ---
 
-<SiteLayout
-  title={`${doc.title} | NixBench Docs`}
-  description={doc.summary}
-  activePage="docs"
-  canonicalPath={canonicalPath}
-  openGraphType="article"
-  modifiedTime={siteMetadata.lastUpdated}
-  structuredData={[docsStructuredData, docsBreadcrumbs]}
-  footer={{
-    text: "NixBench docs are generated from <code>docs/</code> in the benchmark repository.",
-    href: sourceHref,
-    label: "View source",
-  }}
->
-  <main id="main-content" class="docs-page">
-    <section class="docs-hero" aria-labelledby="docs-title">
-      <div class="docs-hero-inner">
-        <div class="docs-title-block">
-          <h1 id="docs-title">{doc.title}</h1>
-          <p>{doc.summary}</p>
+<SiteLayout title={`${doc.title} | NixBench Docs`} description={doc.summary} activePage="docs" canonicalPath={canonicalPath} openGraphType="article" modifiedTime={siteMetadata.lastUpdated} structuredData={[docsStructuredData, docsBreadcrumbs]} footer={{ text: "NixBench docs are generated from <code>docs/</code> in the benchmark repository.", href: sourceHref, label: "View source" }}>
+  <main id="main-content">
+    <section class="border-b bg-card" aria-labelledby="docs-title">
+      <div class="content-shell flex flex-col gap-5 py-12 sm:py-16 lg:flex-row lg:items-end lg:justify-between">
+        <div class="max-w-3xl">
+          <p class="eyebrow">Documentation</p>
+          <h1 id="docs-title" class="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">{doc.title}</h1>
+          <p class="mt-4 text-lg leading-8 text-muted-foreground">{doc.summary}</p>
         </div>
-        <Card className="docs-context-card">
-          <CardHeader>
-            <h2 class="card-title">{doc.sourcePath}</h2>
-            <CardDescription>Static HTML generated from the repository markdown.</CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button asChild variant="ghost" size="sm">
-              <a href={sourceHref}>
-                <FileText data-icon="inline-start" aria-hidden="true" />
-                Open source
-              </a>
-            </Button>
-          </CardFooter>
-        </Card>
+        <p class="flex shrink-0 items-center gap-2 font-mono text-xs text-muted-foreground"><FileText className="size-4" aria-hidden="true" />Maintained in <a class="text-foreground" href={sourceHref}>{doc.sourcePath}</a></p>
       </div>
     </section>
 
-    <div class="docs-shell">
-      <aside class="docs-rail" aria-label="Documentation navigation">
-        <div class="docs-rail-sticky">
-          <div class="docs-rail-heading">
-            <BookOpenText aria-hidden="true" />
-            <span>Docs</span>
-          </div>
-          <nav class="docs-nav" aria-label="Documentation pages">
-            {docs.map((entry) => (
-              <a href={`/docs/${entry.pageSlug}.html`} aria-current={entry.slug === doc.slug ? "page" : undefined}>
-                <span>{entry.group}</span>
-                {entry.title}
-              </a>
-            ))}
+    <div class="content-shell py-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8 xl:grid-cols-[13rem_minmax(0,1fr)_11rem]">
+      <details class="mb-6 border-y lg:hidden">
+        <summary class="flex min-h-12 cursor-pointer items-center gap-2 font-semibold"><BookOpenText className="size-4" aria-hidden="true" /> Documentation</summary>
+        <nav class="grid gap-1 pb-4" aria-label="Documentation pages">
+          {docs.map((entry) => <a class="rounded-md px-3 py-2 text-sm text-muted-foreground no-underline hover:bg-muted hover:text-foreground aria-[current=page]:bg-nix-blue-soft aria-[current=page]:font-semibold aria-[current=page]:text-accent-foreground" href={`/docs/${entry.pageSlug}.html`} aria-current={entry.slug === doc.slug ? "page" : undefined}>{entry.title}</a>)}
+        </nav>
+      </details>
+
+      <aside class="hidden lg:block" aria-label="Documentation navigation">
+        <div class="sticky top-24">
+          <div class="mb-3 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider"><BookOpenText className="size-4 text-nix-blue" aria-hidden="true" /><span>Docs</span></div>
+          <nav class="grid gap-1 border-l pl-3" aria-label="Documentation pages">
+            {docs.map((entry) => <a class="rounded-r-md px-3 py-2 text-sm leading-5 text-muted-foreground no-underline hover:bg-muted hover:text-foreground aria-[current=page]:bg-nix-blue-soft aria-[current=page]:font-semibold aria-[current=page]:text-accent-foreground" href={`/docs/${entry.pageSlug}.html`} aria-current={entry.slug === doc.slug ? "page" : undefined}><span class="sr-only">{entry.group}: </span>{entry.title}</a>)}
           </nav>
-          {doc.headings.length > 0 && (
-            <>
-              <Separator className="docs-rail-separator" />
-              <div class="docs-rail-heading docs-rail-heading-secondary">
-                <span>On this page</span>
-              </div>
-              <nav class="docs-toc" aria-label="On this page">
-                {doc.headings.map((heading) => (
-                  <a class:list={{ "toc-child": heading.depth === 3 }} href={`#${heading.id}`}>
-                    {heading.text}
-                  </a>
-                ))}
-              </nav>
-            </>
-          )}
         </div>
       </aside>
 
-      <article class="docs-article">
-        <div class="docs-prose" set:html={doc.html} />
-        <nav class="docs-neighbors" aria-label="Adjacent documentation pages">
-          {previousDoc && (
-            <Card className="docs-neighbor-card">
-              <CardHeader>
-                <CardTitle>{previousDoc.title}</CardTitle>
-                <CardDescription>{previousDoc.summary}</CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button asChild variant="ghost" size="sm">
-                  <a href={`/docs/${previousDoc.pageSlug}.html`}>
-                    <ArrowLeft data-icon="inline-start" aria-hidden="true" />
-                    Read previous
-                  </a>
-                </Button>
-              </CardFooter>
-            </Card>
-          )}
-          {nextDoc && (
-            <Card className="docs-neighbor-card">
-              <CardHeader>
-                <CardTitle>{nextDoc.title}</CardTitle>
-                <CardDescription>{nextDoc.summary}</CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button asChild variant="ghost" size="sm">
-                  <a href={`/docs/${nextDoc.pageSlug}.html`}>
-                    Read next
-                    <ArrowRight data-icon="inline-end" aria-hidden="true" />
-                  </a>
-                </Button>
-              </CardFooter>
-            </Card>
-          )}
+      <article class="min-w-0 rounded-lg border bg-card px-5 py-8 sm:px-8 lg:px-10">
+        <div class="prose prose-neutral max-w-none prose-headings:scroll-mt-24 prose-headings:tracking-tight prose-a:text-nix-blue prose-code:text-foreground prose-pre:border prose-pre:bg-background prose-table:text-sm dark:prose-invert" set:html={doc.html} />
+        <nav class="mt-12 grid gap-4 border-t pt-8 sm:grid-cols-2" aria-label="Adjacent documentation pages">
+          {previousDoc && <Card><CardHeader><CardTitle>{previousDoc.title}</CardTitle><CardDescription>{previousDoc.summary}</CardDescription></CardHeader><CardFooter className="mt-auto"><Button asChild variant="ghost" size="sm"><a href={`/docs/${previousDoc.pageSlug}.html`}><ArrowLeft aria-hidden="true" />Read previous</a></Button></CardFooter></Card>}
+          {nextDoc && <Card><CardHeader><CardTitle>{nextDoc.title}</CardTitle><CardDescription>{nextDoc.summary}</CardDescription></CardHeader><CardFooter className="mt-auto"><Button asChild variant="ghost" size="sm"><a href={`/docs/${nextDoc.pageSlug}.html`}>Read next<ArrowRight aria-hidden="true" /></a></Button></CardFooter></Card>}
         </nav>
       </article>
+
+      {doc.headings.length > 0 && <aside class="hidden xl:block" aria-label="On this page"><div class="sticky top-24"><span class="eyebrow">On this page</span><nav class="mt-3 grid gap-2 border-l pl-3">{doc.headings.map((heading) => <a class:list={["text-sm leading-5 text-muted-foreground no-underline hover:text-foreground", { "pl-3": heading.depth === 3 }]} href={`#${heading.id}`}>{heading.text}</a>)}</nav></div></aside>}
     </div>
   </main>
 </SiteLayout>

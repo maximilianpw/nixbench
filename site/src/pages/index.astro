@@ -34,11 +34,16 @@ const projectStructuredData = {
     label: "Scoring model",
   }}
 >
-  <main id="main-content" class="app-page home-page">
+  <main id="main-content">
     <HomeHero />
-    <LeaderboardPanel client:visible />
+    <LeaderboardPanel
+      compact
+      headingTitle="Current benchmark snapshot"
+      headingDescription="A quick view of repeated-run results on the current 29-task corpus."
+      client:visible
+    />
     <ExplainerSection />
-    <TasksSection />
+    <TasksSection client:visible />
     <MethodSection />
     <UpdatesSection client:visible />
   </main>

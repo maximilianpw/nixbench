@@ -55,7 +55,7 @@ function ChartContainer({
 
   return (
     <ChartContext.Provider value={{ config }}>
-      <div data-slot="chart" data-chart={chartId} className={cn("chart-container", className)} {...props}>
+      <div data-slot="chart" data-chart={chartId} className={cn("flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border/60 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-layer]:outline-none [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none", className)} {...props}>
         <ChartStyle id={chartId} config={config} />
         <RechartsPrimitive.ResponsiveContainer width="100%" height="100%" initialDimension={initialDimension}>
           {children}
@@ -147,9 +147,9 @@ function ChartTooltipContent({
   }
 
   return (
-    <div className={cn("chart-tooltip", className)}>
+    <div className={cn("grid min-w-32 gap-2 rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md", className)}>
       {tooltipLabel}
-      <dl>
+      <dl className="grid gap-1.5">
         {payload
           .filter((item) => item.type !== "none")
           .map((item, index) => {
@@ -162,15 +162,15 @@ function ChartTooltipContent({
             }
 
             return (
-              <div key={index}>
-                <dt>
+              <div key={index} className="flex items-center justify-between gap-4">
+                <dt className="flex items-center gap-2 text-muted-foreground">
                   {!hideIndicator ? (
-                    <i className="chart-tooltip-indicator" style={{ "--swatch": indicatorColor } as React.CSSProperties} />
+                    <i className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: indicatorColor }} />
                   ) : null}
                   {itemConfig?.label ?? item.name}
                 </dt>
                 {item.value != null ? (
-                  <dd>{typeof item.value === "number" ? item.value.toLocaleString() : String(item.value)}</dd>
+                  <dd className="font-mono font-semibold tabular-nums text-foreground">{typeof item.value === "number" ? item.value.toLocaleString() : String(item.value)}</dd>
                 ) : null}
               </div>
             );
@@ -198,7 +198,7 @@ function ChartLegendContent({
   }
 
   return (
-    <div className={cn("chart-legend", className)}>
+    <div className={cn("flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground", className)}>
       {payload
         .filter((item) => item.type !== "none")
         .map((item, index) => {
@@ -206,8 +206,8 @@ function ChartLegendContent({
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
           return (
-            <span key={index}>
-              {itemConfig?.icon && !hideIcon ? <itemConfig.icon /> : <i style={{ "--swatch": item.color } as React.CSSProperties} />}
+            <span key={index} className="flex items-center gap-2">
+              {itemConfig?.icon && !hideIcon ? <itemConfig.icon /> : <i className="size-2.5 rounded-sm" style={{ backgroundColor: item.color }} />}
               {itemConfig?.label ?? item.value}
             </span>
           );

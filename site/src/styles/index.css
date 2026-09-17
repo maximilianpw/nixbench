@@ -1,0 +1,155 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+:root {
+  color-scheme: light;
+  --background: #f3f4f0;
+  --foreground: #101411;
+  --card: #fffefb;
+  --card-foreground: #101411;
+  --popover: #fffefb;
+  --popover-foreground: #101411;
+  --primary: #101411;
+  --primary-foreground: #fffefb;
+  --secondary: #e9ece7;
+  --secondary-foreground: #101411;
+  --muted: #e9ece7;
+  --muted-foreground: #626c65;
+  --accent: #e8edff;
+  --accent-foreground: #2544a8;
+  --destructive: #b23d35;
+  --border: #d5dad4;
+  --input: #aeb8af;
+  --ring: #3057d6;
+  --nix-blue: #3057d6;
+  --nix-blue-deep: #2544a8;
+  --nix-blue-soft: #e8edff;
+  --pass: #197047;
+  --amber: #946014;
+  --fail: #b23d35;
+  --claude: #ae5a2f;
+  --codex: #286fca;
+  --opencode: #667d25;
+  --gemma: #a33f78;
+  --grid-line: rgb(25 35 29 / 9.5%);
+  --radius: 0.375rem;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #101411;
+  --foreground: #f3f5ef;
+  --card: #171c18;
+  --card-foreground: #f3f5ef;
+  --popover: #171c18;
+  --popover-foreground: #f3f5ef;
+  --primary: #f3f5ef;
+  --primary-foreground: #101411;
+  --secondary: #202721;
+  --secondary-foreground: #f3f5ef;
+  --muted: #202721;
+  --muted-foreground: #a6afa8;
+  --accent: #202c53;
+  --accent-foreground: #9aacff;
+  --destructive: #f08278;
+  --border: #303a32;
+  --input: #4d5a50;
+  --ring: #7895ff;
+  --nix-blue: #7895ff;
+  --nix-blue-deep: #9aacff;
+  --nix-blue-soft: #202c53;
+  --pass: #64c795;
+  --amber: #e2aa5b;
+  --fail: #f08278;
+  --claude: #e29368;
+  --codex: #74b2ff;
+  --opencode: #b4cc62;
+  --gemma: #ee8cbd;
+  --grid-line: rgb(229 237 230 / 10.5%);
+}
+
+@theme inline {
+  --font-sans: "Instrument Sans", "Avenir Next", ui-sans-serif, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-nix-blue: var(--nix-blue);
+  --color-nix-blue-deep: var(--nix-blue-deep);
+  --color-nix-blue-soft: var(--nix-blue-soft);
+  --color-pass: var(--pass);
+  --color-amber: var(--amber);
+  --color-fail: var(--fail);
+  --color-claude: var(--claude);
+  --color-codex: var(--codex);
+  --color-opencode: var(--opencode);
+  --color-gemma: var(--gemma);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --breakpoint-xs: 27rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth bg-background;
+  }
+
+  body {
+    @apply m-0 min-w-80 bg-background font-sans text-foreground antialiased;
+  }
+
+  a {
+    @apply underline-offset-4;
+  }
+
+  button,
+  input,
+  select,
+  summary,
+  a {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  code {
+    @apply rounded-sm border bg-muted px-1 py-0.5 font-mono text-[0.84em];
+  }
+
+  ::selection {
+    @apply bg-nix-blue-soft text-foreground;
+  }
+}
+
+@utility content-shell {
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+
+@utility section-shell {
+  @apply content-shell py-16 sm:py-20 lg:py-24;
+}
+
+@utility eyebrow {
+  @apply font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground;
+}

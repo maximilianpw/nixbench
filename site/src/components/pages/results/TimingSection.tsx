@@ -16,13 +16,13 @@ export function TimingSection({}: TimingSectionProps = {}) {
     selectedModel === "all" ? resultColumns : resultColumns.filter((column) => column.key === selectedModel);
 
   return (
-    <PageSection className="timing-section" labelledBy="timing-heading">
+    <PageSection labelledBy="timing-heading">
       <SectionHeader
         title="Elapsed task time for the same fixed baseline runs."
         description="Timing follows the exact columns above: xhigh Codex runs and the historical Claude default composite, each with a 240-second per-task timeout."
         headingId="timing-heading"
       />
-      <div className="matrix-toolbar timing-toolbar">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <ToggleGroup
           type="single"
           value={selectedModel}
@@ -30,7 +30,7 @@ export function TimingSection({}: TimingSectionProps = {}) {
             if (value) setSelectedModel(value as TimingSelection);
           }}
           aria-label="Timing chart model columns"
-          className="model-toggle"
+          className="max-sm:w-full"
         >
           <ToggleGroupItem value="all" aria-label="Show all timing columns">
             All
@@ -41,17 +41,17 @@ export function TimingSection({}: TimingSectionProps = {}) {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <p>
+        <p className="font-mono text-xs text-muted-foreground">
           Charting <strong>{visibleColumns.length}</strong> of <strong>{resultColumns.length}</strong> model columns
         </p>
       </div>
-      <details className="timing-provenance">
-        <summary>Run provenance ({visibleColumns.length})</summary>
-        <ul>
+      <details className="mb-6 rounded-lg border bg-card p-4 text-sm">
+        <summary className="cursor-pointer font-semibold">Run provenance ({visibleColumns.length})</summary>
+        <ul className="mt-4 grid gap-3">
           {visibleColumns.map((column) => (
-            <li key={column.key}>
+            <li className="grid gap-1 border-t pt-3 sm:grid-cols-[1fr_1fr_2fr]" key={column.key}>
               <strong>{column.label}</strong>
-              <span>
+              <span className="text-muted-foreground">
                 {column.corpus} · {column.effort}
               </span>
               <code>{column.runId}</code>

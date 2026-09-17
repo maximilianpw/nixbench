@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { CartesianGrid, ErrorBar, LabelList, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
 
 import { LeaderboardChartTooltip } from "@/components/charts/leaderboard/ChartTooltip";
@@ -13,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart";
 import type { LeaderboardAggregate, ModelKey } from "@/data/benchmark";
-import { cn } from "@/lib/utils";
 
 export type LeaderboardChartProps = {
   aggregates: LeaderboardAggregate[];
@@ -39,43 +37,63 @@ export function LeaderboardChart({
   ) satisfies ChartConfig;
   const xScale = buildSecondsScale(aggregates);
   const yScale = buildTaskScale(aggregates, taskCount, taskScaleMode);
+  const mobileSummaries = series.map((entry) => {
+    const best = [...entry.aggregates].sort(
+      (left, right) => right.tasksPassedMean - left.tasksPassedMean || left.secondsPerTaskMean - right.secondsPerTaskMean,
+    )[0];
+    return { entry, best };
+  });
 
   return (
     <Card
-      className="chart-card evidence-plot react-chart-frame"
+      className="gap-0 overflow-hidden py-0"
       aria-labelledby="leaderboard-chart-title"
       aria-describedby="leaderboard-chart-description"
     >
-      <CardHeader>
-        <div className="evidence-card-heading">
+      <CardHeader className="border-b py-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <CardTitle id="leaderboard-chart-title">Configuration means, with uncertainty</CardTitle>
+            <CardTitle id="leaderboard-chart-title">Tasks solved vs. time</CardTitle>
             <CardDescription id="leaderboard-chart-description">
-              Mean tasks passed against mean agent seconds per task. Paths connect ordered effort configurations;
-              select a model to reveal its 95% Student&apos;s t intervals and effort labels.{" "}
-              {taskScaleMode === "focused"
-                ? `The task axis focuses on ${yScale.domain[0]}–${yScale.domain[1]} to make the observed differences legible.`
-                : "The task axis shows the full zero-based context."}{" "}
-              {xScale.scale === "log"
-                ? "The time axis uses logarithmic spacing because observed runtimes span more than one order of magnitude."
-                : "The time axis uses linear spacing."}{" "}
-              {view === "summary"
-                ? "Individual trials are hidden in this summary view."
-                : "Faint points are individual trials."}
+              Higher is better; farther left is faster. Select a model to inspect effort levels and uncertainty.
             </CardDescription>
+            <details className="mt-3 text-sm text-muted-foreground">
+              <summary className="cursor-pointer font-semibold text-foreground">How to read this chart</summary>
+              <p className="mt-2 max-w-3xl leading-6">
+                Each point is an average for one effort setting. Paths connect effort settings for the same model.
+                Repeated runs receive 95% Student&apos;s t intervals. The time axis uses {xScale.scale} spacing
+                {xScale.scale === "log" ? " because runtimes span more than one order of magnitude" : ""}.
+                {taskScaleMode === "focused"
+                  ? ` The task axis is zoomed to ${yScale.domain[0]}–${yScale.domain[1]}.`
+                  : " The task axis starts at zero."}
+                {view === "summary" ? " Individual runs are hidden." : " Faint points show individual runs."}
+              </p>
+            </details>
           </div>
-          <div className="evidence-axis-note" aria-label="Chart axis summary">
+          <div className="flex shrink-0 flex-wrap gap-2 lg:max-w-52" aria-label="Chart axis summary">
             <Badge variant="muted">
-              {taskScaleMode === "focused" ? "Focused" : "Full"}: {yScale.domain[0]}–{yScale.domain[1]} tasks
+              {taskScaleMode === "focused" ? "Zoomed" : "Starts at zero"}: {yScale.domain[0]}–{yScale.domain[1]} tasks
             </Badge>
-            <Badge variant="muted">{xScale.scale === "log" ? "Log" : "Linear"} time axis</Badge>
-            <span>↑ more tasks</span>
-            <span>← less time</span>
+            <Badge variant="muted">{xScale.scale === "log" ? "Logarithmic" : "Linear"} time</Badge>
+            <span className="font-mono text-xs text-muted-foreground">↑ more tasks</span>
+            <span className="font-mono text-xs text-muted-foreground">← less time</span>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <ChartContainer className="chart-shell evidence-chart-shell" config={chartConfig} initialDimension={{ width: 860, height: 410 }}>
+      <CardContent className="p-0">
+        <div className="p-5 md:hidden" aria-label="Best observed result by model">
+          <p className="eyebrow mb-3">Best observed average for each visible model</p>
+          <ol className="divide-y rounded-md border">
+            {mobileSummaries.map(({ entry, best }) => best ? (
+              <li className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 p-3 text-sm" key={entry.key}>
+                <span className="flex items-center gap-2"><i className="size-2.5 rounded-full" aria-hidden="true" style={{ backgroundColor: entry.color }} />{entry.label.split(" via ")[0]}</span>
+                <strong className="font-mono tabular-nums">{best.tasksPassedMean.toFixed(1)}/{best.taskCount}</strong>
+                <small className="col-span-2 text-muted-foreground">{best.secondsPerTaskMean.toFixed(1)}s/task · {best.effort ?? "default"}</small>
+              </li>
+            ) : null)}
+          </ol>
+        </div>
+        <ChartContainer className="hidden h-[440px] w-full p-4 md:flex" config={chartConfig} initialDimension={{ width: 860, height: 410 }}>
           <ScatterChart accessibilityLayer margin={{ top: 30, right: 42, bottom: 48, left: 26 }}>
             <CartesianGrid stroke="var(--grid-line)" strokeDasharray="3 5" />
             <XAxis
@@ -86,8 +104,8 @@ export function LeaderboardChart({
               ticks={xScale.ticks}
               type="number"
               label={{ value: "Mean agent seconds / task", position: "insideBottomRight", offset: -24 }}
-              stroke="var(--muted)"
-              tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
+              stroke="var(--muted-foreground)"
+              tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "IBM Plex Mono" }}
             />
             <YAxis
               dataKey="tasksPassedMean"
@@ -96,8 +114,8 @@ export function LeaderboardChart({
               ticks={yScale.ticks}
               type="number"
               label={{ value: `Mean tasks passed / ${taskCount}`, position: "insideTopLeft", offset: -18 }}
-              stroke="var(--muted)"
-              tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}
+              stroke="var(--muted-foreground)"
+              tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "IBM Plex Mono" }}
             />
             <ZAxis dataKey="pointSize" range={[14, 72]} />
             <ChartTooltip
@@ -112,11 +130,7 @@ export function LeaderboardChart({
               return (
                 <Scatter
                   key={`${entry.key}-trajectory`}
-                  className={cn(
-                    "effort-trajectory",
-                    isModelDimmed(highlightedModel, model) && "is-dimmed",
-                    isHighlighted && "is-highlighted",
-                  )}
+                  className={isModelDimmed(highlightedModel, model) ? "opacity-25" : undefined}
                   data={orderByEffort(entry.aggregates)}
                   fill={entry.color}
                   isAnimationActive={false}
@@ -143,10 +157,7 @@ export function LeaderboardChart({
                   return (
                     <Scatter
                       key={`${entry.key}-trials`}
-                      className={cn(
-                        "leaderboard-series",
-                        isModelDimmed(highlightedModel, model) && "is-dimmed",
-                      )}
+                      className={isModelDimmed(highlightedModel, model) ? "opacity-25" : undefined}
                       data={entry.trials.map((trial) => ({
                         ...trial,
                         secondsPerTaskMean: trial.secondsPerTask,
@@ -170,12 +181,9 @@ export function LeaderboardChart({
                 return (
                   <Scatter
                     key={point.id}
-                    className={cn(
-                      "leaderboard-series",
-                      isModelDimmed(highlightedModel, point.series) && "is-dimmed",
-                    )}
+                    className={isModelDimmed(highlightedModel, point.series) ? "opacity-25" : undefined}
                     data={[point]}
-                    fill={point.trialCount > 1 ? entry.color : "var(--panel)"}
+                    fill={point.trialCount > 1 ? entry.color : "var(--card)"}
                     fillOpacity={isHighlighted || highlightedModel === null ? 0.88 : 0.24}
                     isAnimationActive={false}
                     name={point.label}
@@ -204,8 +212,8 @@ export function LeaderboardChart({
                     {isHighlighted ? (
                       <LabelList
                         dataKey="effort"
-                        fill="var(--ink)"
-                        fontFamily="var(--mono)"
+                        fill="var(--foreground)"
+                        fontFamily="IBM Plex Mono"
                         fontSize={10}
                         offset={9}
                         position="top"
@@ -218,18 +226,18 @@ export function LeaderboardChart({
           </ScatterChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter>
-        <div className="evidence-footer">
-          <div className="evidence-key" aria-label="Evidence mark key">
+      <CardFooter className="border-t p-5">
+        <div className="grid w-full gap-5">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground [&_span]:flex [&_span]:items-center [&_span]:gap-2 [&_i]:size-2.5 [&_i]:rounded-full [&_i]:border [&_i]:border-nix-blue [&_i]:bg-nix-blue/20" aria-label="Evidence mark key">
             <span>
               <i className={highlightedModel ? "mean-mark" : "trajectory-mark"} aria-hidden="true" />
               {highlightedModel ? "Selected mean + 95% CI" : "Ordered effort path + mean"}
             </span>
             <span><i className="single-mark" aria-hidden="true" />Single observation or legacy composite; no CI</span>
             {view === "trials" ? (
-              <span><i className="trial-mark" aria-hidden="true" />Individual trial</span>
+              <span><i className="trial-mark" aria-hidden="true" />Individual run</span>
             ) : null}
-            <small>
+            <small className="basis-full">
               {view === "summary"
                 ? highlightedModel
                   ? "Selected model shows effort labels and uncertainty."
@@ -237,7 +245,7 @@ export function LeaderboardChart({
                 : "Marks use each model's color and configuration code."}
             </small>
           </div>
-          <div className="chart-legend" role="list" aria-label="Model legend">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="list" aria-label="Model legend">
             {series.map((entry) => {
               const model = entry.aggregates[0]?.series;
 
@@ -248,13 +256,14 @@ export function LeaderboardChart({
                   type="button"
                   aria-pressed={highlightedModel === model}
                   aria-label={highlightedModel === model ? "Show all models" : `Isolate ${entry.label}`}
+                  className="grid min-h-14 grid-cols-[auto_1fr] items-center gap-x-2 rounded-md border p-3 text-left hover:bg-muted aria-pressed:border-nix-blue aria-pressed:bg-nix-blue-soft data-[dimmed=true]:opacity-40"
                   data-dimmed={isModelDimmed(highlightedModel, model) || undefined}
                   onClick={() => onHighlightedModelChange(highlightedModel === model ? null : (model ?? null))}
                 >
-                  <i aria-hidden="true" style={{ "--swatch": entry.color } as CSSProperties} />
-                  <strong>{entry.label}</strong>
-                  <small>
-                    {entry.aggregates.length} cfg · {entry.aggregates.reduce((sum, aggregate) => sum + aggregate.trialCount, 0)} trials
+                  <i className="row-span-2 size-2.5 rounded-full" aria-hidden="true" style={{ backgroundColor: entry.color }} />
+                  <strong>{entry.label.split(" via ")[0]}</strong>
+                  <small className="text-muted-foreground">
+                    {entry.aggregates.length} settings · {entry.aggregates.reduce((sum, aggregate) => sum + aggregate.trialCount, 0)} runs
                   </small>
                 </button>
               );
