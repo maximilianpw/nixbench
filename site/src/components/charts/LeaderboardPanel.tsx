@@ -93,8 +93,7 @@ export function LeaderboardPanel() {
               higher effort; they do not imply continuous or monotonic scaling. See the{" "}
               <a href="/docs/reproducibility.html">reproducibility method</a>
               {corpus === currentCorpusLabel ? (
-                <>, <a href="/docs/runs/2026-08-08-local-opencode-models.html">OpenCode run provenance</a>,
-                  and <a href="/docs/runs/2026-09-10-astra-pi-isolated.html">Astra/Pi run provenance</a>.
+                <> and <a href="/docs/runs/2026-09-10-astra-pi-isolated.html">Astra/Pi run provenance</a>.
                   Raw run IDs appear in trial tooltips.</>
               ) : (
                 <> and <a href="/docs/runs/2026-06-24-model-comparison.html">historical run provenance</a>.</>

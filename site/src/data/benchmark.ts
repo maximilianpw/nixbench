@@ -162,21 +162,13 @@ export const resultColumns: ResultColumn[] = [
   },
 ];
 
+const hiddenModelKeys = new Set<ModelKey>(["gemma4Local", "bonsai27Local"]);
+
 const modelIndexColumns: Array<Pick<ResultColumn, "key" | "label" | "corpus">> = [
   ...resultColumns,
   {
     key: "gpt6AstraPi",
     label: "GPT-6 Astra via Pi, no skills",
-    corpus: "29-task corpus",
-  },
-  {
-    key: "gemma4Local",
-    label: "Gemma 4 26B-A4B QAT Q4_0",
-    corpus: "29-task corpus",
-  },
-  {
-    key: "bonsai27Local",
-    label: "Ternary Bonsai 27B Q2_0",
     corpus: "29-task corpus",
   },
 ];
@@ -764,7 +756,9 @@ const originalLeaderboardRuns: LeaderboardRun[] = [
   },
 ];
 
-const generatedLeaderboardRuns = generatedTrialRows as LeaderboardRun[];
+const generatedLeaderboardRuns = (generatedTrialRows as LeaderboardRun[]).filter(
+  (run) => !run.series || !hiddenModelKeys.has(run.series),
+);
 const generatedCorpora = new Set(generatedLeaderboardRuns.map((run) => run.corpus));
 
 export const leaderboardRuns: LeaderboardRun[] = [

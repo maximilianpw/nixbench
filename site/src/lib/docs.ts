@@ -32,6 +32,7 @@ const preferredOrder = [
 ];
 
 const orderBySlug = new Map(preferredOrder.map((slug, index) => [slug, index]));
+const hiddenDocSlugs = new Set(["runs/2026-08-08-local-opencode-models.md"]);
 
 async function listMarkdownFiles(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -300,7 +301,10 @@ function docGroup(slug: string) {
 }
 
 export async function getDocs() {
-  const files = await listMarkdownFiles(docsRoot);
+  const files = (await listMarkdownFiles(docsRoot)).filter((file) => {
+    const slug = relative(docsRoot, file).split(sep).join("/");
+    return !hiddenDocSlugs.has(slug);
+  });
   const docs = await Promise.all(
     files.map(async (file) => {
       const slug = relative(docsRoot, file).split(sep).join("/");
