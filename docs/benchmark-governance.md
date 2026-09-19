@@ -94,9 +94,12 @@ uncertainty/discrimination estimates. Additional independent trials are
 strongly recommended—five or more per configuration for serious comparisons—
 but are optional when the approved budget cannot support them.
 
-Draft records retain run IDs, study artifact digests, valid observations,
-timeouts, and invalid or incomplete attempts. Reviewers must inspect solve-rate
-stability, unavailable statistical results, common failure behavior, accepted
+Draft records retain canonical `cfg-<sha256>` configuration IDs, run IDs,
+study artifact digests, valid observations, timeouts, and invalid or incomplete
+attempts. `empirical_difficulty` translates the observed solve-rate band: a high
+solve rate is `easy`, a mixed solve rate is `mixed`, and a low solve rate is
+`hard`. Reviewers must inspect solve-rate stability, unavailable statistical
+results, common failure behavior, accepted
 valid alternatives, and evaluator disputes. An authorized reviewer then records
 an explicit decision, date, identity, and rationale. Both accepted-alternative
 and evaluator-dispute review must be complete before `approve` can activate a

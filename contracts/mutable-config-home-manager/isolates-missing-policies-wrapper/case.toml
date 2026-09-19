@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "mutable-config-home-manager"
+outcome = "reject"
+criterion_id = "managed-policy"
+description = "Mutable profile keeps its boundary but omits Thunderbird's top-level policies wrapper"
+
+[expected_criteria]
+"managed-policy" = false
+"mutable-state-boundary" = true
+"profile-variable" = true
+"thunderbird-config" = true

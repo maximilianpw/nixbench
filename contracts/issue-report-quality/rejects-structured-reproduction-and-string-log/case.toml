@@ -1,0 +1,14 @@
+schema_version = 3
+task_id = "issue-report-quality"
+outcome = "reject"
+criterion_id = "reproduction-and-system"
+description = "Issue report uses a structured reproduction object and a string log instead of the required lists"
+
+[coupled_failures]
+"outcome-evidence" = "The same candidate also uses a string log instead of the required non-empty list, so outcome evidence fails independently."
+
+[expected_criteria]
+"bounded-analysis" = true
+"outcome-evidence" = false
+"report-fields" = true
+"reproduction-and-system" = false

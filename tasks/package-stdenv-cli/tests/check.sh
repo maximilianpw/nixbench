@@ -15,8 +15,11 @@ let
   lib = {
     licenses.mit = { spdxId = "MIT"; marker = 51; };
     platforms.unix = [ "unix-platform-sentinel" ];
+    platforms.all = [ "all-platforms-sentinel" ];
   };
-  stdenv.mkDerivation = attrs: attrs // { __mkDerivation = true; };
+  stdenv.mkDerivation = definition:
+    let attrs = if builtins.isFunction definition then definition attrs else definition;
+    in attrs // { __mkDerivation = true; };
   fetchFromGitHub = attrs: attrs // { __fetcher = "github"; };
   installShellFiles = { package = "installShellFiles"; marker = 59; };
   pkg = import ${workdir}/package.nix {
@@ -51,7 +54,7 @@ in {
       builtins.isString pkg.meta.description && pkg.meta.description != ""
       && builtins.isString pkg.meta.homepage && pkg.meta.homepage != ""
       && pkg.meta.license == lib.licenses.mit
-      && pkg.meta.platforms == lib.platforms.unix
+      && builtins.isList pkg.meta.platforms && pkg.meta.platforms != []
       && pkg.meta.mainProgram == "tinygrep"
     );
   };

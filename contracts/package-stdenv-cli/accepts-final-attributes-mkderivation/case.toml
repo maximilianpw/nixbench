@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "package-stdenv-cli"
+outcome = "pass"
+criterion_id = "package-source"
+description = "Stdenv package uses the supported final-attributes mkDerivation form"
+
+[expected_criteria]
+"build-contract" = true
+"install-contract" = true
+"package-metadata" = true
+"package-source" = true

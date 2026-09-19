@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "issue-report-quality"
+outcome = "reject"
+criterion_id = "reproduction-and-system"
+description = "Issue report uses a structured reproduction object instead of the required command list"
+
+[expected_criteria]
+"bounded-analysis" = true
+"outcome-evidence" = true
+"report-fields" = true
+"reproduction-and-system" = false

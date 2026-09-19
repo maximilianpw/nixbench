@@ -13,4 +13,4 @@ Requirements:
 - Use `makeFlags = [ "PREFIX=$(out)" ]`.
 - Enable checks with `doCheck = true`.
 - Install the binary to `$out/bin/tinygrep` in `installPhase`.
-- Set `meta.description`, `meta.homepage`, `meta.license`, `meta.platforms`, and `meta.mainProgram`.
+- Set `meta.description`, `meta.homepage`, `meta.license`, `meta.platforms` to a non-empty platform list, and `meta.mainProgram`.

@@ -10,7 +10,7 @@ Requirements:
 - Set `programs.thunderbird.enable = true`.
 - Set `home.sessionVariables.THUNDERBIRD_PROFILE_DIR = profileDir`.
 - Write managed defaults to `xdg.configFile."thunderbird/policies.json".text`.
-- The policies JSON must include `"DisableAppUpdate": true`.
+- The policies JSON must use Thunderbird's top-level `policies` object and include `"policies": { "DisableAppUpdate": true }`.
 - Record `mutableState = [ profileDir ]` so callers know that profile directory is intentionally not Home Manager-owned.
 - Do not manage `.thunderbird/profiles.ini`, `prefs.js`, or profile directories through `home.file`.
 - Do not set `recursive = true` for `.thunderbird`.

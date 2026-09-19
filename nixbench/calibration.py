@@ -286,7 +286,9 @@ def build_calibration_report(
                 "configurations": configuration_summaries,
                 "discrimination": task_health["discrimination"],
                 "author_difficulty": task.difficulty,
-                "empirical_difficulty": task_health["empirical_solve_rate_band"],
+                "empirical_difficulty": _empirical_difficulty(
+                    task_health["empirical_solve_rate_band"]
+                ),
                 "review": {
                     "decision": "pending",
                     "reviewer": None,
@@ -394,10 +396,13 @@ def _validate_configuration(value: object, task_id: str) -> dict[str, Any]:
     if set(value) != fields:
         raise ValueError(f"{task_id}: calibration configuration fields are incomplete or unknown")
     configuration_id = _nonempty_string(value.get("configuration_id"), f"{task_id}: configuration_id")
-    if len(configuration_id) != 64 or any(
-        character not in "0123456789abcdef" for character in configuration_id
+    digest = configuration_id.removeprefix("cfg-")
+    if not configuration_id.startswith("cfg-") or len(digest) != 64 or any(
+        character not in "0123456789abcdef" for character in digest
     ):
-        raise ValueError(f"{task_id}: configuration_id must be a SHA-256 digest")
+        raise ValueError(
+            f"{task_id}: configuration_id must use canonical cfg-<sha256> form"
+        )
     valid_count = _nonnegative_int(value.get("valid_observation_count"), f"{task_id}: valid observation count")
     run_ids = _unique_strings(value.get("run_ids"), f"{task_id}: run_ids")
     if len(run_ids) != valid_count:
@@ -453,6 +458,16 @@ def _validate_review(value: object, task_id: str) -> dict[str, Any]:
         if not rationale.strip():
             raise ValueError(f"{task_id}: completed review requires rationale")
     return dict(value)
+
+
+def _empirical_difficulty(solve_rate_band: object) -> str | None:
+    if solve_rate_band is None:
+        return None
+    mapping = {"high": "easy", "mixed": "mixed", "low": "hard"}
+    try:
+        return mapping[str(solve_rate_band)]
+    except KeyError as exc:
+        raise ValueError("unknown empirical solve-rate band") from exc
 
 
 def _sha256_file(path: Path) -> str:

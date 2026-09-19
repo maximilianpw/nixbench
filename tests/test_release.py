@@ -1263,7 +1263,7 @@ class ReleaseTests(unittest.TestCase):
             "corpus_digest": identity.digest,
             "configurations": [
                 {
-                    "configuration_id": f"{index + 10:064x}",
+                    "configuration_id": f"cfg-{index + 10:064x}",
                     "valid_observation_count": 1,
                     "run_ids": [f"run-{index}"],
                     "study_artifact_sha256": [f"{index + 1:064x}"],

@@ -12,6 +12,11 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
+  get = path: default: value:
+    if path == [] then value
+    else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
+    then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
+    else default;
   lib = {
     mkEnableOption = description: {
       __enable = true;
@@ -54,41 +59,54 @@ let
     port = 3131;
     extraArgs = [];
   };
-  service = module.config.content.systemd.services.nixbench-agent;
-  exec = service.serviceConfig.ExecStart;
-  alternateService = alternate.config.content.systemd.services.nixbench-agent;
-  alternateExec = alternateService.serviceConfig.ExecStart;
+  options = get [ "options" "services" "nixbench-agent" ] {} module;
+  enableOption = get [ "enable" ] {} options;
+  packageOption = get [ "package" ] {} options;
+  portOption = get [ "port" ] {} options;
+  extraArgsOption = get [ "extraArgs" ] {} options;
+  extraArgsType = get [ "type" ] {} extraArgsOption;
+  moduleConfig = get [ "config" ] {} module;
+  alternateConfig = get [ "config" ] {} alternate;
+  disabledConfig = get [ "config" ] {} disabled;
+  service = get [ "content" "systemd" "services" "nixbench-agent" ] {} moduleConfig;
+  exec = get [ "serviceConfig" "ExecStart" ] "" service;
+  alternateService = get [ "content" "systemd" "services" "nixbench-agent" ] {} alternateConfig;
+  alternateExec = get [ "serviceConfig" "ExecStart" ] "" alternateService;
 in {
   schema_version = 2;
   criteria = {
     "option-schema" = passes (
-      module.options.services.nixbench-agent.enable.__enable == true
-      && module.options.services.nixbench-agent.package.__option == true
-      && module.options.services.nixbench-agent.package.type == lib.types.package
-      && module.options.services.nixbench-agent.package.default == pkgs.nixbench-agent
-      && module.options.services.nixbench-agent.port.__option == true
-      && module.options.services.nixbench-agent.port.type == lib.types.port
-      && module.options.services.nixbench-agent.port.default == 8080
-      && module.options.services.nixbench-agent.extraArgs.__option == true
-      && module.options.services.nixbench-agent.extraArgs.type.kind == "list"
-      && module.options.services.nixbench-agent.extraArgs.type.type == lib.types.str
-      && module.options.services.nixbench-agent.extraArgs.default == []
+      get [ "__enable" ] false enableOption == true
+      && get [ "__option" ] false packageOption == true
+      && get [ "type" ] null packageOption == lib.types.package
+      && get [ "default" ] null packageOption == pkgs.nixbench-agent
+      && get [ "__option" ] false portOption == true
+      && get [ "type" ] null portOption == lib.types.port
+      && get [ "default" ] null portOption == 8080
+      && get [ "__option" ] false extraArgsOption == true
+      && get [ "kind" ] null extraArgsType == "list"
+      && get [ "type" ] null extraArgsType == lib.types.str
+      && get [ "default" ] null extraArgsOption == []
     );
     "conditional-service" = passes (
-      module.config.__mkIf == true && alternate.config.__mkIf == true && disabled.config.__mkIf == false
+      get [ "__mkIf" ] false moduleConfig == true
+      && get [ "__mkIf" ] false alternateConfig == true
+      && get [ "__mkIf" ] true disabledConfig == false
     );
     "exec-arguments" = passes (
-      builtins.match ".*custom-agent/bin/nixbench-agent.*" exec != null
+      builtins.isString exec
+      && builtins.match ".*custom-agent/bin/nixbench-agent.*" exec != null
       && builtins.match ".*--port 9191.*" exec != null
       && builtins.match ".*--verbose.*" exec != null
       && builtins.match ".*--json.*" exec != null
+      && builtins.isString alternateExec
       && builtins.match ".*alternate-agent/bin/nixbench-agent.*" alternateExec != null
       && builtins.match ".*--port 4242.*" alternateExec != null
       && builtins.match ".*--quiet.*" alternateExec != null
     );
     "firewall-port" = passes (
-      module.config.content.networking.firewall.allowedTCPPorts == [ 9191 ]
-      && alternate.config.content.networking.firewall.allowedTCPPorts == [ 4242 ]
+      get [ "content" "networking" "firewall" "allowedTCPPorts" ] null moduleConfig == [ 9191 ]
+      && get [ "content" "networking" "firewall" "allowedTCPPorts" ] null alternateConfig == [ 4242 ]
     );
   };
   notes = [];

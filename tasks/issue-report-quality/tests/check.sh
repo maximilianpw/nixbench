@@ -18,8 +18,14 @@ let
     then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
     else default;
   report = import ${workdir}/report.nix;
+  system = get [ "system" ] {} report;
+  reproduction = get [ "reproduction" ] [] report;
+  logs = get [ "logs" ] [] report;
+  analysis = get [ "analysis" ] {} report;
+  observed = get [ "observed" ] [] analysis;
+  unverified = get [ "unverified" ] [] analysis;
+  analysisText = builtins.toJSON analysis;
   text = builtins.toJSON report;
-  analysisText = builtins.toJSON report.analysis;
 in {
   schema_version = 2;
   criteria = {
@@ -30,32 +36,33 @@ in {
       && builtins.isString (get [ "actual" ] null report) && get [ "actual" ] "" report != ""
     );
     "reproduction-and-system" = passes (
-      report.system.system == "x86_64-linux"
-      && report.system.nixosRelease == "25.05"
-      && report.system.nixpkgsRevision == "8f3b2d1"
-      && builtins.elem "nixos-rebuild test --flake .#workstation" report.reproduction
+      get [ "system" ] null system == "x86_64-linux"
+      && get [ "nixosRelease" ] null system == "25.05"
+      && get [ "nixpkgsRevision" ] null system == "8f3b2d1"
+      && builtins.isList reproduction
+      && builtins.elem "nixos-rebuild test --flake .#workstation" reproduction
     );
     "outcome-evidence" = passes (
-      report.expectedStatus == "evaluation-succeeds"
-      && report.actualStatus == "evaluation-fails"
-      && builtins.isList report.logs
-      && builtins.length report.logs > 0
-      && builtins.all (item: builtins.isString item && item != "") report.logs
-      && builtins.elem "error: The option services.xserver.displayManager.sddm.enable does not exist" report.logs
+      get [ "expectedStatus" ] null report == "evaluation-succeeds"
+      && get [ "actualStatus" ] null report == "evaluation-fails"
+      && builtins.isList logs
+      && builtins.length logs > 0
+      && builtins.all (item: builtins.isString item && item != "") logs
+      && builtins.elem "error: The option services.xserver.displayManager.sddm.enable does not exist" logs
     );
     "bounded-analysis" = passes (
-      builtins.isAttrs report.analysis
-      && builtins.isList report.analysis.observed
-      && builtins.length report.analysis.observed > 0
-      && builtins.all (item: builtins.isString item && item != "") report.analysis.observed
-      && builtins.isString report.analysis.likelyFix
-      && report.analysis.likelyFix != ""
-      && builtins.isList report.analysis.unverified
+      builtins.isAttrs analysis
+      && builtins.isList observed
+      && builtins.length observed > 0
+      && builtins.all (item: builtins.isString item && item != "") observed
+      && builtins.isString (get [ "likelyFix" ] null analysis)
+      && get [ "likelyFix" ] "" analysis != ""
+      && builtins.isList unverified
       && builtins.match ".*services[.]xserver[.]displayManager[.]sddm[.]enable.*" analysisText != null
       && builtins.match ".*services[.]displayManager[.]sddm[.]enable.*" analysisText != null
-      && !(report.analysis ? rootCause)
-      && !(report.analysis ? confirmedRootCause)
-      && report.confidence == "observed"
+      && !(analysis ? rootCause)
+      && !(analysis ? confirmedRootCause)
+      && get [ "confidence" ] null report == "observed"
       && builtins.match ".*[Cc][Hh][Aa][Tt][Gg][Pp][Tt].*" text == null
       && builtins.match ".*[Cc][Oo][Pp][Ii][Ll][Oo][Tt].*" text == null
       && builtins.match ".*[^A-Za-z][Aa][Ii][^A-Za-z].*" text == null

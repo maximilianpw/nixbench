@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from nixbench.calibration import load_calibration_registry, registry_payload_from_report
 from nixbench.cli import build_parser, main
 from nixbench.corpus import identify_corpus
 from nixbench.protocol import compute_configuration_id
@@ -151,6 +152,12 @@ class CliTests(unittest.TestCase):
             self.assertEqual(len(configurations), 3)
             incomplete = next(item for item in configurations if item["incomplete_attempt_count"] == 1)
             self.assertEqual(incomplete["invalid_attempt_rate"], 0.5)
+            self.assertEqual(sufficient["records"][0]["empirical_difficulty"], "easy")
+
+            registry_path = results_dir / "task-calibrations.json"
+            registry_path.write_text(json.dumps(registry_payload_from_report(sufficient)))
+            registry = load_calibration_registry(registry_path, identity=identity)
+            self.assertEqual(set(registry.records), {"toy"})
 
     def test_calibration_report_rejects_duplicate_cells_and_mismatched_corpus(self) -> None:
         with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as results:

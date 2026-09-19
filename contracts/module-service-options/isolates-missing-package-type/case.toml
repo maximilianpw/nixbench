@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-service-options"
+outcome = "reject"
+criterion_id = "option-schema"
+description = "Service module omits the required package option type while preserving runtime behavior"
+
+[expected_criteria]
+"conditional-service" = true
+"exec-arguments" = true
+"firewall-port" = true
+"option-schema" = false

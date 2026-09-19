@@ -16,10 +16,10 @@ Requirements:
 - Include `title`, `failureClass`, `system`, `reproduction`, `expectedStatus`, `actualStatus`, `expected`, `actual`, `logs`, `analysis`, and `confidence`.
 - `failureClass` must be `"evaluation"`.
 - `system` must include `system`, `nixosRelease`, and `nixpkgsRevision`.
-- `reproduction` must include the exact command above.
+- `reproduction` must be a list of command strings and include the exact command above.
 - Set `expectedStatus = "evaluation-succeeds"` and `actualStatus = "evaluation-fails"`.
 - `expected` and `actual` are free-form explanations for human readers. The status fields record their machine-graded outcomes.
-- `logs` must include the observed error.
+- `logs` must be a non-empty list of strings and include the observed error.
 - `analysis` should contain `observed` (a list), `likelyFix` (a string), and `unverified` (a list). It must state the observed stale option path and the likely current option path without adding a `rootCause` or `confirmedRootCause` claim.
 - Set `confidence = "observed"`.
 - Do not mention ChatGPT, Copilot, AI, or unsupported guesses.
