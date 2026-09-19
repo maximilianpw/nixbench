@@ -31,7 +31,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
 
 
 RELEASE_TOOL_SCHEMA_VERSION = 1
-RELEASE_MANIFEST_SCHEMA_VERSION = 1
+RELEASE_MANIFEST_SCHEMA_VERSION = 2
 REQUIRED_PROTOCOL_SCHEMA_VERSION = 2
 RUNTIME_SAFETY_FRACTION = 0.8
 MINIMUM_PUBLICATION_TASKS = 5
@@ -336,6 +336,7 @@ def build_release_manifest(
             "profile": APPROVED_HELDOUT_PROFILE,
             "adapter": adapter.id,
             "adapter_sha256": adapter.sha256,
+            "adapter_bundle_sha256": adapter.bundle_sha256,
             "attestation_trust": adapter.trust,
             "preflight_evidence": APPROVED_PREFLIGHT_EVIDENCE,
         }
@@ -397,6 +398,10 @@ def check_publication(
 ) -> dict[str, Any]:
     metadata = study.get("metadata")
     reasons: list[str] = []
+    if release_manifest.get("schema_version") != RELEASE_MANIFEST_SCHEMA_VERSION:
+        reasons.append(
+            f"publication requires release manifest schema {RELEASE_MANIFEST_SCHEMA_VERSION}"
+        )
     if not isinstance(metadata, Mapping):
         return {"eligible": False, "reasons": ["study metadata is missing"]}
     if metadata.get("corpus_digest") != release_manifest.get("corpus_digest"):
@@ -418,6 +423,7 @@ def check_publication(
         "agent_command_sha256",
         "agent_adapter",
         "agent_adapter_sha256",
+        "agent_adapter_bundle_sha256",
         "attestation_trust",
     )
     if any(not metadata.get(field) for field in identity_fields):
@@ -430,6 +436,11 @@ def check_publication(
         adapter = None
     if adapter is not None and metadata.get("agent_adapter_sha256") != adapter.sha256:
         reasons.append("study adapter digest does not match the registered adapter")
+    if (
+        adapter is not None
+        and metadata.get("agent_adapter_bundle_sha256") != adapter.bundle_sha256
+    ):
+        reasons.append("study adapter bundle digest does not match the registered adapter")
     if metadata.get("completion_attestation") != "required":
         reasons.append("publication requires completion attestation")
     required_protocol = release_manifest.get("required_protocol_schema_version")
@@ -539,6 +550,12 @@ def check_publication(
             "agent_adapter_sha256"
         ) != isolation.get("adapter_sha256"):
             reasons.append("study adapter digest does not match trusted release manifest")
+        if not isinstance(isolation, Mapping) or metadata.get(
+            "agent_adapter_bundle_sha256"
+        ) != isolation.get("adapter_bundle_sha256"):
+            reasons.append(
+                "study adapter bundle digest does not match trusted release manifest"
+            )
         if isinstance(trials, list):
             for trial in trials:
                 status = trial.get("agent_status") if isinstance(trial, Mapping) else None
@@ -962,8 +979,14 @@ def _verify_release_manifest(
         "task_digests",
         "trusted_isolation",
     }
-    if set(manifest) != required_fields or manifest.get("schema_version") != 1:
-        return False, "checked release manifest fields do not match schema 1"
+    if (
+        set(manifest) != required_fields
+        or manifest.get("schema_version") != RELEASE_MANIFEST_SCHEMA_VERSION
+    ):
+        return (
+            False,
+            f"checked release manifest fields do not match schema {RELEASE_MANIFEST_SCHEMA_VERSION}",
+        )
     corpus = report["corpus"]
     strata = report.get("strata")
     if not isinstance(strata, Mapping):
@@ -1011,6 +1034,7 @@ def _verify_release_manifest(
             "profile": APPROVED_HELDOUT_PROFILE,
             "adapter": adapter.id,
             "adapter_sha256": adapter.sha256,
+            "adapter_bundle_sha256": adapter.bundle_sha256,
             "attestation_trust": adapter.trust,
             "preflight_evidence": APPROVED_PREFLIGHT_EVIDENCE,
         }

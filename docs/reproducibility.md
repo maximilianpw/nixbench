@@ -41,7 +41,7 @@ its observations from those files. Otherwise, it marks the study
 
 Each new run records a content-addressed corpus digest and configuration ID. The corpus digest covers the manifest, task metadata, prompts, starters, references, evaluators, and contract fixtures. The Git revision remains provenance and does not identify benchmark content. Site-only or documentation-only commits therefore do not change the corpus digest.
 
-The configuration ID covers the controlled run protocol and corpus digest. This includes the model ID and identity evidence, harness version, effort, network and tool policy, isolation profile, system, timeout, exact wrapper-prompt bytes, and exact agent command. Display fields such as `series`, `marker`, and `label` do not affect it. Host and platform are excluded from correctness identity and produce a separate timing environment ID. Compare timings only when that ID matches.
+The configuration ID covers the controlled run protocol and corpus digest. This includes the model ID and identity evidence, harness version, effort, network and tool policy, isolation profile, system, timeout, exact wrapper-prompt bytes, exact agent command, and the registered adapter bundle digest. Display fields such as `series`, `marker`, and `label` do not affect it. Host and platform are excluded from correctness identity and produce a separate timing environment ID. Compare timings only when that ID matches.
 
 ## Recommended run metadata
 
@@ -71,20 +71,32 @@ Runs without `--protocol-file` remain available for local compatibility, but the
 
 A complete protocol sets `completion_attestation = "required"`, names a
 registered adapter such as `agent_adapter = "codex-json"`, and selects that
-adapter with `--agent-adapter`. The harness derives the registered adapter's
-executable digest. It snapshots and removes the adapter's status file before
-the evaluator runs. The bundled Codex adapter consumes `codex exec --json`
+adapter with `--agent-adapter`. The harness retains the legacy entry-point
+executable digest and separately derives a canonical adapter bundle digest.
+The bundle digest uses stable repository-relative names, file lengths and
+bytes, and executable-bit state. It snapshots and removes the adapter's status
+file before the evaluator runs. The bundled Codex adapter consumes
+`codex exec --json`
 events and removes all harness-private paths from the Codex child environment.
 It does not infer success from human-readable log text. A raw `--agent-cmd`
 without a registered adapter remains protocol-incomplete.
 
-The `codex-json` adapter trust level is `provisional-same-uid`. Local same-UID
-processes are outside its sealing guarantee. Private held-out publication uses
-the `codex-json-bwrap` adapter with `isolation_profile = "linux-bwrap-v1"`.
+The `codex-json` bundle contains only `scripts/codex-agent-adapter.py`; its
+trust level is `provisional-same-uid`. Local same-UID processes are outside its
+sealing guarantee. The `codex-json-bwrap` bundle contains
+`scripts/bwrap-codex-agent.py`, `nixbench/isolation.py`, and
+`launchers/linux-bwrap-v1.toml`. Private held-out publication uses that adapter
+with `isolation_profile = "linux-bwrap-v1"`.
 Its trusted outer process writes status evidence while the model runs in a
 bubblewrap namespace without the repository, corpus, evaluator, reference,
 results, host home, or Nix daemon socket. `publication-check` rejects held-out
-studies without a successful approved preflight.
+studies without a successful approved preflight or when the study, registered
+adapter, and schema-2 release manifest do not carry the same bundle digest.
+Schema-1 release manifests are not silently upgraded.
+
+Adapter bundle identity covers the repository-local harness code and policy
+that constructs and checks isolation. It does not identify the model provider,
+remote provider code, model weights, or the external Codex/model executable.
 
 Current studies use the adapter through `scripts/run-current-studies.sh`.
 Generic `--agent-cmd` commands remain useful for local runs, but they are

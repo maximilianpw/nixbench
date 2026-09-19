@@ -54,6 +54,7 @@ class ResolvedProtocol:
     completion_attestation: str
     agent_adapter: str | None
     agent_adapter_sha256: str | None
+    agent_adapter_bundle_sha256: str | None
     attestation_trust: str
     agent_timeout_seconds: int
     system: str
@@ -78,6 +79,7 @@ class ResolvedProtocol:
             "completion_attestation": self.completion_attestation,
             "agent_adapter": self.agent_adapter,
             "agent_adapter_sha256": self.agent_adapter_sha256,
+            "agent_adapter_bundle_sha256": self.agent_adapter_bundle_sha256,
             "attestation_trust": self.attestation_trust,
             "agent_timeout_seconds": self.agent_timeout_seconds,
             "system": self.system,
@@ -132,6 +134,7 @@ def resolve_protocol(
         }
         complete = False
         adapter_digest = None
+        adapter_bundle_digest = None
         attestation_trust = "unattested"
     else:
         values = _load_protocol(protocol_path)
@@ -148,6 +151,7 @@ def resolve_protocol(
             values["completion_attestation"] = "unattested"
             values["agent_adapter"] = None
             adapter_digest = None
+            adapter_bundle_digest = None
             attestation_trust = "unattested"
             complete = False
         else:
@@ -165,6 +169,7 @@ def resolve_protocol(
                     "linux-bwrap-v1 requires the matching trusted isolation adapter"
                 )
             adapter_digest = adapter.sha256
+            adapter_bundle_digest = adapter.bundle_sha256
             attestation_trust = adapter.trust
             if agent_command is None:
                 raise ValueError("a complete protocol requires --agent-cmd")
@@ -188,6 +193,7 @@ def resolve_protocol(
         "wrapper_prompt_sha256": wrapper_hash,
         "agent_command_sha256": command_hash,
         "agent_adapter_sha256": adapter_digest,
+        "agent_adapter_bundle_sha256": adapter_bundle_digest,
         "attestation_trust": attestation_trust,
     }
     configuration_id = "cfg-" + _hash_json(
@@ -219,6 +225,7 @@ def resolve_protocol(
             else None
         ),
         agent_adapter_sha256=adapter_digest,
+        agent_adapter_bundle_sha256=adapter_bundle_digest,
         attestation_trust=attestation_trust,
         agent_timeout_seconds=int(controlled["agent_timeout_seconds"]),
         system=str(controlled["system"]),

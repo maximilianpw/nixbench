@@ -14,7 +14,7 @@ from nixbench.isolation import (
     build_bubblewrap_command,
     run_isolation_probe,
 )
-from nixbench.adapters import get_trusted_adapter
+from nixbench.adapters import TrustedAdapter, get_trusted_adapter
 from nixbench.release import (
     build_release_manifest,
     check_publication,
@@ -555,6 +555,11 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("visibility", " ".join(rejected["reasons"]))
 
         study["metadata"]["corpus_visibility"] = "private-heldout"
+        bundle_digest = study["metadata"].pop("agent_adapter_bundle_sha256")
+        rejected = check_publication(study, release_manifest=manifest)
+        self.assertIn("identity is incomplete", " ".join(rejected["reasons"]))
+        study["metadata"]["agent_adapter_bundle_sha256"] = bundle_digest
+
         study["trials"][0]["agent_status"]["completed"] = False
         rejected = check_publication(study, release_manifest=manifest)
         self.assertIn("agent status", " ".join(rejected["reasons"]))
@@ -563,6 +568,58 @@ class ReleaseTests(unittest.TestCase):
         study["metadata"]["agent_adapter_sha256"] = "f" * 64
         rejected = check_publication(study, release_manifest=manifest)
         self.assertIn("adapter digest", " ".join(rejected["reasons"]))
+
+    def test_heldout_publication_rejects_transitive_isolation_change(self) -> None:
+        study = self.publication_study(
+            task_ids=["task-a"], trial_count=1, corpus_visibility="private-heldout"
+        )
+        manifest = self.private_release_manifest(task_count=1)
+        registered = get_trusted_adapter("codex-json-bwrap")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            copied = []
+            for source in registered.bundle_files:
+                relative = source.resolve().relative_to(registered.repository_root.resolve())
+                destination = root / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+                copied.append(destination)
+            changed_adapter = TrustedAdapter(
+                id=registered.id,
+                executable=root / "scripts" / "bwrap-codex-agent.py",
+                trust=registered.trust,
+                repository_root=root,
+                bundle_files=tuple(copied),
+                isolation_profile=registered.isolation_profile,
+            )
+            isolation = root / "nixbench" / "isolation.py"
+            isolation.write_bytes(isolation.read_bytes() + b"\n# changed isolation\n")
+
+            self.assertEqual(changed_adapter.sha256, registered.sha256)
+            self.assertNotEqual(
+                changed_adapter.bundle_sha256, registered.bundle_sha256
+            )
+            with patch(
+                "nixbench.release.get_trusted_adapter", return_value=changed_adapter
+            ):
+                rejected = check_publication(study, release_manifest=manifest)
+
+        self.assertFalse(rejected["eligible"])
+        self.assertIn("bundle digest", " ".join(rejected["reasons"]))
+
+    def test_legacy_release_manifest_is_not_silently_upgraded(self) -> None:
+        study = self.publication_study(
+            task_ids=["task-a"], trial_count=1, corpus_visibility="private-heldout"
+        )
+        manifest = self.private_release_manifest(task_count=1)
+        manifest["schema_version"] = 1
+        manifest["trusted_isolation"].pop("adapter_bundle_sha256")
+
+        rejected = check_publication(study, release_manifest=manifest)
+
+        self.assertFalse(rejected["eligible"])
+        self.assertIn("manifest schema 2", " ".join(rejected["reasons"]))
 
     def test_private_initializer_refuses_public_tree_and_creates_no_repository(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -721,8 +778,9 @@ class ReleaseTests(unittest.TestCase):
     def private_release_manifest(
         *, task_count: int, task_count_restricted: bool = True
     ) -> dict[str, object]:
-        adapter_digest = get_trusted_adapter("codex-json-bwrap").sha256
+        adapter = get_trusted_adapter("codex-json-bwrap")
         return {
+            "schema_version": 2,
             "corpus_id": "private-corpus",
             "corpus_version": "1.0.0",
             "corpus_digest": "d" * 64,
@@ -734,7 +792,8 @@ class ReleaseTests(unittest.TestCase):
             "trusted_isolation": {
                 "profile": "linux-bwrap-v1",
                 "adapter": "codex-json-bwrap",
-                "adapter_sha256": adapter_digest,
+                "adapter_sha256": adapter.sha256,
+                "adapter_bundle_sha256": adapter.bundle_sha256,
                 "attestation_trust": "approved-linux-bwrap-v1",
                 "preflight_evidence": APPROVED_PREFLIGHT_EVIDENCE,
             },
@@ -748,7 +807,7 @@ class ReleaseTests(unittest.TestCase):
         trial_count: int,
         corpus_visibility: str,
     ) -> dict[str, object]:
-        adapter_digest = get_trusted_adapter("codex-json-bwrap").sha256
+        adapter = get_trusted_adapter("codex-json-bwrap")
         trials = []
         for run in range(trial_count):
             observations = []
@@ -804,7 +863,8 @@ class ReleaseTests(unittest.TestCase):
                 "wrapper_prompt_sha256": "a" * 64,
                 "agent_command_sha256": "b" * 64,
                 "agent_adapter": "codex-json-bwrap",
-                "agent_adapter_sha256": adapter_digest,
+                "agent_adapter_sha256": adapter.sha256,
+                "agent_adapter_bundle_sha256": adapter.bundle_sha256,
                 "attestation_trust": "approved-linux-bwrap-v1",
                 "isolation_profile": "linux-bwrap-v1",
             },

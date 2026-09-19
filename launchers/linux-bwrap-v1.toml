@@ -1,6 +1,12 @@
 schema_version = 1
 id = "linux-bwrap-v1"
 adapter = "codex-json-bwrap"
+bundle_format = "nixbench-trusted-adapter-bundle-v1"
+bundle_files = [
+  "scripts/bwrap-codex-agent.py",
+  "nixbench/isolation.py",
+  "launchers/linux-bwrap-v1.toml",
+]
 platform = "linux"
 workspace = "/workspace"
 host_workspace = "/tmp/nixbench-isolated-<random>/work"

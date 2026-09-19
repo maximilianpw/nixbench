@@ -20,7 +20,7 @@ results.
 | 005 | Preserve task observations and publish calibrated statistics | P2 | L | 004 | DONE |
 | 006 | Build release gates and held-out corpus infrastructure | P2 | L | 001, 002, 004, 005 | DONE |
 | 007 | Prevent starter and contract symlinks from exposing hidden corpus content | P1 | S | — | DONE |
-| 008 | Bind trusted isolation claims to the complete adapter bundle | P1 | M | — | TODO |
+| 008 | Bind trusted isolation claims to the complete adapter bundle | P1 | M | — | DONE |
 | 009 | Strictly validate and recompute study publication identity | P1 | L | 008 | TODO |
 | 010 | Gate current website exports through checked releases and publication validation | P1 | M | 009 | TODO |
 | 011 | Make rubric criteria independently evaluable and negatively covered | P1 | L | — | TODO |

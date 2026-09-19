@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+
+from nixbench.adapters import adapter_bundle_sha256, get_trusted_adapter
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -14,6 +17,56 @@ ADAPTER = REPO_ROOT / "scripts" / "codex-agent-adapter.py"
 
 
 class CodexAgentAdapterTests(unittest.TestCase):
+    def test_bwrap_bundle_digest_covers_declared_security_boundary_only(self) -> None:
+        adapter = get_trusted_adapter("codex-json-bwrap")
+        expected_members = {
+            "scripts/bwrap-codex-agent.py",
+            "nixbench/isolation.py",
+            "launchers/linux-bwrap-v1.toml",
+        }
+        self.assertEqual(
+            {
+                path.resolve().relative_to(adapter.repository_root.resolve()).as_posix()
+                for path in adapter.bundle_files
+            },
+            expected_members,
+        )
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            copied_members = []
+            for source in adapter.bundle_files:
+                relative = source.resolve().relative_to(adapter.repository_root.resolve())
+                destination = root / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+                copied_members.append(destination)
+            baseline = adapter_bundle_sha256(root, copied_members)
+            self.assertEqual(baseline, adapter_bundle_sha256(root, reversed(copied_members)))
+
+            unrelated = root / "README.md"
+            unrelated.write_text("not part of the bundle\n")
+            self.assertEqual(baseline, adapter_bundle_sha256(root, copied_members))
+
+            for member in copied_members:
+                with self.subTest(member=member.relative_to(root)):
+                    original = member.read_bytes()
+                    member.write_bytes(original + b"\n# bundle mutation\n")
+                    self.assertNotEqual(
+                        baseline, adapter_bundle_sha256(root, copied_members)
+                    )
+                    member.write_bytes(original)
+
+            executable = root / "scripts" / "bwrap-codex-agent.py"
+            executable.chmod(0o644)
+            self.assertNotEqual(baseline, adapter_bundle_sha256(root, copied_members))
+
+    def test_non_isolated_adapter_has_deterministic_bundle_identity(self) -> None:
+        adapter = get_trusted_adapter("codex-json")
+
+        self.assertEqual(adapter.bundle_sha256, adapter.bundle_sha256)
+        self.assertRegex(adapter.bundle_sha256, r"^[0-9a-f]{64}$")
+
     def test_completed_turn_writes_native_event_attestation(self) -> None:
         result, status = self.run_adapter(
             [

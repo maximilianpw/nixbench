@@ -85,7 +85,7 @@
   },
   "previous_version": null,
   "release_date": "2026-09-16",
-  "release_gate_result_digest": "3a5db849c2660f50ccd49361e39a1796c26959398e486faf753460d8f68ae90c",
+  "release_gate_result_digest": "6bb760213040b83f31a88b8df34d5929aa5dcfdcd56a958b463c9e5e93bcc9ea",
   "reporting": {
     "corpus_health_schema_version": 1,
     "fixed_corpus_method_version": "1",
@@ -95,7 +95,7 @@
     "wilson_method_version": "1"
   },
   "required_protocol_schema_version": 2,
-  "schema_version": 1,
+  "schema_version": 2,
   "scoring_schema": "criteria-v2",
   "task_count": 29,
   "task_count_restricted": false,

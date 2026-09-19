@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from nixbench.adapters import TrustedAdapter, get_trusted_adapter
 from nixbench.protocol import resolve_protocol
 
 
@@ -204,6 +206,7 @@ class ProtocolTests(unittest.TestCase):
             self.assertFalse(resolved.protocol_complete)
             self.assertEqual(resolved.completion_attestation, "unattested")
             self.assertIsNone(resolved.agent_adapter_sha256)
+            self.assertIsNone(resolved.agent_adapter_bundle_sha256)
 
     def test_schema_one_protocol_without_adapter_remains_readable_but_incomplete(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -246,6 +249,9 @@ class ProtocolTests(unittest.TestCase):
 
             self.assertEqual(resolved.agent_adapter, "codex-json")
             self.assertRegex(resolved.agent_adapter_sha256 or "", r"^[0-9a-f]{64}$")
+            self.assertRegex(
+                resolved.agent_adapter_bundle_sha256 or "", r"^[0-9a-f]{64}$"
+            )
 
     def test_bwrap_adapter_requires_matching_isolation_profile(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -286,7 +292,7 @@ class ProtocolTests(unittest.TestCase):
             self.assertTrue(resolved.protocol_complete)
             self.assertEqual(resolved.attestation_trust, "approved-linux-bwrap-v1")
 
-    def test_adapter_digest_and_trust_change_configuration_id(self) -> None:
+    def test_adapter_digests_and_trust_change_configuration_id(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             wrapper = root / "prompt.txt"
@@ -295,13 +301,97 @@ class ProtocolTests(unittest.TestCase):
             path.write_text("\n".join(protocol_values()) + "\n")
             baseline = resolve(path, wrapper)
 
-            for digest, trust in (("f" * 64, baseline.attestation_trust), (baseline.agent_adapter_sha256, "isolated-approved")):
-                with self.subTest(digest=digest, trust=trust), patch(
+            cases = (
+                (
+                    "f" * 64,
+                    baseline.agent_adapter_bundle_sha256,
+                    baseline.attestation_trust,
+                ),
+                (
+                    baseline.agent_adapter_sha256,
+                    "e" * 64,
+                    baseline.attestation_trust,
+                ),
+                (
+                    baseline.agent_adapter_sha256,
+                    baseline.agent_adapter_bundle_sha256,
+                    "isolated-approved",
+                ),
+            )
+            for digest, bundle_digest, trust in cases:
+                with self.subTest(
+                    digest=digest, bundle_digest=bundle_digest, trust=trust
+                ), patch(
                     "nixbench.protocol.get_trusted_adapter",
-                    return_value=SimpleNamespace(sha256=digest, trust=trust),
+                    return_value=SimpleNamespace(
+                        sha256=digest,
+                        bundle_sha256=bundle_digest,
+                        trust=trust,
+                        isolation_profile=None,
+                    ),
                 ):
                     changed = resolve(path, wrapper)
                 self.assertNotEqual(baseline.configuration_id, changed.configuration_id)
+
+    def test_isolation_module_change_changes_bundle_and_configuration_identity(self) -> None:
+        registered = get_trusted_adapter("codex-json-bwrap")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            copied = []
+            for source in registered.bundle_files:
+                relative = source.resolve().relative_to(registered.repository_root.resolve())
+                destination = root / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+                copied.append(destination)
+            adapter = TrustedAdapter(
+                id=registered.id,
+                executable=root / "scripts" / "bwrap-codex-agent.py",
+                trust=registered.trust,
+                repository_root=root,
+                bundle_files=tuple(copied),
+                isolation_profile=registered.isolation_profile,
+            )
+            wrapper = root / "prompt.txt"
+            wrapper.write_text("prompt")
+            path = root / "protocol.toml"
+            path.write_text(
+                ("\n".join(protocol_values()) + "\n")
+                .replace('agent_adapter = "codex-json"', 'agent_adapter = "codex-json-bwrap"')
+                .replace('isolation_profile = "test"', 'isolation_profile = "linux-bwrap-v1"')
+            )
+
+            with patch("nixbench.protocol.get_trusted_adapter", return_value=adapter):
+                baseline = resolve_protocol(
+                    path,
+                    corpus_digest="a" * 64,
+                    agent_command="codex exec --json",
+                    agent_adapter="codex-json-bwrap",
+                    wrapper_prompt_path=wrapper,
+                    agent_timeout_seconds=300,
+                    system="x86_64-linux",
+                    host="host",
+                    platform="linux",
+                )
+                isolation = root / "nixbench" / "isolation.py"
+                isolation.write_bytes(isolation.read_bytes() + b"\n# changed isolation\n")
+                changed = resolve_protocol(
+                    path,
+                    corpus_digest="a" * 64,
+                    agent_command="codex exec --json",
+                    agent_adapter="codex-json-bwrap",
+                    wrapper_prompt_path=wrapper,
+                    agent_timeout_seconds=300,
+                    system="x86_64-linux",
+                    host="host",
+                    platform="linux",
+                )
+
+            self.assertNotEqual(
+                baseline.agent_adapter_bundle_sha256,
+                changed.agent_adapter_bundle_sha256,
+            )
+            self.assertNotEqual(baseline.configuration_id, changed.configuration_id)
 
     def test_complete_protocol_rejects_conflicting_cli_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

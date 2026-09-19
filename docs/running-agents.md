@@ -35,9 +35,10 @@ python3 bench.py run package-stdenv-cli \
 `protocols/example.toml` is a template. Copy it and set its system, timeout,
 model, harness, effort, network, isolation, tool policy, and registered adapter
 to the values used by the run. The timeout, system, and adapter must match the
-command-line values. The harness hashes the wrapper, agent command, and
-registered adapter executable. It stores the hashes, not the raw command, in
-publication metadata.
+command-line values. The harness hashes the wrapper and agent command. For a
+registered adapter it records both the legacy entry-point executable digest and
+a canonical digest of the adapter's declared local trust bundle. It stores the
+hashes, not the raw command, in publication metadata.
 
 ## Repeated studies
 
@@ -185,6 +186,18 @@ the bubblewrap process itself. A raw command cannot claim this profile. The
 launcher mounts only the copied workspace read-write, creates a fresh home and
 `/tmp`, mounts required system paths read-only, and omits the repository,
 corpus, evaluator, reference, results, host home, and Nix daemon socket.
+
+The trusted `codex-json-bwrap` bundle is exactly:
+
+- `scripts/bwrap-codex-agent.py`, the outer launcher and attestation owner;
+- `nixbench/isolation.py`, which constructs the namespace and preflight; and
+- `launchers/linux-bwrap-v1.toml`, which declares the reviewed policy.
+
+Changing any member changes the adapter bundle digest and therefore the
+configuration identity. Held-out publication requires the study metadata,
+current adapter registration, and schema-2 release manifest to agree on that
+digest. The bundle does not cover provider-controlled remote code, model
+weights, or the external Codex/model executable.
 
 Before starting Codex, a generic in-namespace preflight checks that the Nix
 daemon socket is absent and `/workspace` is writable. The launcher uses a

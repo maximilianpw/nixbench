@@ -470,6 +470,7 @@ print(json.dumps({"type": "turn.completed"}))
             self.assertEqual(len(metadata["agent_command_sha256"]), 64)
             self.assertEqual(metadata["agent_adapter"], "codex-json")
             self.assertEqual(len(metadata["agent_adapter_sha256"]), 64)
+            self.assertEqual(len(metadata["agent_adapter_bundle_sha256"]), 64)
             self.assertEqual(metadata["attestation_trust"], "provisional-same-uid")
             self.assertNotIn(agent_command, study_path.read_text())
 

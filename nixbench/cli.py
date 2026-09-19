@@ -768,6 +768,7 @@ def _run_identity_metadata(
         "completion_attestation": protocol.completion_attestation,
         "agent_adapter": protocol.agent_adapter,
         "agent_adapter_sha256": protocol.agent_adapter_sha256,
+        "agent_adapter_bundle_sha256": protocol.agent_adapter_bundle_sha256,
         "attestation_trust": protocol.attestation_trust,
         "model_identity_evidence": protocol.model_identity_evidence,
         "wrapper_prompt_sha256": protocol.wrapper_prompt_sha256,
