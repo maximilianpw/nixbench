@@ -85,7 +85,7 @@
   },
   "previous_version": null,
   "release_date": "2026-09-19",
-  "release_gate_result_digest": "d8952ef7ab9257dc8d1317314d6854a7bb7c6b7f6423c47a82bd604aebc3998c",
+  "release_gate_result_digest": "4d1d1744d5214aa05f805b02c65667c92c53b147f5a98f7dc688fc195d7efe5e",
   "reporting": {
     "corpus_health_schema_version": 1,
     "fixed_corpus_method_version": "1",
