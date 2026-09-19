@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import json
-import re
+import os
+import tempfile
 from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from .release import check_publication
 from .reporting import (
     build_configuration_report,
     build_study_report,
     load_study_summary,
 )
+from .study_validation import StudyValidationError, validate_current_study
 
 
 REQUIRED_SITE_METADATA = (
@@ -35,6 +39,7 @@ def export_studies_for_site(
     expected_configurations: int | None = None,
     merge_existing: bool = False,
     allow_legacy_protocol: bool = False,
+    release_manifest: Mapping[str, Any] | None = None,
 ) -> int:
     if minimum_trials < 1:
         raise ValueError("minimum_trials must be at least 1")
@@ -74,6 +79,15 @@ def export_studies_for_site(
             raise ValueError(
                 f"study summary {study_path} is missing site metadata: {', '.join(missing)}"
             )
+        if (
+            metadata.get("protocol_complete") is True
+            and release_manifest is None
+            and (task_count is None or shallow.get("task_count") == task_count)
+        ):
+            raise ValueError(
+                f"study summary {study_path} uses the current protocol; "
+                "--release-manifest is required"
+            )
         shallow_trials = shallow.get("trials")
         shallow_trial_count = shallow.get(
             "trial_count", len(shallow_trials) if isinstance(shallow_trials, list) else None
@@ -81,35 +95,80 @@ def export_studies_for_site(
         if shallow_trial_count == 0 and shallow_trials == []:
             continue
         loaded_studies[study_path] = load_study_summary(study_path)
-    report_groups: dict[tuple[str, str] | tuple[str, Path], list[dict[str, Any]]] = {}
-    group_key_by_path: dict[Path, tuple[str, str] | tuple[str, Path]] = {}
+
+    validated_studies: dict[Path, dict[str, Any]] = {}
+    current_paths: set[Path] = set()
     for study_path, study in loaded_studies.items():
+        study_task_count = study.get("task_count")
+        if task_count is not None and study_task_count != task_count:
+            continue
         metadata = study.get("metadata")
-        configuration_id = metadata.get("configuration_id") if isinstance(metadata, dict) else None
-        corpus_digest = metadata.get("corpus_digest") if isinstance(metadata, dict) else None
-        key: tuple[str, str] | tuple[str, Path]
-        participates = isinstance(metadata, dict)
-        if (
-            participates
-            and isinstance(configuration_id, str)
-            and isinstance(corpus_digest, str)
-        ):
-            key = (corpus_digest, configuration_id)
+        if not isinstance(metadata, dict):
+            raise ValueError(f"study summary {study_path} has no metadata object")
+        if metadata.get("protocol_complete") is True:
+            if release_manifest is None:
+                raise ValueError(
+                    f"study summary {study_path} uses the current protocol; "
+                    "--release-manifest is required"
+                )
+            try:
+                validated = validate_current_study(study)
+            except StudyValidationError as exc:
+                raise ValueError(
+                    f"study summary {study_path} failed current-study validation: {exc}"
+                ) from exc
+            publication = check_publication(
+                validated, release_manifest=release_manifest
+            )
+            if publication["eligible"] is not True:
+                raise ValueError(
+                    f"study summary {study_path} is ineligible for publication: "
+                    + "; ".join(publication["reasons"])
+                )
+            validated_studies[study_path] = validated
+            current_paths.add(study_path)
+        elif allow_legacy_protocol:
+            validated_studies[study_path] = study
         else:
-            key = ("study", study_path)
+            raise ValueError(
+                f"study summary {study_path} has an incomplete legacy protocol; "
+                "use --allow-legacy-protocol only for explicit compatibility exports"
+            )
+
+    report_groups: dict[tuple[object, ...], list[dict[str, Any]]] = {}
+    group_key_by_path: dict[Path, tuple[object, ...]] = {}
+    for study_path, study in validated_studies.items():
+        metadata = study["metadata"]
+        configuration_id = metadata.get("configuration_id")
+        corpus_digest = metadata.get("corpus_digest")
+        if study_path in current_paths:
+            key = (
+                "current",
+                release_manifest.get("schema_version") if release_manifest else None,
+                release_manifest.get("corpus_id") if release_manifest else None,
+                release_manifest.get("corpus_version") if release_manifest else None,
+                release_manifest.get("corpus_digest") if release_manifest else None,
+                metadata.get("protocol_schema_version"),
+                metadata.get("agent_adapter_bundle_sha256"),
+                configuration_id,
+            )
+        elif isinstance(configuration_id, str) and isinstance(corpus_digest, str):
+            key = ("legacy", corpus_digest, configuration_id)
+        else:
+            key = ("legacy-study", study_path)
         group_key_by_path[study_path] = key
         report_groups.setdefault(key, []).append(study)
     canonical_reports = {
         key: (
             build_configuration_report(studies)
-            if len(studies) > 1 and isinstance(key[1], str)
+            if len(studies) > 1
             else build_study_report(studies[0])
         )
         for key, studies in report_groups.items()
     }
 
     rows: list[dict[str, Any]] = []
-    for study_path, study in loaded_studies.items():
+    for study_path, study in validated_studies.items():
 
         metadata = study.get("metadata")
         if not isinstance(metadata, dict):
@@ -132,54 +191,14 @@ def export_studies_for_site(
         canonical_report = canonical_reports[group_key_by_path[study_path]]
         stratum_counts = _export_stratum_counts(canonical_report)
 
-        protocol_complete = metadata.get("protocol_complete") is True
+        protocol_complete = study_path in current_paths
         if protocol_complete:
-            required_identity = (
-                "corpus_id",
-                "corpus_version",
-                "corpus_digest",
-                "protocol_id",
-                "configuration_id",
-                "timing_environment_id",
-                "completion_attestation",
-                "agent_adapter",
-                "agent_adapter_sha256",
-                "attestation_trust",
-                "wrapper_prompt_sha256",
-                "agent_command_sha256",
-            )
-            missing_identity = [
-                key for key in required_identity if not metadata.get(key)
-            ]
-            if missing_identity:
-                raise ValueError(
-                    f"study summary {study_path} is missing identity metadata: "
-                    + ", ".join(missing_identity)
-                )
             configuration_id = _nonempty_string(
                 metadata["configuration_id"], f"{study_path}: configuration_id"
             )
             corpus_digest = _nonempty_string(
                 metadata["corpus_digest"], f"{study_path}: corpus_digest"
             )
-            _sha256_string(
-                metadata["wrapper_prompt_sha256"],
-                f"{study_path}: wrapper_prompt_sha256",
-            )
-            _sha256_string(
-                metadata["agent_command_sha256"],
-                f"{study_path}: agent_command_sha256",
-            )
-            if metadata["completion_attestation"] != "required":
-                raise ValueError(
-                    f"{study_path}: completion_attestation must be required"
-                )
-            if metadata["attestation_trust"] == "provisional-same-uid" and metadata.get(
-                "corpus_visibility"
-            ) in {"private", "held-out", "private-heldout"}:
-                raise ValueError(
-                    f"{study_path}: held-out publication requires approved isolation evidence"
-                )
         elif allow_legacy_protocol:
             stored_configuration = metadata.get("configuration_id")
             stored_corpus = metadata.get("corpus_digest")
@@ -193,11 +212,8 @@ def export_studies_for_site(
             else:
                 configuration_id = f"legacy-{study_id}"
                 corpus_digest = None
-        else:
-            raise ValueError(
-                f"study summary {study_path} has an incomplete legacy protocol; "
-                "use --allow-legacy-protocol only for explicit compatibility exports"
-            )
+        else:  # pragma: no cover - classified before report construction
+            raise AssertionError("unclassified study protocol")
         for trial_number, trial in enumerate(trials, start=1):
             if not isinstance(trial, dict):
                 raise ValueError(
@@ -210,14 +226,9 @@ def export_studies_for_site(
                     f"study summary {study_path} contains an invalid or incomplete trial: {run_id}"
                 )
             scoring_schema = trial.get("scoring_schema", "legacy-binary")
-            if (
-                protocol_complete
-                and scoring_schema != "criteria-v2"
-                and not allow_legacy_protocol
-            ):
+            if protocol_complete and scoring_schema != "criteria-v2":
                 raise ValueError(
-                    f"study summary {study_path} uses legacy scoring for current publication; "
-                    "use --allow-legacy-protocol only for an explicit compatibility export"
+                    f"study summary {study_path} uses legacy scoring for current publication"
                 )
             has_stored_identity = corpus_digest is not None
             if has_stored_identity and (
@@ -327,23 +338,33 @@ def export_studies_for_site(
             "duplicate run IDs in exportable studies: " + ", ".join(duplicate_run_ids)
         )
 
-    corpus_by_configuration: dict[str, str | None] = {}
+    corpus_by_configuration: dict[tuple[bool, str], str | None] = {}
     for row in rows:
         configuration_id = row["configurationId"]
         corpus_digest = row["corpusDigest"]
-        previous = corpus_by_configuration.setdefault(configuration_id, corpus_digest)
+        population_key = (row["protocolComplete"] is True, configuration_id)
+        previous = corpus_by_configuration.setdefault(population_key, corpus_digest)
         if previous != corpus_digest:
             raise ValueError(
                 f"configuration {configuration_id} contains mixed corpus digests"
             )
 
-    configuration_counts = Counter(row["configurationId"] for row in rows)
+    configuration_counts = Counter(
+        (row["protocolComplete"] is True, row["configurationId"])
+        for row in rows
+    )
+    current_configurations = {
+        configuration_id
+        for current, configuration_id in configuration_counts
+        if current
+    }
     if (
         expected_configurations is not None
-        and len(configuration_counts) != expected_configurations
+        and len(current_configurations) != expected_configurations
     ):
         raise ValueError(
-            f"expected {expected_configurations} configurations, found {len(configuration_counts)}"
+            f"expected {expected_configurations} current configurations, "
+            f"found {len(current_configurations)}"
         )
     incomplete = {
         configuration_id: count
@@ -352,7 +373,8 @@ def export_studies_for_site(
     }
     if incomplete:
         detail = ", ".join(
-            f"{key}={count}" for key, count in sorted(incomplete.items())
+            f"{'current' if key[0] else 'legacy'}:{key[1]}={count}"
+            for key, count in sorted(incomplete.items())
         )
         raise ValueError(
             f"configurations below minimum_trials={minimum_trials}: {detail}"
@@ -374,15 +396,39 @@ def export_studies_for_site(
     rows.sort(
         key=lambda row: (row["corpus"], row["series"], row["effort"], row["runId"])
     )
-    trial_numbers: Counter[str] = Counter()
+    trial_numbers: Counter[tuple[bool, str]] = Counter()
     for row in rows:
-        trial_numbers[row["configurationId"]] += 1
-        row["trial"] = trial_numbers[row["configurationId"]]
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(
-        json.dumps(rows, indent=2, sort_keys=True, allow_nan=False) + "\n"
-    )
+        population_key = (
+            row["protocolComplete"] is True,
+            row["configurationId"],
+        )
+        trial_numbers[population_key] += 1
+        row["trial"] = trial_numbers[population_key]
+    _write_json_atomically(output_path, rows)
     return len(rows)
+
+
+def _write_json_atomically(output_path: Path, rows: list[dict[str, Any]]) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(rows, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=output_path.parent,
+            prefix=f".{output_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temporary_path = Path(handle.name)
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_path, output_path)
+    finally:
+        if temporary_path is not None and temporary_path.exists():
+            temporary_path.unlink()
 
 
 def _merge_existing_rows(
@@ -414,13 +460,6 @@ def _nonempty_string(value: object, label: str) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError(f"{label} must be a non-empty string")
     return value
-
-
-def _sha256_string(value: object, label: str) -> str:
-    text = _nonempty_string(value, label)
-    if re.fullmatch(r"[0-9a-f]{64}", text) is None:
-        raise ValueError(f"{label} must be a lowercase SHA-256 digest")
-    return text
 
 
 def _positive_int(value: object, label: str) -> int:

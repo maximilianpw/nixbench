@@ -79,6 +79,22 @@ python3 bench.py run-all \
 
 Runs without `--protocol-file` remain available for local compatibility, but they set `protocol_complete = false`. `export-site` rejects them unless the operator supplies `--allow-legacy-protocol`.
 
+Current-protocol website exports must also name the checked corpus release:
+
+```sh
+python3 bench.py --results-dir results export-site \
+  --release-manifest corpus/releases/2.0.0.json \
+  --output site/src/data/benchmark-trials.json
+```
+
+`export-site` does not maintain a weaker parallel validation path. Before it
+groups studies or computes site reports, it runs the shared schema-3 validator
+that recomputes primitive evidence and controlled protocol identity, then runs
+the canonical publication check against the supplied release manifest. A
+failure leaves the destination unchanged. Explicit legacy imports may omit the
+manifest, remain labelled with their historical protocol and scoring schema,
+and do not satisfy expected current-configuration counts.
+
 A complete protocol sets `completion_attestation = "required"`, names a
 registered adapter such as `agent_adapter = "codex-json"`, and selects that
 adapter with `--agent-adapter`. The harness retains the legacy entry-point

@@ -86,6 +86,7 @@ To produce the checked JSON consumed by the website after running one or more fu
 
 ```sh
 python3 bench.py --results-dir results export-site \
+  --release-manifest corpus/releases/2.0.0.json \
   --task-count 29 \
   --minimum-trials 5 \
   --expected-configurations 14 \
@@ -93,19 +94,25 @@ python3 bench.py --results-dir results export-site \
   --output site/src/data/benchmark-trials.json
 ```
 
-The publication gate fails without modifying the output when a configuration
-is missing, has fewer than the required trials, mixes corpus or protocol
-identities, lacks a complete protocol and registered completion adapter,
-contains invalid observations, or uses legacy scoring. It skips zero-trial
-attempt ledgers so an infrastructure failure does not hide valid sibling
-studies or block resumption. Provisional same-UID attestation cannot publish a
-private or held-out corpus. Historical studies require the explicit
-`--allow-legacy-protocol` compatibility flag.
+`export-site` is a presentation transform over checked publication evidence,
+not an independent validator. Whenever any selected study uses the current
+protocol, `--release-manifest` is mandatory. The exporter invokes the canonical
+schema-3 current-study validator and `publication-check` policy before grouping
+or reporting any study. It fails without modifying the output when the release,
+corpus task matrix, primitive observations, controlled protocol identity,
+completion evidence, or publication policy does not match. It also retains the
+site-specific minimum-trial and expected-current-configuration gates. Zero-trial
+attempt ledgers are skipped so an infrastructure failure does not hide valid
+sibling studies or block resumption. Private-heldout and retired studies remain
+ineligible for direct public-site export. Historical studies require the
+explicit `--allow-legacy-protocol` compatibility flag and never count toward
+`--expected-configurations`.
 
 When the local results archive contains only newly collected studies, merge those checked rows into the existing site dataset instead of replacing prior evidence:
 
 ```sh
 python3 bench.py --results-dir results export-site \
+  --release-manifest corpus/releases/2.0.0.json \
   --task-count 29 \
   --minimum-trials 1 \
   --expected-configurations 2 \

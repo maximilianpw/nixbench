@@ -411,6 +411,21 @@ def build_release_manifest(
     }
 
 
+def load_release_manifest(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"cannot read release manifest {path}: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise ValueError(f"release manifest {path} must be a JSON object")
+    reasons = _release_manifest_validation_reasons(payload)
+    if reasons:
+        raise ValueError(
+            f"release manifest {path} is invalid: " + "; ".join(reasons)
+        )
+    return payload
+
+
 def check_publication(
     study: Mapping[str, Any], *, release_manifest: Mapping[str, Any]
 ) -> dict[str, Any]:

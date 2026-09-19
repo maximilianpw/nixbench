@@ -22,7 +22,7 @@ results.
 | 007 | Prevent starter and contract symlinks from exposing hidden corpus content | P1 | S | — | DONE |
 | 008 | Bind trusted isolation claims to the complete adapter bundle | P1 | M | — | DONE |
 | 009 | Strictly validate and recompute study publication identity | P1 | L | 008 | DONE |
-| 010 | Gate current website exports through checked releases and publication validation | P1 | M | 009 | TODO |
+| 010 | Gate current website exports through checked releases and publication validation | P1 | M | 009 | DONE |
 | 011 | Make rubric criteria independently evaluable and negatively covered | P1 | L | — | DONE |
 | 012 | Enforce task calibration before corpus activation | P1 | L | 009, 011 | TODO |
 

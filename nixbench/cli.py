@@ -29,6 +29,7 @@ from .release import (
     export_publication_bundle,
     health_report_provenance,
     initialize_private_corpus,
+    load_release_manifest,
     load_verified_health_evidence,
 )
 from .runner import TaskRunResult, SolutionMode, detect_nix_system, make_run_id, run_task, write_summary
@@ -159,9 +160,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Export recorded study trials as checked site data.",
     )
     export_parser.add_argument("--output", type=Path, required=True, help="Destination JSON file.")
+    export_parser.add_argument(
+        "--release-manifest",
+        type=Path,
+        help=(
+            "Checked corpus release manifest. Required whenever any selected "
+            "study uses the current protocol; legacy-only compatibility exports may omit it."
+        ),
+    )
     export_parser.add_argument("--task-count", type=int, help="Only export studies with this corpus size.")
     export_parser.add_argument("--minimum-trials", type=int, default=1)
-    export_parser.add_argument("--expected-configurations", type=int)
+    export_parser.add_argument(
+        "--expected-configurations",
+        type=int,
+        help="Require this many current release-backed configurations; legacy rows do not count.",
+    )
     export_parser.add_argument(
         "--merge-existing",
         action="store_true",
@@ -636,6 +649,11 @@ def cmd_run_all(args: argparse.Namespace) -> int:
 
 
 def cmd_export_site(args: argparse.Namespace) -> int:
+    release_manifest = (
+        load_release_manifest(args.release_manifest)
+        if args.release_manifest is not None
+        else None
+    )
     row_count = export_studies_for_site(
         args.results_dir,
         args.output,
@@ -644,6 +662,7 @@ def cmd_export_site(args: argparse.Namespace) -> int:
         expected_configurations=args.expected_configurations,
         merge_existing=args.merge_existing,
         allow_legacy_protocol=args.allow_legacy_protocol,
+        release_manifest=release_manifest,
     )
     print(f"exported {row_count} trial rows to {args.output}")
     return 0

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
+from nixbench.adapters import get_trusted_adapter
 from nixbench.export import export_studies_for_site
+from nixbench.protocol import compute_configuration_id
 
 
 class ExportTests(unittest.TestCase):
@@ -207,7 +210,7 @@ class ExportTests(unittest.TestCase):
                         "study_id": "current",
                         "task_count": 1,
                         "trial_count": 1,
-                        "metadata": metadata,
+                        "metadata": {**metadata, "protocol_complete": False},
                         "trials": [trial],
                         "attempt_count": 2,
                         "attempts": [
@@ -249,7 +252,9 @@ class ExportTests(unittest.TestCase):
                 )
             )
 
-            export_studies_for_site(root, root / "out.json")
+            export_studies_for_site(
+                root, root / "out.json", allow_legacy_protocol=True
+            )
             row = json.loads((root / "out.json").read_text())[0]
 
             self.assertEqual(row["observations"], [observation])
@@ -261,39 +266,6 @@ class ExportTests(unittest.TestCase):
                 0.75,
             )
             self.assertEqual(row["stratumCounts"]["wholeCorpusTaskCount"], 1)
-
-    def test_provisional_attestation_rejects_held_out_publication(self) -> None:
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            path = root / "studies" / "held-out" / "summary.json"
-            path.parent.mkdir(parents=True)
-            metadata = {
-                **self.site_metadata(),
-                "corpus_id": "held-out",
-                "corpus_version": "1.0.0",
-                "corpus_visibility": "private",
-                "corpus_digest": "c" * 64,
-                "protocol_id": "test-protocol",
-                "protocol_schema_version": 1,
-                "protocol_complete": True,
-                "completion_attestation": "required",
-                "agent_adapter": "codex-json",
-                "agent_adapter_sha256": "d" * 64,
-                "attestation_trust": "provisional-same-uid",
-                "configuration_id": "cfg-held-out",
-                "timing_environment_id": "timing-held-out",
-                "wrapper_prompt_sha256": "b" * 64,
-                "agent_command_sha256": "a" * 64,
-            }
-            trial = {
-                **self.trial("held-out-run"),
-                "corpus_digest": "c" * 64,
-                "configuration_id": "cfg-held-out",
-            }
-            path.write_text(json.dumps({"task_count": 29, "metadata": metadata, "trials": [trial]}))
-
-            with self.assertRaisesRegex(ValueError, "approved isolation evidence"):
-                export_studies_for_site(root, root / "out.json")
 
     def test_site_export_refuses_private_and_retired_studies_before_hydration(self) -> None:
         for visibility in ("private-heldout", "retired"):
@@ -570,7 +542,6 @@ class ExportTests(unittest.TestCase):
                     Path(temp) / "out.json",
                     task_count=29,
                     minimum_trials=5,
-                    expected_configurations=1,
                     allow_legacy_protocol=True,
                 )
 
@@ -612,7 +583,7 @@ class ExportTests(unittest.TestCase):
             )
 
             with self.assertRaisesRegex(
-                ValueError, "expected 2 configurations, found 1"
+                ValueError, "expected 2 current configurations, found 0"
             ):
                 export_studies_for_site(
                     root,
@@ -786,13 +757,16 @@ class ExportTests(unittest.TestCase):
                 "corpus_digest": "c" * 64,
                 "configuration_id": "cfg-stored",
             }
+            metadata["protocol_complete"] = False
             summary_path.write_text(
                 json.dumps(
                     {"task_count": 29, "metadata": metadata, "trials": [trial]}
                 )
             )
 
-            export_studies_for_site(root, root / "out.json")
+            export_studies_for_site(
+                root, root / "out.json", allow_legacy_protocol=True
+            )
             row = json.loads((root / "out.json").read_text())[0]
 
             self.assertEqual(row["configurationId"], "cfg-stored")
@@ -862,111 +836,165 @@ class ExportTests(unittest.TestCase):
                     root, root / "out.json", allow_legacy_protocol=True
                 )
 
-    def test_rejects_mixed_trial_identity(self) -> None:
+    def test_current_export_requires_release_manifest_without_modifying_output(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            summary_path = root / "studies" / "mixed" / "summary.json"
-            summary_path.parent.mkdir(parents=True)
-            metadata = {
-                **self.site_metadata(),
-                "corpus_id": "test-corpus",
-                "corpus_version": "2.0.0-dev",
-                "corpus_digest": "c" * 64,
-                "protocol_id": "test-protocol",
-                "protocol_complete": True,
-                "completion_attestation": "required",
-                "configuration_id": "cfg-stored",
-                "timing_environment_id": "timing-stored",
-                "wrapper_prompt_sha256": "b" * 64,
-                "agent_command_sha256": "a" * 64,
-                "agent_adapter": "codex-json",
-                "agent_adapter_sha256": "d" * 64,
-                "attestation_trust": "provisional-same-uid",
-            }
-            trial = {
-                **self.trial("mixed-run"),
-                "corpus_digest": "d" * 64,
-                "configuration_id": "cfg-stored",
-            }
-            summary_path.write_text(
-                json.dumps(
-                    {"task_count": 29, "metadata": metadata, "trials": [trial]}
-                )
-            )
+            self.write_study(root, "current", self.current_study())
+            output = root / "out.json"
+            original = b"existing-site-data\n"
+            output.write_bytes(original)
 
-            with self.assertRaisesRegex(ValueError, "mixed corpus or protocol"):
-                export_studies_for_site(root, root / "out.json")
+            with self.assertRaisesRegex(ValueError, "--release-manifest is required"):
+                export_studies_for_site(root, output)
 
-    def test_complete_protocol_requires_derived_hashes(self) -> None:
+            self.assertEqual(output.read_bytes(), original)
+
+    def test_exports_release_validated_current_study(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            summary_path = root / "studies" / "current" / "summary.json"
-            summary_path.parent.mkdir(parents=True)
-            metadata = {
-                **self.site_metadata(),
-                "corpus_id": "test-corpus",
-                "corpus_version": "2.0.0-dev",
-                "corpus_digest": "c" * 64,
-                "protocol_id": "test-protocol",
-                "protocol_complete": True,
-                "completion_attestation": "required",
-                "configuration_id": "cfg-stored",
-                "timing_environment_id": "timing-stored",
-            }
-            trial = {
-                **self.trial("current-run"),
-                "corpus_digest": "c" * 64,
-                "configuration_id": "cfg-stored",
-            }
-            summary_path.write_text(
-                json.dumps(
-                    {"task_count": 29, "metadata": metadata, "trials": [trial]}
-                )
+            study = self.current_study()
+            self.write_study(root, "current", study)
+
+            count = export_studies_for_site(
+                root,
+                root / "out.json",
+                release_manifest=self.release_manifest(),
+                expected_configurations=1,
             )
+            row = json.loads((root / "out.json").read_text())[0]
 
-            with self.assertRaisesRegex(ValueError, "wrapper_prompt_sha256"):
-                export_studies_for_site(root, root / "out.json")
+        self.assertEqual(count, 1)
+        self.assertEqual(row["configurationId"], study["metadata"]["configuration_id"])
+        self.assertEqual(row["corpusDigest"], "d" * 64)
+        self.assertTrue(row["protocolComplete"])
+        self.assertEqual(row["scoringSchema"], "criteria-v2")
+        self.assertEqual(row["observations"][0]["task_id"], "task-a")
+        self.assertFalse(row["aggregateOnly"])
+        self.assertEqual(
+            row["canonicalReport"]["strata"]["whole_corpus"]["macro_task_score"],
+            1,
+        )
 
-    def test_current_publication_rejects_legacy_scoring_without_opt_in(self) -> None:
+    def test_current_publication_failures_leave_output_unchanged(self) -> None:
+        cases = (
+            (
+                "wrong corpus digest",
+                lambda study, manifest: manifest.__setitem__("corpus_digest", "c" * 64),
+                "corpus digest does not match",
+            ),
+            (
+                "wrong task set",
+                self.replace_manifest_task,
+                "task IDs do not match",
+            ),
+            (
+                "invalid normalized score",
+                lambda study, manifest: study["trials"][0]["observations"][0].__setitem__("normalized_score", 0.5),
+                "normalized_score disagrees",
+            ),
+            (
+                "unreleased corpus version",
+                lambda study, manifest: manifest.__setitem__("corpus_version", "2.0.0"),
+                "corpus version does not match",
+            ),
+            (
+                "missing completion evidence",
+                lambda study, manifest: study.pop("attempts"),
+                "complete attempts ledger",
+            ),
+        )
+        for name, mutate, expected in cases:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                study = self.current_study()
+                manifest = self.release_manifest()
+                mutate(study, manifest)
+                self.write_study(root, "current", study)
+                output = root / "out.json"
+                original = b"[\n  {\"sentinel\": true}\n]\n"
+                output.write_bytes(original)
+
+                with self.assertRaisesRegex(ValueError, expected):
+                    export_studies_for_site(
+                        root,
+                        output,
+                        merge_existing=True,
+                        release_manifest=manifest,
+                    )
+
+                self.assertEqual(output.read_bytes(), original)
+
+    def test_self_asserted_configuration_collision_is_rejected_before_grouping(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            summary_path = root / "studies" / "current" / "summary.json"
-            summary_path.parent.mkdir(parents=True)
-            metadata = {
-                **self.site_metadata(),
-                "corpus_id": "test-corpus",
-                "corpus_version": "2.0.0",
-                "corpus_digest": "c" * 64,
-                "protocol_id": "test-protocol",
-                "protocol_complete": True,
-                "completion_attestation": "required",
-                "configuration_id": "cfg-stored",
-                "timing_environment_id": "timing-stored",
-                "wrapper_prompt_sha256": "b" * 64,
-                "agent_command_sha256": "a" * 64,
-                "agent_adapter": "codex-json",
-                "agent_adapter_sha256": "d" * 64,
-                "attestation_trust": "provisional-same-uid",
-            }
-            trial = {
-                **self.trial("legacy-score"),
-                "scoring_schema": "legacy-binary",
-                "corpus_digest": "c" * 64,
-                "configuration_id": "cfg-stored",
-            }
-            summary_path.write_text(
-                json.dumps({"task_count": 29, "metadata": metadata, "trials": [trial]})
-            )
+            first = self.current_study(run_id="run-a")
+            second = self.current_study(run_id="run-b")
+            second["metadata"]["controlled_protocol"]["effort"] = "low"
+            self.write_study(root, "first", first)
+            self.write_study(root, "second", second)
 
-            with self.assertRaisesRegex(ValueError, "legacy scoring"):
-                export_studies_for_site(root, root / "out.json")
-
-            self.assertEqual(
+            with self.assertRaisesRegex(ValueError, "configuration_id does not match"):
                 export_studies_for_site(
-                    root, root / "legacy.json", allow_legacy_protocol=True
-                ),
-                1,
+                    root,
+                    root / "out.json",
+                    release_manifest=self.release_manifest(),
+                )
+
+            self.assertFalse((root / "out.json").exists())
+
+    def test_mixed_current_and_legacy_populations_remain_separate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            current = self.current_study(run_id="current-run")
+            configuration_id = current["metadata"]["configuration_id"]
+            legacy_metadata = {
+                **self.site_metadata(),
+                "protocol_complete": False,
+                "protocol_id": "legacy-protocol",
+                "configuration_id": configuration_id,
+                "corpus_digest": "d" * 64,
+            }
+            legacy_trial = {
+                **self.trial("legacy-run"),
+                "passed_tasks": 1,
+                "failed_tasks": 0,
+                "task_count": 1,
+                "score": 1,
+                "max_score": 1,
+                "scoring_schema": "legacy-binary",
+                "configuration_id": configuration_id,
+                "corpus_digest": "d" * 64,
+            }
+            legacy = {
+                "study_id": "legacy",
+                "task_count": 1,
+                "metadata": legacy_metadata,
+                "trials": [legacy_trial],
+            }
+            self.write_study(root, "current", current)
+            self.write_study(root, "legacy", legacy)
+
+            export_studies_for_site(
+                root,
+                root / "out.json",
+                allow_legacy_protocol=True,
+                release_manifest=self.release_manifest(),
+                expected_configurations=1,
             )
+            rows = json.loads((root / "out.json").read_text())
+
+        current_row = next(row for row in rows if row["protocolComplete"])
+        legacy_row = next(row for row in rows if not row["protocolComplete"])
+        self.assertEqual(current_row["configurationId"], legacy_row["configurationId"])
+        self.assertEqual(current_row["scoringSchema"], "criteria-v2")
+        self.assertEqual(legacy_row["scoringSchema"], "legacy-binary")
+        self.assertEqual(legacy_row["protocolId"], "legacy-protocol")
+        self.assertEqual(current_row["trial"], 1)
+        self.assertEqual(legacy_row["trial"], 1)
+        self.assertNotEqual(
+            current_row["canonicalReport"]["study_id"],
+            legacy_row["canonicalReport"]["study_id"],
+        )
 
     def test_publication_rejects_an_invalid_trial_observation(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -988,6 +1016,154 @@ class ExportTests(unittest.TestCase):
                 export_studies_for_site(
                     root, root / "out.json", allow_legacy_protocol=True
                 )
+
+    @staticmethod
+    def write_study(root: Path, name: str, study: dict[str, object]) -> None:
+        path = root / "studies" / name / "summary.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(study))
+
+    @staticmethod
+    def release_manifest(task_ids: list[str] | None = None) -> dict[str, object]:
+        selected = task_ids or ["task-a"]
+        return {
+            "schema_version": 2,
+            "corpus_id": "test-corpus",
+            "corpus_version": "1.0.0",
+            "corpus_digest": "d" * 64,
+            "visibility": "public",
+            "task_count": len(selected),
+            "required_protocol_schema_version": 2,
+            "reporting": {"report_schema_version": 1},
+            "active_tasks": selected,
+            "task_digests": {
+                task_id: hashlib.sha256(task_id.encode()).hexdigest()
+                for task_id in selected
+            },
+            "task_count_restricted": False,
+            "trusted_isolation": None,
+        }
+
+    @staticmethod
+    def replace_manifest_task(
+        study: dict[str, object], manifest: dict[str, object]
+    ) -> None:
+        del study
+        manifest["active_tasks"] = ["task-b"]
+        manifest["task_digests"] = {
+            "task-b": hashlib.sha256(b"task-b").hexdigest()
+        }
+
+    @classmethod
+    def current_study(
+        cls, *, run_id: str = "current-run"
+    ) -> dict[str, object]:
+        adapter = get_trusted_adapter("codex-json")
+        controlled_protocol = {
+            "schema_version": 2,
+            "id": "test-protocol",
+            "harness_id": "nixbench",
+            "harness_version": "test",
+            "model_id": "gpt-test",
+            "model_identity_evidence": "vendor-api-direct",
+            "effort": "high",
+            "network_policy": "disabled",
+            "isolation_profile": "local-workspace",
+            "tool_policy": "default",
+            "completion_attestation": "required",
+            "agent_adapter": "codex-json",
+            "agent_timeout_seconds": 60,
+            "system": "x86_64-linux",
+            "wrapper_prompt_sha256": "a" * 64,
+            "agent_command_sha256": "b" * 64,
+            "agent_adapter_sha256": adapter.sha256,
+            "agent_adapter_bundle_sha256": adapter.bundle_sha256,
+            "attestation_trust": adapter.trust,
+        }
+        configuration_id = compute_configuration_id(
+            "d" * 64, controlled_protocol
+        )
+        observation = {
+            "task_id": "task-a",
+            "task_digest": hashlib.sha256(b"task-a").hexdigest(),
+            "category": "packages",
+            "difficulty": "medium",
+            "measurement_status": "valid",
+            "task_outcome": "pass",
+            "invalid_reason": None,
+            "scoring_schema": "criteria-v2",
+            "passed": True,
+            "score": 100,
+            "max_score": 100,
+            "normalized_score": 1,
+            "criteria": {"behavior": True},
+            "criterion_points": {"behavior": 100},
+            "criterion_failure_classes": {"behavior": "wrong-value"},
+            "required_criteria": ["behavior"],
+            "passed_criteria": ["behavior"],
+            "failed_criteria": [],
+            "failure_classes": [],
+            "agent_duration_seconds": 1,
+            "evaluator_duration_seconds": 0.1,
+            "agent_timeout": False,
+            "infrastructure_events": [],
+        }
+        trial = {
+            "run_id": run_id,
+            "measurement_status": "valid",
+            "passed_tasks": 1,
+            "failed_tasks": 0,
+            "task_count": 1,
+            "score": 100,
+            "max_score": 100,
+            "score_rate": 1,
+            "agent_time_seconds": 1,
+            "agent_seconds_per_task": 1,
+            "timeouts": 0,
+            "scoring_schema": "criteria-v2",
+            "corpus_digest": "d" * 64,
+            "configuration_id": configuration_id,
+            "observations": [observation],
+        }
+        return {
+            "schema_version": 3,
+            "study_id": f"study-{run_id}",
+            "metadata": {
+                **cls.site_metadata(),
+                "corpus_id": "test-corpus",
+                "corpus_version": "1.0.0",
+                "corpus_digest": "d" * 64,
+                "corpus_visibility": "public",
+                "configuration_id": configuration_id,
+                "controlled_protocol_schema_version": 1,
+                "controlled_protocol": controlled_protocol,
+                "protocol_id": "test-protocol",
+                "protocol_schema_version": 2,
+                "protocol_complete": True,
+                "model_identity_evidence": "vendor-api-direct",
+                "timing_environment_id": "timing-a",
+                "completion_attestation": "required",
+                "wrapper_prompt_sha256": "a" * 64,
+                "agent_command_sha256": "b" * 64,
+                "agent_adapter": "codex-json",
+                "agent_adapter_sha256": adapter.sha256,
+                "agent_adapter_bundle_sha256": adapter.bundle_sha256,
+                "attestation_trust": adapter.trust,
+                "isolation_profile": "local-workspace",
+                "system": "x86_64-linux",
+                "agent_timeout_seconds": 60,
+            },
+            "trial_count": 1,
+            "task_count": 1,
+            "trials": [trial],
+            "attempts": [
+                {
+                    "run_id": run_id,
+                    "measurement_status": "valid",
+                    "included_in_trials": True,
+                }
+            ],
+        }
 
     @staticmethod
     def site_metadata() -> dict[str, str]:

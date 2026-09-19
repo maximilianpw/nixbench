@@ -673,6 +673,68 @@ print(json.dumps({"type": "turn.completed"}))
             self.assertEqual(study["attempt_count"], 2)
             self.assertEqual(study["attempts"][1]["measurement_status"], "invalid")
 
+    def test_export_site_requires_manifest_for_current_study_before_writing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as results:
+            root = Path(temp)
+            results_dir = Path(results)
+            make_toy_task(root)
+            study_path = results_dir / "studies" / "current" / "summary.json"
+            study_path.parent.mkdir(parents=True)
+            study_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 3,
+                        "study_id": "current",
+                        "task_count": 1,
+                        "trial_count": 1,
+                        "metadata": {
+                            "label": "Current",
+                            "model": "model",
+                            "series": "current",
+                            "effort": "high",
+                            "marker": "C",
+                            "kind": "codex",
+                            "agent_version": "test",
+                            "host": "test",
+                            "network": "disabled",
+                            "protocol_complete": True,
+                        },
+                        "trials": [{"run_id": "current-run"}],
+                    }
+                )
+            )
+            output = results_dir / "site.json"
+            original = b"existing output\n"
+            output.write_bytes(original)
+
+            returncode, stdout, stderr = invoke_cli(
+                root,
+                results_dir,
+                "export-site",
+                "--output",
+                str(output),
+            )
+            final_output = output.read_bytes()
+
+        self.assertEqual(returncode, 2)
+        self.assertEqual(stdout, "")
+        self.assertIn("--release-manifest is required", stderr)
+        self.assertEqual(final_output, original)
+
+    def test_export_site_parser_accepts_checked_release_manifest_path(self) -> None:
+        args = build_parser().parse_args(
+            [
+                "export-site",
+                "--output",
+                "site.json",
+                "--release-manifest",
+                "corpus/releases/1.0.0.json",
+            ]
+        )
+        self.assertEqual(
+            args.release_manifest, Path("corpus/releases/1.0.0.json")
+        )
+
 
 def attested_agent_command(command: str) -> str:
     status = json.dumps(
