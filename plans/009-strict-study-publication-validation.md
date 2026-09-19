@@ -12,6 +12,7 @@
 
 ## Status
 
+- **State**: DONE
 - **Priority**: P1
 - **Effort**: L
 - **Risk**: MED
@@ -209,15 +210,15 @@ legacy aggregate-only behavior.
 
 ## Done criteria
 
-- [ ] One shared validator governs current study loading, reporting, and publication.
-- [ ] Configuration IDs are recomputed from retained controlled protocol data.
-- [ ] Public task IDs and digests exactly match the checked release manifest.
-- [ ] Scores, normalized scores, pass state, criteria, and trial totals are derived and cross-checked.
-- [ ] Duplicate cells and mismatched task matrices are rejected.
-- [ ] Historical summaries remain explicit legacy/aggregate-only inputs and cannot publish as current.
-- [ ] Focused and full test suites pass with required system tools.
-- [ ] Release check passes with current evidence and an appropriately versioned manifest.
-- [ ] `plans/README.md` status row is updated.
+- [x] One shared validator governs current study loading, reporting, and publication.
+- [x] Configuration IDs are recomputed from retained controlled protocol data.
+- [x] Public task IDs and digests exactly match the checked release manifest.
+- [x] Scores, normalized scores, pass state, criteria, and trial totals are derived and cross-checked.
+- [x] Duplicate cells and mismatched task matrices are rejected.
+- [x] Historical summaries remain explicit legacy/aggregate-only inputs and cannot publish as current.
+- [x] Focused and full test suites pass with required system tools.
+- [x] Release check passes with current evidence and an appropriately versioned manifest.
+- [x] `plans/README.md` status row is updated.
 
 ## STOP conditions
 

@@ -203,7 +203,7 @@ class ExportTests(unittest.TestCase):
             summary_path.write_text(
                 json.dumps(
                     {
-                        "schema_version": 3,
+                        "schema_version": 2,
                         "study_id": "current",
                         "task_count": 1,
                         "trial_count": 1,
@@ -239,7 +239,7 @@ class ExportTests(unittest.TestCase):
             unpublished.write_text(
                 json.dumps(
                     {
-                        "schema_version": 3,
+                        "schema_version": 2,
                         "study_id": "unpublished",
                         "task_count": 1,
                         "trial_count": 1,

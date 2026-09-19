@@ -21,6 +21,7 @@ MODEL_IDENTITY_EVIDENCE = {
     "unverified",
 }
 ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+CONTROLLED_PROTOCOL_IDENTITY_SCHEMA_VERSION = 1
 PROTOCOL_FIELDS = (
     "schema_version",
     "id",
@@ -196,9 +197,7 @@ def resolve_protocol(
         "agent_adapter_bundle_sha256": adapter_bundle_digest,
         "attestation_trust": attestation_trust,
     }
-    configuration_id = "cfg-" + _hash_json(
-        {"corpus_digest": corpus_digest, "protocol": controlled}
-    )
+    configuration_id = compute_configuration_id(corpus_digest, controlled)
     timing_environment_id = "timing-" + _hash_json(
         {
             "host": host,
@@ -234,6 +233,15 @@ def resolve_protocol(
         protocol_complete=complete,
         configuration_id=configuration_id,
         timing_environment_id=timing_environment_id,
+    )
+
+
+def compute_configuration_id(
+    corpus_digest: str, controlled_protocol: dict[str, object]
+) -> str:
+    """Return the canonical identity for a corpus and controlled protocol payload."""
+    return "cfg-" + _hash_json(
+        {"corpus_digest": corpus_digest, "protocol": controlled_protocol}
     )
 
 

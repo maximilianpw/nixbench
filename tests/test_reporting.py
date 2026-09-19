@@ -210,7 +210,7 @@ class ReportingTests(unittest.TestCase):
             ],
         )
         study = {
-            "schema_version": 3,
+            "schema_version": 2,
             "study_id": "study-a",
             "metadata": {
                 "corpus_id": "corpus-a",
@@ -242,7 +242,7 @@ class ReportingTests(unittest.TestCase):
     def test_study_report_counts_invalid_attempts_and_reasons(self) -> None:
         complete = trial("run-a", [observation("task-a", score=100)])
         study = {
-            "schema_version": 3,
+            "schema_version": 2,
             "study_id": "study-a",
             "metadata": {
                 "corpus_id": "corpus-a",
@@ -296,7 +296,7 @@ class ReportingTests(unittest.TestCase):
             "run-b", [observation(task_id, score=50) for task_id in task_ids[:-1]]
         )
         study = {
-            "schema_version": 3,
+            "schema_version": 2,
             "study_id": "incomplete-matrix",
             "metadata": {
                 "corpus_id": "corpus-a",
@@ -381,6 +381,27 @@ class ReportingTests(unittest.TestCase):
                 loaded["trials"][0]["observations"][0]["task_digest"],
                 "digest-task-a",
             )
+
+    def test_current_study_missing_controlled_protocol_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "summary.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 3,
+                        "study_id": "invalid-current",
+                        "metadata": {"corpus_digest": "a" * 64},
+                        "trial_count": 0,
+                        "task_count": 1,
+                        "trials": [],
+                    }
+                )
+            )
+
+            with self.assertRaisesRegex(
+                ValueError, "missing canonical controlled protocol payload"
+            ):
+                load_study_summary(path)
 
     def test_pre_plan_four_run_summary_falls_back_to_aggregate_only(self) -> None:
         fixture = (
@@ -491,7 +512,7 @@ class ReportingTests(unittest.TestCase):
             for task_id in ("task-b", "task-a")
         ]
         study = {
-            "schema_version": 3,
+            "schema_version": 2,
             "study_id": "study-a",
             "metadata": {
                 "corpus_digest": "corpus-a",
@@ -535,7 +556,7 @@ class ReportingTests(unittest.TestCase):
         for index, timing_environment in enumerate(("timing-a", "timing-b")):
             studies.append(
                 {
-                    "schema_version": 3,
+                    "schema_version": 2,
                     "study_id": f"study-{index}",
                     "metadata": {
                         "corpus_id": "corpus-a",

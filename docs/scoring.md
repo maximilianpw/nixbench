@@ -82,16 +82,28 @@ converted and must not be pooled with rubric-scored trials.
 ## Study observations
 
 Study schema version 3 retains one normalized observation for every task in
-every valid trial. Each observation includes the task digest, category,
-author-assigned difficulty, score and maximum score, criterion outcomes,
-failure classes, timeout state, infrastructure events, and agent and evaluator
-durations. The writer derives the compatibility totals from these observations
-and rejects inconsistent totals.
+every valid trial. The primitive evidence is the task identity and digest,
+controlled category and difficulty, criterion booleans plus their rubric points,
+required flags and failure classes, timeout state, measurement status, task
+outcome, infrastructure events, and agent and evaluator durations. `score` and
+`max_score` are checked against that rubric evidence.
+
+`normalized_score` is redundant: the shared current-study validator recomputes
+it as `score / max_score` (with a documented `1e-12` floating-point tolerance)
+and requires the stored value to agree and remain in `[0, 1]`. The same
+validator derives pass state from required criteria and timeout state, derives
+passed/failed criterion lists and failure classes, and derives every trial's
+score, maximum score, score rate, pass/fail counts, task count, timeout count,
+and timing totals. Current reporting and publication reject an altered
+`normalized_score`, impossible score, duplicate task cell, criterion/pass
+disagreement, or redundant trial total rather than using it.
 
 Historical study summaries are hydrated from their referenced run summaries
 when those files remain available. A historical summary without those files is
-marked `aggregate_only = true`. Reports do not infer task observations from a
-corpus total.
+marked `aggregate_only = true`. This is an explicit legacy path: historical
+aggregate-only data is never upgraded into a current schema-3 publication by
+filling defaults or inventing task observations. Reports do not infer task
+observations from a corpus total.
 
 ## Reported estimands
 

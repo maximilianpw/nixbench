@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import Mock, call, patch
 
 from nixbench.agent_status import read_agent_status
+from nixbench.protocol import compute_configuration_id
 from nixbench.runner import _read_score, _run_shell_command, run_task, write_summary
 from nixbench.scoring import Criterion
 from nixbench.study import (
@@ -21,6 +22,52 @@ from nixbench.study import (
     write_study_summary,
 )
 from nixbench.task import load_task
+
+
+def current_study_metadata() -> dict[str, object]:
+    controlled = {
+        "schema_version": 2,
+        "id": "test-protocol",
+        "harness_id": "nixbench",
+        "harness_version": "test",
+        "model_id": "toy-model",
+        "model_identity_evidence": "unverified",
+        "effort": "high",
+        "network_policy": "disabled",
+        "isolation_profile": "local-workspace",
+        "tool_policy": "default",
+        "completion_attestation": "required",
+        "agent_adapter": None,
+        "agent_timeout_seconds": 60,
+        "system": "x86_64-linux",
+        "wrapper_prompt_sha256": None,
+        "agent_command_sha256": None,
+        "agent_adapter_sha256": None,
+        "agent_adapter_bundle_sha256": None,
+        "attestation_trust": "unattested",
+    }
+    corpus_digest = "a" * 64
+    return {
+        "corpus_digest": corpus_digest,
+        "configuration_id": compute_configuration_id(corpus_digest, controlled),
+        "controlled_protocol_schema_version": 1,
+        "controlled_protocol": controlled,
+        "protocol_id": "test-protocol",
+        "protocol_schema_version": 2,
+        "model_identity_evidence": "unverified",
+        "completion_attestation": "required",
+        "agent_adapter": None,
+        "agent_adapter_sha256": None,
+        "agent_adapter_bundle_sha256": None,
+        "attestation_trust": "unattested",
+        "wrapper_prompt_sha256": None,
+        "agent_command_sha256": None,
+        "isolation_profile": "local-workspace",
+        "system": "x86_64-linux",
+        "agent_timeout_seconds": 60,
+        "model": "toy-model",
+        "effort": "high",
+    }
 
 
 class RunnerTests(unittest.TestCase):
@@ -790,7 +837,25 @@ class RunnerTests(unittest.TestCase):
     def test_write_study_summary_aggregates_independent_trials(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            task = make_toy_task(root)
+            task = make_toy_task(
+                root,
+                check_script=(
+                    "set -eu\n"
+                    "workdir=${1:-$PWD}\n"
+                    "if grep -q '^reference$' \"$workdir/answer.txt\"; then\n"
+                    "  printf '%s' '{\"schema_version\":2,\"criteria\":{\"behavior\":true}}' > \"$NIXBENCH_SCORE_FILE\"\n"
+                    "  exit 0\n"
+                    "fi\n"
+                    "printf '%s' '{\"schema_version\":2,\"criteria\":{\"behavior\":false}}' > \"$NIXBENCH_SCORE_FILE\"\n"
+                    "exit 1\n"
+                ),
+            )
+            with (task.root / "metadata.toml").open("a") as handle:
+                handle.write(
+                    "\n[[criteria]]\nid = \"behavior\"\npoints = 10\n"
+                    "required = true\nfailure_class = \"wrong-value\"\n"
+                )
+            task = load_task(task.root)
             results_dir = root / "results"
             reference = run_task(
                 task,
@@ -804,9 +869,22 @@ class RunnerTests(unittest.TestCase):
                 run_id="starter",
                 solution_mode="starter",
             )
+            metadata = current_study_metadata()
             trials = [
-                build_study_trial("reference", [reference]),
-                build_study_trial("starter", [starter]),
+                build_study_trial(
+                    "reference",
+                    [reference],
+                    corpus_digest=metadata["corpus_digest"],
+                    configuration_id=metadata["configuration_id"],
+                    task_digests={"toy": "b" * 64},
+                ),
+                build_study_trial(
+                    "starter",
+                    [starter],
+                    corpus_digest=metadata["corpus_digest"],
+                    configuration_id=metadata["configuration_id"],
+                    task_digests={"toy": "b" * 64},
+                ),
             ]
 
             with self.assertRaisesRegex(ValueError, "every task digest"):
@@ -831,7 +909,7 @@ class RunnerTests(unittest.TestCase):
                 results_dir,
                 "study",
                 trials,
-                metadata={"model": "toy-model", "effort": "high"},
+                metadata=metadata,
             )
             summary = json.loads(summary_path.read_text())
 
@@ -854,6 +932,7 @@ class RunnerTests(unittest.TestCase):
                     results_dir,
                     "inconsistent",
                     [inconsistent],
+                    metadata=metadata,
                 )
 
     def test_invalid_measurement_is_kept_in_attempts_but_excluded_from_trials(self) -> None:
@@ -869,12 +948,14 @@ class RunnerTests(unittest.TestCase):
                 run_id="invalid",
                 solution_mode="starter",
             )
+            metadata = current_study_metadata()
             attempt = build_study_attempt(
                 "invalid",
                 [result],
                 expected_task_count=1,
-                corpus_digest="corpus-a",
-                configuration_id="cfg-a",
+                corpus_digest=metadata["corpus_digest"],
+                configuration_id=metadata["configuration_id"],
+                task_digests={"toy": "b" * 64},
             )
 
             self.assertEqual(attempt["measurement_status"], "invalid")
@@ -889,7 +970,7 @@ class RunnerTests(unittest.TestCase):
                 [],
                 attempts=[attempt],
                 task_count=1,
-                metadata={"corpus_digest": "corpus-a", "configuration_id": "cfg-a"},
+                metadata=metadata,
             )
             summary = json.loads(summary_path.read_text())
             self.assertEqual(summary["schema_version"], 3)

@@ -12,7 +12,11 @@ from pathlib import Path
 from .corpus import CorpusIdentity, identify_corpus
 from .export import export_studies_for_site
 from .isolation import APPROVED_PREFLIGHT_EVIDENCE
-from .protocol import ResolvedProtocol, resolve_protocol
+from .protocol import (
+    CONTROLLED_PROTOCOL_IDENTITY_SCHEMA_VERSION,
+    ResolvedProtocol,
+    resolve_protocol,
+)
 from .reporting import (
     build_corpus_health_report,
     build_study_report,
@@ -762,6 +766,8 @@ def _run_identity_metadata(
         "corpus_digest": corpus.digest,
         "corpus_task_digests": corpus.task_digests,
         "protocol": protocol.to_json(),
+        "controlled_protocol_schema_version": CONTROLLED_PROTOCOL_IDENTITY_SCHEMA_VERSION,
+        "controlled_protocol": protocol.controlled_fields(),
         "protocol_id": protocol.id,
         "protocol_schema_version": protocol.schema_version,
         "protocol_complete": protocol.protocol_complete,

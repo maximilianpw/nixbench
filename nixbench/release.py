@@ -22,6 +22,7 @@ from .reporting import (
     build_study_report,
 )
 from .runner import TaskRunResult, run_task
+from .study_validation import StudyValidationError, validate_current_study
 from .task import Task, TaskError, iter_tasks, load_task
 
 try:
@@ -396,14 +397,16 @@ def build_release_manifest(
 def check_publication(
     study: Mapping[str, Any], *, release_manifest: Mapping[str, Any]
 ) -> dict[str, Any]:
-    metadata = study.get("metadata")
-    reasons: list[str] = []
-    if release_manifest.get("schema_version") != RELEASE_MANIFEST_SCHEMA_VERSION:
-        reasons.append(
-            f"publication requires release manifest schema {RELEASE_MANIFEST_SCHEMA_VERSION}"
-        )
-    if not isinstance(metadata, Mapping):
-        return {"eligible": False, "reasons": ["study metadata is missing"]}
+    reasons = _release_manifest_validation_reasons(release_manifest)
+    if reasons:
+        return {"eligible": False, "reasons": reasons}
+    try:
+        validated_study = validate_current_study(study)
+    except StudyValidationError as exc:
+        reasons.append(f"study validation failed: {exc}")
+        return {"eligible": False, "reasons": reasons}
+    study = validated_study
+    metadata = study["metadata"]
     if metadata.get("corpus_digest") != release_manifest.get("corpus_digest"):
         reasons.append("study corpus digest does not match the release manifest")
     if metadata.get("corpus_id") != release_manifest.get("corpus_id"):
@@ -450,6 +453,37 @@ def check_publication(
     if study.get("task_count") != expected_task_count:
         reasons.append("study task count does not match the release manifest")
     trials = study.get("trials")
+    if isinstance(trials, list) and trials:
+        observations = trials[0].get("observations", [])
+        if isinstance(observations, list):
+            observation_ids = {str(item["task_id"]) for item in observations}
+            if manifest_visibility == "public":
+                manifest_ids = set(_string_list(release_manifest.get("active_tasks")))
+                if observation_ids != manifest_ids:
+                    reasons.append(
+                        "study task IDs do not match the release manifest"
+                    )
+                manifest_digests = release_manifest.get("task_digests")
+                if isinstance(manifest_digests, Mapping) and any(
+                    item.get("task_digest") != manifest_digests.get(item.get("task_id"))
+                    for item in observations
+                    if isinstance(item, Mapping)
+                ):
+                    reasons.append(
+                        "study task digests do not match the release manifest"
+                    )
+            elif manifest_visibility == "private-heldout":
+                observed_hashes = {
+                    hashlib.sha256(str(item["task_digest"]).encode("ascii")).hexdigest()
+                    for item in observations
+                    if isinstance(item, Mapping)
+                }
+                if observed_hashes != set(
+                    _string_list(release_manifest.get("active_tasks"))
+                ):
+                    reasons.append(
+                        "study task digests do not match opaque release manifest tasks"
+                    )
     trial_task_sets: list[set[str]] = []
     if not isinstance(trials, list) or not trials:
         reasons.append("publication requires at least one complete trial")
@@ -572,7 +606,67 @@ def check_publication(
                         "held-out publication trial has missing or invalid agent status evidence"
                     )
                     break
-    return {"eligible": not reasons, "reasons": reasons}
+    return {"eligible": not reasons, "reasons": list(dict.fromkeys(reasons))}
+
+
+def _release_manifest_validation_reasons(
+    manifest: Mapping[str, Any],
+) -> list[str]:
+    if manifest.get("schema_version") != RELEASE_MANIFEST_SCHEMA_VERSION:
+        return [
+            f"publication requires release manifest schema {RELEASE_MANIFEST_SCHEMA_VERSION}"
+        ]
+    reasons: list[str] = []
+    for field in ("corpus_id", "corpus_version", "corpus_digest", "visibility"):
+        if not isinstance(manifest.get(field), str) or not manifest.get(field):
+            reasons.append(f"release manifest {field} is missing or invalid")
+    digest = manifest.get("corpus_digest")
+    if isinstance(digest, str) and (
+        len(digest) != 64 or any(character not in "0123456789abcdef" for character in digest)
+    ):
+        reasons.append("release manifest corpus_digest is not a SHA-256 digest")
+    visibility = manifest.get("visibility")
+    if visibility not in {"public", "private-heldout"}:
+        reasons.append("release manifest visibility is not publishable")
+    task_count = manifest.get("task_count")
+    if type(task_count) is not int or task_count <= 0:
+        reasons.append("release manifest task_count is invalid")
+    required_protocol = manifest.get("required_protocol_schema_version")
+    if type(required_protocol) is not int or required_protocol <= 0:
+        reasons.append("release manifest required protocol schema is invalid")
+    active_tasks = manifest.get("active_tasks")
+    if not isinstance(active_tasks, list) or not all(
+        isinstance(item, str) and item for item in active_tasks
+    ) or len(active_tasks) != len(set(active_tasks)):
+        reasons.append("release manifest active_tasks is invalid")
+        active_tasks = []
+    elif type(task_count) is int and len(active_tasks) != task_count:
+        reasons.append("release manifest active_tasks disagrees with task_count")
+    task_digests = manifest.get("task_digests")
+    if not isinstance(task_digests, Mapping):
+        reasons.append("release manifest task_digests is invalid")
+    elif visibility == "public":
+        if set(task_digests) != set(active_tasks) or any(
+            not isinstance(value, str)
+            or len(value) != 64
+            or any(character not in "0123456789abcdef" for character in value)
+            for value in task_digests.values()
+        ):
+            reasons.append("release manifest public task digests are invalid")
+    elif visibility == "private-heldout":
+        if task_digests:
+            reasons.append("private release manifest must not expose task digests")
+        if any(
+            len(value) != 64
+            or any(character not in "0123456789abcdef" for character in value)
+            for value in active_tasks
+        ):
+            reasons.append("release manifest opaque task hashes are invalid")
+        if not isinstance(manifest.get("trusted_isolation"), Mapping):
+            reasons.append("private release manifest trusted isolation is missing")
+    if type(manifest.get("task_count_restricted")) is not bool:
+        reasons.append("release manifest task_count_restricted is invalid")
+    return reasons
 
 
 def export_publication_bundle(
@@ -918,6 +1012,7 @@ def _release_gate_digest(
         Path(__file__).with_name("scoring.py"),
         Path(__file__).with_name("reporting.py"),
         Path(__file__).with_name("study.py"),
+        Path(__file__).with_name("study_validation.py"),
         Path(__file__).with_name("task.py"),
         root / "scripts" / "bwrap-codex-agent.py",
         root / "launchers" / "linux-bwrap-v1.toml",

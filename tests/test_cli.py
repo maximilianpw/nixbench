@@ -413,7 +413,7 @@ class CliTests(unittest.TestCase):
                 study["trials"][0]["configuration_id"],
                 study["metadata"]["configuration_id"],
             )
-            self.assertEqual(study["schema_version"], 3)
+            self.assertEqual(study["schema_version"], 2)
             self.assertEqual(
                 study["trials"][0]["observations"][0]["task_digest"],
                 study["metadata"]["corpus_task_digests"]["toy"],

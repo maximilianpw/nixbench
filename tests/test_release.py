@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -24,6 +25,7 @@ from nixbench.release import (
     health_report_provenance,
     load_verified_health_evidence,
 )
+from nixbench.protocol import compute_configuration_id
 from nixbench.runner import run_task
 from nixbench.task import load_task
 
@@ -468,7 +470,7 @@ class ReleaseTests(unittest.TestCase):
         study.update({
             "study_id": "secret-study",
         })
-        release_manifest = self.private_release_manifest(task_count=1)
+        release_manifest = self.private_release_manifest(task_ids=[sentinel])
 
         bundle = export_publication_bundle(
             study, release_manifest=release_manifest, redact_task_details=True
@@ -497,7 +499,8 @@ class ReleaseTests(unittest.TestCase):
         bundle = export_publication_bundle(
             study,
             release_manifest=self.private_release_manifest(
-                task_count=5, task_count_restricted=False
+                task_ids=[f"private-task-{index}" for index in range(5)],
+                task_count_restricted=False,
             ),
             redact_task_details=True,
         )
@@ -518,7 +521,9 @@ class ReleaseTests(unittest.TestCase):
             trial_count=4,
             corpus_visibility="private-heldout",
         )
-        manifest = self.private_release_manifest(task_count=5)
+        manifest = self.private_release_manifest(
+            task_ids=["task-a", "task-b", "task-c", "task-d", "task-e"]
+        )
         study["attempts"] = []
         with self.assertRaisesRegex(ValueError, "publication is ineligible"):
             export_publication_bundle(
@@ -535,18 +540,92 @@ class ReleaseTests(unittest.TestCase):
                 study, release_manifest=manifest, redact_task_details=True
             )
 
+    def test_publication_rejects_wrong_public_task_id_and_digest(self) -> None:
+        study = self.publication_study(
+            task_ids=["task-b"], trial_count=1, corpus_visibility="public"
+        )
+        manifest = self.public_release_manifest(["task-a"])
+
+        wrong_id = check_publication(study, release_manifest=manifest)
+        self.assertIn("task IDs do not match", " ".join(wrong_id["reasons"]))
+
+        matching = self.publication_study(
+            task_ids=["task-a"], trial_count=1, corpus_visibility="public"
+        )
+        matching["trials"][0]["observations"][0]["task_digest"] = "f" * 64
+        wrong_digest = check_publication(matching, release_manifest=manifest)
+        self.assertIn("task digests do not match", " ".join(wrong_digest["reasons"]))
+
+    def test_publication_rejects_redundant_field_and_identity_tampering(self) -> None:
+        manifest = self.private_release_manifest(task_ids=["task-a"])
+        mutations = (
+            ("normalized_score disagrees", lambda study: study["trials"][0]["observations"][0].__setitem__("normalized_score", 99)),
+            ("score must be within max_score", lambda study: study["trials"][0]["observations"][0].__setitem__("score", 101)),
+            ("score must be within max_score", lambda study: study["trials"][0]["observations"][0].__setitem__("score", -1)),
+            ("passed disagrees with required criteria", lambda study: study["trials"][0]["observations"][0].__setitem__("passed", False)),
+            ("aggregate score disagrees", lambda study: study["trials"][0].__setitem__("score", 99)),
+            ("configuration_id does not match", lambda study: study["metadata"]["controlled_protocol"].__setitem__("effort", "low")),
+        )
+        for expected, mutate in mutations:
+            with self.subTest(expected=expected):
+                study = self.publication_study(
+                    task_ids=["task-a"], trial_count=1, corpus_visibility="private-heldout"
+                )
+                mutate(study)
+                rejected = check_publication(study, release_manifest=manifest)
+                self.assertIn(expected, " ".join(rejected["reasons"]))
+
+        duplicate = self.publication_study(
+            task_ids=["task-a"], trial_count=1, corpus_visibility="private-heldout"
+        )
+        duplicate["trials"][0]["observations"].append(
+            dict(duplicate["trials"][0]["observations"][0])
+        )
+        rejected = check_publication(duplicate, release_manifest=manifest)
+        self.assertIn("duplicate task cells", " ".join(rejected["reasons"]))
+
+    def test_publication_rejects_malformed_manifest_and_missing_protocol_payload(self) -> None:
+        study = self.publication_study(
+            task_ids=["task-a"], trial_count=1, corpus_visibility="private-heldout"
+        )
+        malformed = self.private_release_manifest(task_ids=["task-a"])
+        malformed["active_tasks"] = ["not-a-hash"]
+        rejected = check_publication(study, release_manifest=malformed)
+        self.assertIn("opaque task hashes are invalid", " ".join(rejected["reasons"]))
+
+        study["metadata"].pop("controlled_protocol")
+        rejected = check_publication(
+            study,
+            release_manifest=self.private_release_manifest(task_ids=["task-a"]),
+        )
+        self.assertIn("missing canonical controlled protocol payload", " ".join(rejected["reasons"]))
+
     def test_heldout_publication_requires_approved_isolation_evidence(self) -> None:
         study = self.publication_study(
             task_ids=["task-a"], trial_count=1, corpus_visibility="private-heldout"
         )
-        manifest = self.private_release_manifest(task_count=1)
+        manifest = self.private_release_manifest(task_ids=["task-a"])
 
         study["metadata"]["isolation_profile"] = "local-workspace"
+        study["metadata"]["controlled_protocol"]["isolation_profile"] = "local-workspace"
+        local_configuration = compute_configuration_id(
+            study["metadata"]["corpus_digest"],
+            study["metadata"]["controlled_protocol"],
+        )
+        study["metadata"]["configuration_id"] = local_configuration
+        study["trials"][0]["configuration_id"] = local_configuration
         rejected = check_publication(study, release_manifest=manifest)
         self.assertFalse(rejected["eligible"])
         self.assertIn("approved held-out isolation", " ".join(rejected["reasons"]))
 
         study["metadata"]["isolation_profile"] = "linux-bwrap-v1"
+        study["metadata"]["controlled_protocol"]["isolation_profile"] = "linux-bwrap-v1"
+        restored_configuration = compute_configuration_id(
+            study["metadata"]["corpus_digest"],
+            study["metadata"]["controlled_protocol"],
+        )
+        study["metadata"]["configuration_id"] = restored_configuration
+        study["trials"][0]["configuration_id"] = restored_configuration
         accepted = check_publication(study, release_manifest=manifest)
         self.assertTrue(accepted["eligible"], accepted)
 
@@ -557,7 +636,7 @@ class ReleaseTests(unittest.TestCase):
         study["metadata"]["corpus_visibility"] = "private-heldout"
         bundle_digest = study["metadata"].pop("agent_adapter_bundle_sha256")
         rejected = check_publication(study, release_manifest=manifest)
-        self.assertIn("identity is incomplete", " ".join(rejected["reasons"]))
+        self.assertIn("agent_adapter_bundle_sha256 disagrees", " ".join(rejected["reasons"]))
         study["metadata"]["agent_adapter_bundle_sha256"] = bundle_digest
 
         study["trials"][0]["agent_status"]["completed"] = False
@@ -566,6 +645,13 @@ class ReleaseTests(unittest.TestCase):
 
         study["trials"][0]["agent_status"]["completed"] = True
         study["metadata"]["agent_adapter_sha256"] = "f" * 64
+        study["metadata"]["controlled_protocol"]["agent_adapter_sha256"] = "f" * 64
+        changed_configuration = compute_configuration_id(
+            study["metadata"]["corpus_digest"],
+            study["metadata"]["controlled_protocol"],
+        )
+        study["metadata"]["configuration_id"] = changed_configuration
+        study["trials"][0]["configuration_id"] = changed_configuration
         rejected = check_publication(study, release_manifest=manifest)
         self.assertIn("adapter digest", " ".join(rejected["reasons"]))
 
@@ -573,7 +659,7 @@ class ReleaseTests(unittest.TestCase):
         study = self.publication_study(
             task_ids=["task-a"], trial_count=1, corpus_visibility="private-heldout"
         )
-        manifest = self.private_release_manifest(task_count=1)
+        manifest = self.private_release_manifest(task_ids=["task-a"])
         registered = get_trusted_adapter("codex-json-bwrap")
 
         with tempfile.TemporaryDirectory() as temp:
@@ -612,7 +698,7 @@ class ReleaseTests(unittest.TestCase):
         study = self.publication_study(
             task_ids=["task-a"], trial_count=1, corpus_visibility="private-heldout"
         )
-        manifest = self.private_release_manifest(task_count=1)
+        manifest = self.private_release_manifest(task_ids=["task-a"])
         manifest["schema_version"] = 1
         manifest["trusted_isolation"].pop("adapter_bundle_sha256")
 
@@ -775,8 +861,28 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("pkgs.bubblewrap", (root / "flake.nix").read_text())
 
     @staticmethod
+    def public_release_manifest(task_ids: list[str]) -> dict[str, object]:
+        return {
+            "schema_version": 2,
+            "corpus_id": "private-corpus",
+            "corpus_version": "1.0.0",
+            "corpus_digest": "d" * 64,
+            "visibility": "public",
+            "task_count": len(task_ids),
+            "required_protocol_schema_version": 2,
+            "reporting": {"report_schema_version": 1},
+            "active_tasks": task_ids,
+            "task_digests": {
+                task_id: hashlib.sha256(task_id.encode()).hexdigest()
+                for task_id in task_ids
+            },
+            "task_count_restricted": False,
+            "trusted_isolation": None,
+        }
+
+    @staticmethod
     def private_release_manifest(
-        *, task_count: int, task_count_restricted: bool = True
+        *, task_ids: list[str], task_count_restricted: bool = True
     ) -> dict[str, object]:
         adapter = get_trusted_adapter("codex-json-bwrap")
         return {
@@ -785,9 +891,14 @@ class ReleaseTests(unittest.TestCase):
             "corpus_version": "1.0.0",
             "corpus_digest": "d" * 64,
             "visibility": "private-heldout",
-            "task_count": task_count,
+            "task_count": len(task_ids),
             "required_protocol_schema_version": 2,
             "reporting": {"report_schema_version": 1},
+            "active_tasks": sorted(
+                hashlib.sha256(hashlib.sha256(task_id.encode()).hexdigest().encode("ascii")).hexdigest()
+                for task_id in task_ids
+            ),
+            "task_digests": {},
             "task_count_restricted": task_count_restricted,
             "trusted_isolation": {
                 "profile": "linux-bwrap-v1",
@@ -808,35 +919,80 @@ class ReleaseTests(unittest.TestCase):
         corpus_visibility: str,
     ) -> dict[str, object]:
         adapter = get_trusted_adapter("codex-json-bwrap")
+        controlled_protocol = {
+            "schema_version": 2,
+            "id": "protocol-private",
+            "harness_id": "nixbench",
+            "harness_version": "test",
+            "model_id": "model-private",
+            "model_identity_evidence": "vendor-api-direct",
+            "effort": "high",
+            "network_policy": "enabled",
+            "isolation_profile": "linux-bwrap-v1",
+            "tool_policy": "default",
+            "completion_attestation": "required",
+            "agent_adapter": "codex-json-bwrap",
+            "agent_timeout_seconds": 60,
+            "system": "x86_64-linux",
+            "wrapper_prompt_sha256": "a" * 64,
+            "agent_command_sha256": "b" * 64,
+            "agent_adapter_sha256": adapter.sha256,
+            "agent_adapter_bundle_sha256": adapter.bundle_sha256,
+            "attestation_trust": "approved-linux-bwrap-v1",
+        }
+        configuration_id = compute_configuration_id("d" * 64, controlled_protocol)
         trials = []
         for run in range(trial_count):
             observations = []
             for index, task_id in enumerate(task_ids):
+                passed = index % 2 == 0
+                score = 100 if passed else 0
                 observations.append(
                     {
                         "task_id": task_id,
+                        "task_digest": hashlib.sha256(task_id.encode()).hexdigest(),
                         "category": "packages",
                         "difficulty": "medium",
                         "measurement_status": "valid",
-                        "passed": index % 2 == 0,
-                        "score": 100 if index % 2 == 0 else 50,
+                        "task_outcome": "pass" if passed else "fail",
+                        "invalid_reason": None,
+                        "scoring_schema": "criteria-v2",
+                        "passed": passed,
+                        "score": score,
                         "max_score": 100,
-                        "normalized_score": 1.0 if index % 2 == 0 else 0.5,
-                        "passed_criteria": ["behavior"] if index % 2 == 0 else [],
-                        "failed_criteria": [] if index % 2 == 0 else ["behavior"],
-                        "failure_classes": [] if index % 2 == 0 else ["wrong-value"],
+                        "normalized_score": score / 100,
+                        "criteria": {"behavior": passed},
+                        "criterion_points": {"behavior": 100},
+                        "criterion_failure_classes": {"behavior": "wrong-value"},
+                        "required_criteria": ["behavior"],
+                        "passed_criteria": ["behavior"] if passed else [],
+                        "failed_criteria": [] if passed else ["behavior"],
+                        "failure_classes": [] if passed else ["wrong-value"],
                         "agent_duration_seconds": 1,
                         "evaluator_duration_seconds": 0.1,
                         "agent_timeout": False,
                         "infrastructure_events": [],
                     }
                 )
+            score = sum(float(item["score"]) for item in observations)
+            max_score = sum(float(item["max_score"]) for item in observations)
+            passed_tasks = sum(item["passed"] is True for item in observations)
             trials.append(
                 {
                     "run_id": f"run-{run}",
                     "measurement_status": "valid",
+                    "passed_tasks": passed_tasks,
+                    "failed_tasks": len(task_ids) - passed_tasks,
                     "task_count": len(task_ids),
+                    "score": score,
+                    "max_score": max_score,
+                    "score_rate": score / max_score,
+                    "agent_time_seconds": len(task_ids),
+                    "agent_seconds_per_task": 1,
+                    "timeouts": 0,
                     "scoring_schema": "criteria-v2",
+                    "corpus_digest": "d" * 64,
+                    "configuration_id": configuration_id,
                     "observations": observations,
                     "agent_status": {
                         "task_count": len(task_ids),
@@ -847,13 +1003,16 @@ class ReleaseTests(unittest.TestCase):
                 }
             )
         return {
+            "schema_version": 3,
             "study_id": "private-study",
             "metadata": {
                 "corpus_id": "private-corpus",
                 "corpus_version": "1.0.0",
                 "corpus_digest": "d" * 64,
                 "corpus_visibility": corpus_visibility,
-                "configuration_id": "cfg-private",
+                "configuration_id": configuration_id,
+                "controlled_protocol_schema_version": 1,
+                "controlled_protocol": controlled_protocol,
                 "protocol_id": "protocol-private",
                 "protocol_schema_version": 2,
                 "protocol_complete": True,
@@ -867,7 +1026,10 @@ class ReleaseTests(unittest.TestCase):
                 "agent_adapter_bundle_sha256": adapter.bundle_sha256,
                 "attestation_trust": "approved-linux-bwrap-v1",
                 "isolation_profile": "linux-bwrap-v1",
+                "system": "x86_64-linux",
+                "agent_timeout_seconds": 60,
             },
+            "trial_count": len(trials),
             "task_count": len(task_ids),
             "trials": trials,
             "attempts": [

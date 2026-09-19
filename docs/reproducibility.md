@@ -26,8 +26,11 @@ checkpoint.
 
 New study summaries use schema version 3. Each valid trial contains the
 task-by-trial observation matrix, and each attempt retains its task records as
-the exclusion population. Compatibility totals are derived from the matrix.
-Use the canonical report command to inspect a study:
+the exclusion population. The matrix's task and rubric evidence is primitive;
+`normalized_score`, pass/fail lists, failure classes, and all trial totals are
+redundant fields recomputed and cross-checked by the shared validator before
+current reporting or publication. Use the canonical report command to inspect
+a study:
 
 ```sh
 python3 bench.py report-study \
@@ -41,7 +44,14 @@ its observations from those files. Otherwise, it marks the study
 
 Each new run records a content-addressed corpus digest and configuration ID. The corpus digest covers the manifest, task metadata, prompts, starters, references, evaluators, and contract fixtures. The Git revision remains provenance and does not identify benchmark content. Site-only or documentation-only commits therefore do not change the corpus digest.
 
-The configuration ID covers the controlled run protocol and corpus digest. This includes the model ID and identity evidence, harness version, effort, network and tool policy, isolation profile, system, timeout, exact wrapper-prompt bytes, exact agent command, and the registered adapter bundle digest. Display fields such as `series`, `marker`, and `label` do not affect it. Host and platform are excluded from correctness identity and produce a separate timing environment ID. Compare timings only when that ID matches.
+The configuration ID covers the controlled run protocol and corpus digest. This includes the model ID and identity evidence, harness version, effort, network and tool policy, isolation profile, system, timeout, wrapper-prompt SHA-256, agent-command SHA-256, and the registered adapter bundle digest. Display fields such as `series`, `marker`, and `label` do not affect it. Host and platform are excluded from correctness identity and produce a separate timing environment ID. Compare timings only when that ID matches.
+
+Schema-3 metadata retains the exact non-secret hash input in the versioned
+`controlled_protocol` payload. The raw wrapper prompt and agent command are not
+copied there; their SHA-256 values are the controlled inputs. The shared
+protocol function recomputes `configuration_id` from `corpus_digest` and this
+payload, and validation also checks the flattened compatibility fields against
+it. A self-asserted or stale `configuration_id` is therefore rejected.
 
 ## Recommended run metadata
 
@@ -92,7 +102,15 @@ bubblewrap namespace without the repository, corpus, evaluator, reference,
 results, host home, or Nix daemon socket. `publication-check` rejects held-out
 studies without a successful approved preflight or when the study, registered
 adapter, and schema-2 release manifest do not carry the same bundle digest.
-Schema-1 release manifests are not silently upgraded.
+Schema-1 release manifests are not silently upgraded. Publication first
+validates the schema-2 release manifest, then requires corpus ID, version,
+digest, visibility, and task count to agree. For a public corpus, every
+observation `task_digest` and the exact task-ID set must match the manifest's
+`task_digests` and `active_tasks`. For a private held-out corpus, the validator
+hashes each retained observation digest and compares the resulting set with the
+manifest's opaque active-task hashes; task IDs are not emitted in public output.
+Altered task digests, protocol identity, normalized scores, or redundant trial
+totals make the study ineligible.
 
 Adapter bundle identity covers the repository-local harness code and policy
 that constructs and checks isolation. It does not identify the model provider,

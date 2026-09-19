@@ -231,8 +231,11 @@ def write_study_summary(
         if trials
         else {}
     )
+    current_schema = bool(metadata and metadata.get("controlled_protocol")) and all(
+        trial.get("scoring_schema") == "criteria-v2" for trial in trials
+    )
     summary = {
-        "schema_version": 3,
+        "schema_version": 3 if current_schema else 2,
         "study_id": study_id,
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "metadata": metadata or {},

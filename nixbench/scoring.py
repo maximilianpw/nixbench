@@ -149,6 +149,15 @@ def score_schema_two_payload(
         "format": "criteria-v2",
         "schema_version": 2,
         "criteria": normalized_outcomes,
+        "criterion_points": {
+            criterion.id: criterion.points for criterion in criteria
+        },
+        "criterion_failure_classes": {
+            criterion.id: criterion.failure_class for criterion in criteria
+        },
+        "required_criteria": [
+            criterion.id for criterion in criteria if criterion.required
+        ],
         "failed_criteria": [criterion.id for criterion in failed],
         "failure_classes": failure_classes,
         "required_passed": all(

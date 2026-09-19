@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from .scoring import FAILURE_CLASSES
+from .study_validation import normalize_task_observation, validate_current_study
 from .task import VALID_CATEGORIES
 
 
@@ -281,6 +282,8 @@ def load_study_summary(path: Path) -> dict[str, Any]:
     if not isinstance(loaded, dict):
         raise ValueError(f"study summary {path} must be a JSON object")
     study = dict(loaded)
+    if study.get("schema_version") == 3:
+        return validate_current_study(study)
     trials = study.get("trials")
     if not isinstance(trials, list):
         raise ValueError(f"study summary {path} has no trials list")
@@ -378,65 +381,9 @@ def _hydrated_totals_match(
     return True
 
 
-def normalize_task_observation(
-    task: Mapping[str, Any], *, task_digest: object = None
-) -> dict[str, Any]:
-    task_id = _nonempty_string(task.get("task_id"), "task_id")
-    category = _nonempty_string(task.get("category"), f"{task_id}: category")
-    _validate_category(category)
-    difficulty = _nonempty_string(task.get("difficulty"), f"{task_id}: difficulty")
-    measurement_status = _nonempty_string(
-        task.get("measurement_status"), f"{task_id}: measurement_status"
-    )
-    score = _finite_number(task.get("score"), f"{task_id}: score")
-    max_score = _finite_number(task.get("max_score"), f"{task_id}: max_score")
-    if max_score <= 0 or score < 0 or score > max_score:
-        raise ValueError(f"{task_id}: score must be within max_score")
-    criteria = task.get("criteria", {})
-    if not isinstance(criteria, Mapping) or not all(
-        isinstance(key, str) and isinstance(value, bool)
-        for key, value in criteria.items()
-    ):
-        raise ValueError(f"{task_id}: criteria must contain boolean outcomes")
-    agent = task.get("agent")
-    check = task.get("check")
-    agent_duration = 0.0
-    agent_timeout = False
-    if isinstance(agent, Mapping):
-        agent_duration = _finite_number(
-            agent.get("duration_seconds", 0), f"{task_id}: agent duration"
-        )
-        agent_timeout = agent.get("timed_out") is True
-    evaluator_duration = 0.0
-    if isinstance(check, Mapping):
-        evaluator_duration = _finite_number(
-            check.get("duration_seconds", 0), f"{task_id}: evaluator duration"
-        )
-    passed = task.get("passed") is True
-    return {
-        "task_id": task_id,
-        "task_digest": task_digest if isinstance(task_digest, str) else None,
-        "category": category,
-        "difficulty": difficulty,
-        "measurement_status": measurement_status,
-        "task_outcome": task.get("task_outcome"),
-        "passed": passed,
-        "score": score,
-        "max_score": max_score,
-        "normalized_score": score / max_score,
-        "passed_criteria": sorted(key for key, value in criteria.items() if value),
-        "failed_criteria": sorted(key for key, value in criteria.items() if not value),
-        "failure_classes": sorted(_string_list(task.get("failure_classes", []))),
-        "agent_duration_seconds": agent_duration,
-        "evaluator_duration_seconds": evaluator_duration,
-        "agent_timeout": agent_timeout,
-        "infrastructure_events": sorted(
-            _string_list(task.get("infrastructure_events", []))
-        ),
-    }
-
-
 def build_study_report(study: Mapping[str, Any]) -> dict[str, Any]:
+    if study.get("schema_version") == 3:
+        study = validate_current_study(study)
     trials_value = study.get("trials")
     if not isinstance(trials_value, list):
         raise ValueError("study has no trials list")
@@ -659,7 +606,9 @@ def build_configuration_report(
             if isinstance(value, Mapping):
                 attempts.append(dict(value))
     combined = {
-        "schema_version": 3,
+        "schema_version": (
+            3 if all(study.get("schema_version") == 3 for study in studies) else 2
+        ),
         "study_id": "configuration:" + str(next(iter(configuration_ids))),
         "metadata": dict(metadata_values[0]),
         "trial_count": len(trials),
