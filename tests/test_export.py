@@ -875,6 +875,43 @@ class ExportTests(unittest.TestCase):
             1,
         )
 
+    def test_current_merge_preserves_legacy_rows_without_protocol_marker(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.write_study(root, "current", self.current_study())
+            output = root / "out.json"
+            output.write_text(
+                json.dumps(
+                    [
+                        {
+                            "id": "legacy-row",
+                            "runId": "legacy-run",
+                            "corpus": "legacy-corpus",
+                            "series": "legacy-series",
+                            "effort": "default",
+                            "configurationId": "legacy-configuration",
+                        }
+                    ]
+                )
+            )
+
+            count = export_studies_for_site(
+                root,
+                output,
+                merge_existing=True,
+                release_manifest=self.release_manifest(),
+                expected_configurations=1,
+            )
+            rows = json.loads(output.read_text())
+
+        self.assertEqual(count, 2)
+        legacy = next(row for row in rows if row["runId"] == "legacy-run")
+        current = next(row for row in rows if row["runId"] == "current-run")
+        self.assertNotIn("protocolComplete", legacy)
+        self.assertTrue(current["protocolComplete"])
+        self.assertEqual(legacy["trial"], 1)
+        self.assertEqual(current["trial"], 1)
+
     def test_current_publication_failures_leave_output_unchanged(self) -> None:
         cases = (
             (

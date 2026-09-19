@@ -342,7 +342,7 @@ def export_studies_for_site(
     for row in rows:
         configuration_id = row["configurationId"]
         corpus_digest = row["corpusDigest"]
-        population_key = (row["protocolComplete"] is True, configuration_id)
+        population_key = (row.get("protocolComplete") is True, configuration_id)
         previous = corpus_by_configuration.setdefault(population_key, corpus_digest)
         if previous != corpus_digest:
             raise ValueError(
@@ -350,7 +350,7 @@ def export_studies_for_site(
             )
 
     configuration_counts = Counter(
-        (row["protocolComplete"] is True, row["configurationId"])
+        (row.get("protocolComplete") is True, row["configurationId"])
         for row in rows
     )
     current_configurations = {
@@ -399,7 +399,7 @@ def export_studies_for_site(
     trial_numbers: Counter[tuple[bool, str]] = Counter()
     for row in rows:
         population_key = (
-            row["protocolComplete"] is True,
+            row.get("protocolComplete") is True,
             row["configurationId"],
         )
         trial_numbers[population_key] += 1

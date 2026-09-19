@@ -2,116 +2,116 @@ schema_version = 2
 
 [[tasks]]
 task_id = "container-native-vs-oci"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "debug-infinite-recursion"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "debug-network-false-lead"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "devshell-tooling-contract"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "fetcher-source-pin"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "fhs-binary-wrapper"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "flake-input-package-selection"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "flake-per-system-outputs"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "home-manager-extra-special-args"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "home-manager-wsl-module-import"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "home-manager-xdg-files"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "issue-report-quality"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "lang-attrsets-normalize"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "module-path-composition"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "module-service-options"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "module-stale-option-migration"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "module-system-boundaries"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "mutable-config-home-manager"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "nushell-command-not-found"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "overlay-module-boundary"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "overlay-override-package"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "package-name-lookup-contract"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "package-python-application"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "package-stdenv-cli"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "purity-wrapper-derivation"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "python-cuda-uv2nix-patch"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "rust-no-network-build"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "string-escaping-systemd"
-state = "calibrating"
+state = "active"
 
 [[tasks]]
 task_id = "xdg-portal-merge"
-state = "calibrating"
+state = "active"

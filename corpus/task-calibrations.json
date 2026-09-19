@@ -2,6 +2,2153 @@
   "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
   "corpus_id": "nixbench-public",
   "corpus_version": "2.0.0",
-  "records": [],
+  "records": [
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "1ab9a14494b83a8f2e170788b43ddea59aff94ead1ba5c750224fb1b390c2715",
+      "task_id": "container-native-vs-oci"
+    },
+    {
+      "author_difficulty": "easy",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "05aa7735ad6649fc118036263ed79d044d8c95141b762ae2024ea873728efb7c",
+      "task_id": "debug-infinite-recursion"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "217b34166b14d8dd3cb4993ec11087db8b3004c9b1267424917687da98c0d350",
+      "task_id": "debug-network-false-lead"
+    },
+    {
+      "author_difficulty": "easy",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 0.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "mixed",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Two configurations passed. The low-effort configuration produced a valid 75/100 observation whose shell hook did not form a newline-safe quoted NIX_CONFIG setting; the experimental-features criterion failed independently under the clarified public contract. No evaluator dispute or accepted alternative remains.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "99049b19677818ddc1228f19bb0715f1a9c82389f012f3498cad60e75b276fa7",
+      "task_id": "devshell-tooling-contract"
+    },
+    {
+      "author_difficulty": "easy",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "e015b1c3fa1d5d24fdb9f6af534cf347bd224f51e0f1dfa114baf287d6e728fd",
+      "task_id": "fetcher-source-pin"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "3a3719d32358768ce73a4ff9f86840eb6dd20b2215cf2977027ee7a6ffe7a48f",
+      "task_id": "fhs-binary-wrapper"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "4c7c509f48d52fa076259444525b7094a9bc8fa4006a8f7e02dfbb0143a6eb94",
+      "task_id": "flake-input-package-selection"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "e78f0c26fe80b2e6485dadfa796c4c7012223654e577d1bdaa66d760c9ea8702",
+      "task_id": "flake-per-system-outputs"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "384bbbedc8418537aec4b9b08bf4089bd405d41b5ff7972d57ab9cc1ec1f875f",
+      "task_id": "home-manager-extra-special-args"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "827d5f6cf815ef3e9712d312ce0389a237d6237969024196309f17947d10a198",
+      "task_id": "home-manager-wsl-module-import"
+    },
+    {
+      "author_difficulty": "easy",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "e4d2a2fcb4d6135947d295c72beef0e819e2df51aac134a6d8c1ae3ff6fd7d7d",
+      "task_id": "home-manager-xdg-files"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "21da7a1b4855743b210b8af6251bad2255213fc89341ed3a68ba6d2f1588f7a6",
+      "task_id": "issue-report-quality"
+    },
+    {
+      "author_difficulty": "easy",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "0d55c56015e3c6d8cf1e38fe4eb7cd2c0097e53cf7b2ae329cdc13a751a707ce",
+      "task_id": "lang-attrsets-normalize"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "fac582b5fd3addf62c204b693c7dd8d480b694d1015522a5dc056385a2073656",
+      "task_id": "module-path-composition"
+    },
+    {
+      "author_difficulty": "hard",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "3d7d6eaa5da637966f32634385f02e5f5f89e8e0380ffe4e579c8ca6c7e4924a",
+      "task_id": "module-service-options"
+    },
+    {
+      "author_difficulty": "easy",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "799afe6170ac95eaf572eb13d1b91f5f70634ff36c631d134982a3ce4d32c29b",
+      "task_id": "module-stale-option-migration"
+    },
+    {
+      "author_difficulty": "hard",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "9bb6f0092e07eb5b4ef0f6b36141dcc2634601ce9418b44b5c98a76f9ef94b7e",
+      "task_id": "module-system-boundaries"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "0c6b26675b752ead8fc693fb52467494bedb1df0e0de3b5179ce2c9bc28f3818",
+      "task_id": "mutable-config-home-manager"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "fa4c48a6db3bffebadf89de4136ffd645c48e7703d8efe4353ebfb13caa35785",
+      "task_id": "nushell-command-not-found"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "2781d1c63a722ee2440dc4166ac2736c4accd01b198000f383b9d22bf0c1d242",
+      "task_id": "overlay-module-boundary"
+    },
+    {
+      "author_difficulty": "hard",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "f3cb7b693cbb2aa003646cea4d96f7f010a172779f5cf83d062df6d808977047",
+      "task_id": "overlay-override-package"
+    },
+    {
+      "author_difficulty": "easy",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "5c737f0dc8b2fe3c944e91cbb21a7d5c836f09eb5e48acf7da601cc052e70f0d",
+      "task_id": "package-name-lookup-contract"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "446882b75ed0df53fbac2061e860510a29154ab8f0665eb370338837b0c2d488",
+      "task_id": "package-python-application"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "25860fd15f8bbd00811efcf526991c30eaead641ab1f8d2e3487d0bfd172f4e9",
+      "task_id": "package-stdenv-cli"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "36b9a3564d0bedb73e52cad2bf9e88bf62a63c69f283369de3e763dbb654ac74",
+      "task_id": "purity-wrapper-derivation"
+    },
+    {
+      "author_difficulty": "hard",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "4ce342450adeb3e199dbe9a0dfcaed9ef56f541902eefdf322d30fbe9a934650",
+      "task_id": "python-cuda-uv2nix-patch"
+    },
+    {
+      "author_difficulty": "hard",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 0.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 0.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 0.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "hard",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "All three configurations produced valid 75/100 observations because each used the malformed synthetic hash sha256-model. The pinned-model criterion failed independently while source preservation, build inputs, and no-network behavior passed; no evaluator dispute or accepted alternative remains.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "3dc60db32cf828c089681a33527b5c814c931e535aec052311e567649819b451",
+      "task_id": "rust-no-network-build"
+    },
+    {
+      "author_difficulty": "medium",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "18941e6db9970d261b300daada92f42d5580c39b621f3bfff0cdf9cb5190d4b5",
+      "task_id": "string-escaping-systemd"
+    },
+    {
+      "author_difficulty": "hard",
+      "configurations": [
+        {
+          "configuration_id": "cfg-2e9dbe23290a1818078960aaea40e3408e210c1fe8dcdd09c8da78841dad6959",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T211537Z-ef29df3f"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e0885149e9f9dc50c418b42824b77b714744033972f1a31757defb42fafce64d"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-2fd53f7f92da4883168fc7ff02d4d378bd04d4c17449bdd1f8a77215ffc33cff",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T203540Z-cb09287b"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "e4f0c69bdcd0cfdd9c8a8ac7962c2593ffb24a50857ab5ada64f9b0067abc862"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        },
+        {
+          "configuration_id": "cfg-684b35d28d40b2e4ca4cb50e130ef490bc0481ce652d9963145262fea3f52af5",
+          "incomplete_attempt_count": 0,
+          "invalid_attempt_count": 0,
+          "invalid_attempt_rate": 0.0,
+          "run_ids": [
+            "20260919T205921Z-410b7ff7"
+          ],
+          "solve_rate": 1.0,
+          "study_artifact_sha256": [
+            "d341ff9e5befad421e2d646a6ee843dbfec8023c0b45990b5cf34bed7e898b39"
+          ],
+          "timeout_rate": 0.0,
+          "valid_observation_count": 1
+        }
+      ],
+      "corpus_digest": "f588fc8d9dcbaadeb8f342d733374ec334433fed05ec44a8c143074d3d6ed5a1",
+      "corpus_id": "nixbench-public",
+      "corpus_version": "2.0.0",
+      "discrimination": {
+        "configuration_count": 3,
+        "estimate": null,
+        "leave_one_task_out_statistic": "sum-normalized-task-scores",
+        "method": "point-biserial-leave-one-task-out",
+        "method_version": "1",
+        "n": 3,
+        "sampling_unit": "valid-task-observation",
+        "unavailable_reason": "insufficient-sample-size"
+      },
+      "empirical_difficulty": "easy",
+      "review": {
+        "accepted_alternatives_status": "reviewed-no-issue",
+        "date": "2026-09-19",
+        "decision": "approve",
+        "evaluator_dispute_status": "reviewed-no-issue",
+        "rationale": "Three materially distinct declared configurations supplied one valid observation each with solve rates [1.0, 1.0, 1.0]. No invalid observations, timeouts, accepted alternatives, or evaluator disputes remain after calibration-discovered contract fixes. Evidence is sufficient for activation but descriptive only; it does not support stable ranking or discrimination claims.",
+        "reviewer": "maintainer-authorized-agent-review"
+      },
+      "task_digest": "b01acce6e49b243fabb22c2e5e1547b28f75058f7a47a20b5a901e825835a077",
+      "task_id": "xdg-portal-merge"
+    }
+  ],
   "schema_version": 1
 }
