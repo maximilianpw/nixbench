@@ -83,23 +83,75 @@ class CorpusIdentityTests(unittest.TestCase):
             task = make_toy_task(root / "tasks")
             external = Path(outside) / "secret"
             external.write_text("secret")
-            os.symlink(external, task.starter_dir / "escape")
+            os.symlink(external, task.reference_dir / "escape")
 
             with self.assertRaisesRegex(
                 ValueError, "symlink target.*escapes corpus root"
             ):
                 identify_corpus(root / "tasks")
 
-    def test_internal_symlink_descriptor_is_hashed_without_following_it(self) -> None:
+    def test_starter_symlink_to_reference_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             write_manifest(root)
             task = make_toy_task(root / "tasks")
-            os.symlink("answer.txt", task.starter_dir / "answer-link")
+            reference = task.reference_dir / "answer.nix"
+            reference.write_text("hidden reference\n")
+            link = task.starter_dir / "answer.nix"
+            os.symlink("../reference/answer.nix", link)
 
-            identity = identify_corpus(root / "tasks")
+            with self.assertRaisesRegex(
+                ValueError,
+                rf"editable candidate content.*outside its editable tree.*{link.name}",
+            ):
+                identify_corpus(root / "tasks")
 
-            self.assertEqual(identity.task_count, 1)
+    def test_starter_symlink_to_evaluator_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            write_manifest(root)
+            task = make_toy_task(root / "tasks")
+            link = task.starter_dir / "check.sh"
+            os.symlink("../tests/check.sh", link)
+
+            with self.assertRaisesRegex(
+                ValueError,
+                rf"editable candidate content.*outside its editable tree.*{link.name}",
+            ):
+                identify_corpus(root / "tasks")
+
+    def test_contract_candidate_symlink_to_neighbor_case_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            write_manifest(root)
+            task = make_toy_task(root / "tasks")
+            contracts = root / "contracts" / task.id
+            neighbor = contracts / "neighbor" / "secret.txt"
+            neighbor.parent.mkdir(parents=True)
+            neighbor.write_text("hidden neighboring fixture\n")
+            candidate = contracts / "leaky" / "candidate"
+            candidate.mkdir(parents=True)
+            link = candidate / "answer.txt"
+            os.symlink("../../neighbor/secret.txt", link)
+
+            with self.assertRaisesRegex(
+                ValueError,
+                rf"editable candidate content.*outside its editable tree.*{link.name}",
+            ):
+                identify_corpus(root / "tasks")
+
+    def test_symlink_inside_editable_tree_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            write_manifest(root)
+            task = make_toy_task(root / "tasks")
+            link = task.starter_dir / "answer-link"
+            os.symlink("answer.txt", link)
+
+            with self.assertRaisesRegex(
+                ValueError, rf"editable candidate content must not be a symlink.*{link.name}"
+            ):
+                identify_corpus(root / "tasks")
 
     def test_nested_directory_symlink_outside_corpus_is_rejected(self) -> None:
         with (
@@ -112,7 +164,7 @@ class CorpusIdentityTests(unittest.TestCase):
             external = Path(outside) / "directory"
             external.mkdir()
             (external / "secret").write_text("secret")
-            os.symlink(external, task.starter_dir / "nested")
+            os.symlink(external, task.reference_dir / "nested")
 
             with self.assertRaisesRegex(ValueError, "symlink target.*escapes"):
                 identify_corpus(root / "tasks")

@@ -84,7 +84,10 @@ def identify_corpus(
         if task_contracts.exists() or task_contracts.is_symlink():
             task_entries.extend(
                 _tree_entries(
-                    task_contracts, corpus_root, prefix=Path("contracts") / task.id
+                    task_contracts,
+                    corpus_root,
+                    prefix=Path("contracts") / task.id,
+                    editable_roots=_contract_candidate_roots(task_contracts),
                 )
             )
         task_entries.sort(key=lambda entry: entry[0])
@@ -180,24 +183,46 @@ def _task_entries(
     task_prefix = task.root.relative_to(corpus_root)
     for name in ("metadata.toml", "prompt.md"):
         yield _path_entry(task.root / name, corpus_root, task_prefix / name)
-    for name in ("starter", "reference", "tests"):
+    starter_root = task.root / "starter"
+    yield from _tree_entries(
+        starter_root,
+        corpus_root,
+        prefix=task_prefix / "starter",
+        editable_roots=(starter_root,),
+    )
+    for name in ("reference", "tests"):
         yield from _tree_entries(
             task.root / name, corpus_root, prefix=task_prefix / name
         )
 
 
 def _tree_entries(
-    root: Path, corpus_root: Path, *, prefix: Path
+    root: Path,
+    corpus_root: Path,
+    *,
+    prefix: Path,
+    editable_roots: tuple[Path, ...] = (),
 ) -> Iterable[tuple[str, str, bool, bytes]]:
     if root.is_symlink():
-        yield _path_entry(root, corpus_root, prefix)
+        yield _path_entry(
+            root,
+            corpus_root,
+            prefix,
+            editable=_is_within_editable_tree(root, editable_roots),
+        )
         return
     resolved_root = _require_directory_root(root, corpus_root, "corpus content root")
-    yield from _walk_directory(resolved_root, corpus_root, prefix)
+    yield from _walk_directory(
+        resolved_root, corpus_root, prefix, editable_roots=editable_roots
+    )
 
 
 def _walk_directory(
-    directory: Path, corpus_root: Path, prefix: Path
+    directory: Path,
+    corpus_root: Path,
+    prefix: Path,
+    *,
+    editable_roots: tuple[Path, ...],
 ) -> Iterable[tuple[str, str, bool, bytes]]:
     try:
         entries = sorted(os.scandir(directory), key=lambda entry: entry.name)
@@ -211,17 +236,27 @@ def _walk_directory(
         except OSError as exc:
             raise ValueError(f"cannot inspect corpus path {path}: {exc}") from exc
         if stat.S_ISLNK(metadata.st_mode) or stat.S_ISREG(metadata.st_mode):
-            yield _path_entry(path, corpus_root, relative)
+            yield _path_entry(
+                path,
+                corpus_root,
+                relative,
+                editable=_is_within_editable_tree(path, editable_roots),
+            )
         elif stat.S_ISDIR(metadata.st_mode):
             resolved = path.resolve()
             _require_within(resolved, corpus_root, f"directory {path}")
-            yield from _walk_directory(resolved, corpus_root, relative)
+            yield from _walk_directory(
+                resolved,
+                corpus_root,
+                relative,
+                editable_roots=editable_roots,
+            )
         else:
             raise ValueError(f"unsupported corpus file kind: {path}")
 
 
 def _path_entry(
-    path: Path, corpus_root: Path, relative: Path
+    path: Path, corpus_root: Path, relative: Path, *, editable: bool = False
 ) -> tuple[str, str, bool, bytes]:
     try:
         metadata = path.lstat()
@@ -229,6 +264,11 @@ def _path_entry(
         raise ValueError(f"cannot inspect corpus path {path}: {exc}") from exc
     executable = bool(metadata.st_mode & 0o111)
     if stat.S_ISLNK(metadata.st_mode):
+        if editable:
+            raise ValueError(
+                "editable candidate content must not be a symlink and cannot "
+                f"reference files outside its editable tree: {path}"
+            )
         target = os.readlink(path)
         resolved_target = (path.parent / target).resolve(strict=False)
         _require_within(resolved_target, corpus_root, f"symlink target for {path}")
@@ -241,6 +281,28 @@ def _path_entry(
     except OSError as exc:
         raise ValueError(f"cannot read corpus file {path}: {exc}") from exc
     return relative.as_posix(), "regular", executable, payload
+
+
+def _contract_candidate_roots(task_contracts: Path) -> tuple[Path, ...]:
+    if task_contracts.is_symlink():
+        return ()
+    try:
+        cases = tuple(task_contracts.iterdir())
+    except OSError as exc:
+        raise ValueError(
+            f"cannot inspect contracts directory {task_contracts}: {exc}"
+        ) from exc
+    return tuple(case / "candidate" for case in cases)
+
+
+def _is_within_editable_tree(path: Path, editable_roots: tuple[Path, ...]) -> bool:
+    for editable_root in editable_roots:
+        try:
+            path.relative_to(editable_root)
+        except ValueError:
+            continue
+        return True
+    return False
 
 
 def _require_within(path: Path, root: Path, label: str) -> None:

@@ -53,7 +53,7 @@ lowercase slugs, points are positive and sum exactly to `max_score`, and every
 public prompt requirement maps to a required criterion. See
 [scoring.md](scoring.md) for failure classes and compatibility rules.
 
-The corpus manifest lives beside `tasks/` in `corpus.toml`. `python3 bench.py corpus-id --json` computes a SHA-256 digest over the manifest identity fields and all benchmark-owned task content. Paths, file kinds, executable bits, symlink descriptors, and byte lengths are part of the canonical stream. Symlinks may not escape the corpus root.
+The corpus manifest lives beside `tasks/` in `corpus.toml`. `python3 bench.py corpus-id --json` computes a SHA-256 digest over the manifest identity fields and all benchmark-owned task content. Paths, file kinds, executable bits, symlink descriptors, and byte lengths are part of the canonical stream. Corpus identity loading rejects every symlink inside editable `tasks/<task-id>/starter/` and `contracts/<task-id>/<case-id>/candidate/` trees, including links whose targets remain in the same editable tree. Symlinks in trusted reference and evaluator content remain supported when their targets stay inside the corpus root.
 
 Changing task metadata, a prompt, starter, reference, evaluator, rubric, or contract fixture changes the corpus digest. A semantic change may also require a corpus version bump. Git revision is recorded separately as provenance and does not define corpus identity.
 
