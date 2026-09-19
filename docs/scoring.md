@@ -35,6 +35,20 @@ An evaluator exits `0` only when every required criterion passes. Exit `1`
 rejects the candidate and may retain partial credit. A disagreement between
 the exit code and required criteria makes the measurement invalid.
 
+Criterion booleans are independent measurement outputs, not a post-hoc split
+of one binary result. Evaluators guard nested lookups and localize candidate
+evaluation so an absent field in one dimension does not zero unrelated
+dimensions. Only a whole-candidate syntax or import failure may legitimately
+use an all-false rejection fallback.
+
+Evaluator contract schema 3 records the exact expected criterion vector for
+every fixture. Release health runs each fixture repeatedly, compares the whole
+actual vector, verifies the named rejecting criterion is false, requires a
+targeted negative for every required criterion, checks candidate-digest
+independence, and rejects evaluator error logs or nondeterministic vectors.
+Historical trials remain bound to their original corpus digest and are never
+rescored with the hardened boundary.
+
 ## Measurement validity and task outcome
 
 `measurement_status` records whether the run measured the candidate:

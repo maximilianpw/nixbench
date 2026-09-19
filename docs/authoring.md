@@ -34,23 +34,44 @@ runtime below 80 percent of the task timeout, a release note, and a checked
 release manifest. Follow the calibration and lifecycle rules in
 [benchmark-governance.md](benchmark-governance.md).
 
-Each case uses contract schema 2 and names the rubric criterion it exercises:
+Each case uses contract schema 3, names the rubric criterion it exercises,
+and declares the complete expected criterion vector:
 
 ```toml
-schema_version = 2
+schema_version = 3
 task_id = "package-stdenv-cli"
 outcome = "reject"
 criterion_id = "install-contract"
 description = "The install command is present only in a comment."
+
+[expected_criteria]
+package-source = true
+build-contract = true
+install-contract = false
+package-metadata = true
 ```
 
-Keep at least one case for every required criterion. A rejecting case leaves
-its named criterion false. A passing case leaves it true.
+Every required criterion needs its own targeted rejecting case; a criterion
+label on a passing fixture is not negative coverage. A passing case expects all
+criteria true. A rejecting case expects its named criterion false and should
+keep unrelated criteria true. If one plausible mutation necessarily causes
+additional failures, list every such criterion and a reason in
+`[coupled_failures]`. The loader rejects missing or unknown vector keys,
+undocumented coupling, and a rejecting case whose named criterion is expected
+true.
+
+Candidate digests are part of the boundary inventory. Do not present the same
+rejecting candidate as independent evidence for multiple criteria unless the
+cases intentionally vary evaluator inputs and each manifest records a
+`duplicate_candidate_reason`. Every task also keeps at least one passing
+alternative whose materialized candidate differs from the reference.
 
 Evaluators initialize every outcome to false and write the schema-2 score file
-atomically. Evaluate criteria independently where possible so one missing
-attribute does not erase credit for unrelated requirements. Candidate syntax
-or evaluation failures exit `1` with a valid payload. Reserve exit codes `2`
+atomically. Make each criterion total: guard nested attribute access and keep
+candidate-dependent evaluation inside that criterion's boundary so one missing
+field does not erase unrelated credit. An ordinary whole-candidate syntax or
+import failure may exit `1` with an all-false valid payload, but an isolated
+missing field must not collapse the complete vector. Reserve exit codes `2`
 and greater for evaluator implementation or infrastructure failures.
 
 Hidden cases may vary inputs and expose edge conditions. Hidden evaluators may not require an undocumented representation when common semantic alternatives exist.

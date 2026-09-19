@@ -237,16 +237,16 @@ cached report.
 
 ## Done criteria
 
-- [ ] Zero required criteria lack a targeted rejecting fixture.
-- [ ] All contract cases declare complete expected criterion vectors.
-- [ ] Unit tests, corpus-health, and release-check share one contract executor.
-- [ ] The 16 confirmed evaluator-error fixtures no longer emit evaluator errors.
-- [ ] Unrelated criteria retain credit for isolated defects.
-- [ ] Reference solutions all earn full score.
-- [ ] Starters all reject with valid measurements.
-- [ ] Corpus version, release note, and checked manifest honestly record the contract change.
-- [ ] Full test suite and release check pass.
-- [ ] `plans/README.md` status row is updated.
+- [x] Zero required criteria lack a targeted rejecting fixture.
+- [x] All contract cases declare complete expected criterion vectors.
+- [x] Unit tests, corpus-health, and release-check share one contract executor.
+- [x] The 16 confirmed evaluator-error fixtures no longer emit evaluator errors.
+- [x] Unrelated criteria retain credit for isolated defects.
+- [x] Reference solutions all earn full score.
+- [x] Starters all reject with valid measurements.
+- [x] Corpus version, release note, and checked manifest honestly record the contract change.
+- [x] Full test suite and release check pass.
+- [x] `plans/README.md` status row is updated.
 
 ## STOP conditions
 
