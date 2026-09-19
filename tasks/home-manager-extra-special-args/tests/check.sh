@@ -4,9 +4,14 @@ set -eu
 workdir=${1:-$PWD}
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
+command -v nix >/dev/null 2>&1 || exit 2
+command -v python3 >/dev/null 2>&1 || exit 2
 
 cat > "$tmpdir/test.nix" <<EOF
 let
+  passes = value:
+    let attempt = builtins.tryEval (builtins.deepSeq value value);
+    in attempt.success && attempt.value == true;
   flake = import ${workdir}/flake.nix;
   hmModule = { module = "home-manager-nixos-module"; marker = 113; };
   fakeInputs = {
@@ -33,24 +38,35 @@ let
         cfg.modules);
   hmCfg = hmInline.home-manager;
   alice = hmCfg.users.alice { inputs = fakeInputs; };
-in
-assert cfg.system == "x86_64-linux";
-assert cfg.specialArgs.inputs.nixvim.homeManagerModules.nixvim == fakeInputs.nixvim.homeManagerModules.nixvim;
-assert cfg.specialArgs.inputs.agenix.homeManagerModules.default == fakeInputs.agenix.homeManagerModules.default;
-assert cfg.specialArgs.inputs.benchmarkSentinel == fakeInputs.benchmarkSentinel;
-assert builtins.elem hmModule cfg.modules;
-assert hmCfg.useGlobalPkgs == true;
-assert hmCfg.useUserPackages == true;
-assert hmCfg.extraSpecialArgs.inputs.nixvim.homeManagerModules.nixvim == fakeInputs.nixvim.homeManagerModules.nixvim;
-assert hmCfg.extraSpecialArgs.inputs.agenix.homeManagerModules.default == fakeInputs.agenix.homeManagerModules.default;
-assert hmCfg.extraSpecialArgs.inputs.benchmarkSentinel == fakeInputs.benchmarkSentinel;
-assert builtins.isFunction hmCfg.users.alice;
-assert alice.imports == [
-  fakeInputs.nixvim.homeManagerModules.nixvim
-  fakeInputs.agenix.homeManagerModules.default
-];
-assert alice.programs.git.enable == true;
-"ok"
+in {
+  schema_version = 2;
+  criteria = {
+    "nixos-system" = passes (cfg.system == "x86_64-linux");
+    "module-integration" = passes (
+      builtins.elem hmModule cfg.modules
+      && hmCfg.useGlobalPkgs == true && hmCfg.useUserPackages == true
+      && builtins.isFunction hmCfg.users.alice
+    );
+    "forwards-inputs" = passes (
+      cfg.specialArgs.inputs.nixvim.homeManagerModules.nixvim == fakeInputs.nixvim.homeManagerModules.nixvim
+      && cfg.specialArgs.inputs.agenix.homeManagerModules.default == fakeInputs.agenix.homeManagerModules.default
+      && cfg.specialArgs.inputs.benchmarkSentinel == fakeInputs.benchmarkSentinel
+      && hmCfg.extraSpecialArgs.inputs.nixvim.homeManagerModules.nixvim == fakeInputs.nixvim.homeManagerModules.nixvim
+      && hmCfg.extraSpecialArgs.inputs.agenix.homeManagerModules.default == fakeInputs.agenix.homeManagerModules.default
+      && hmCfg.extraSpecialArgs.inputs.benchmarkSentinel == fakeInputs.benchmarkSentinel
+    );
+    "user-imports" = passes (
+      alice.imports == [ fakeInputs.nixvim.homeManagerModules.nixvim fakeInputs.agenix.homeManagerModules.default ]
+      && alice.programs.git.enable == true
+    );
+  };
+  notes = [];
+}
 EOF
 
-nix eval --json --file "$tmpdir/test.nix" >/dev/null
+score_tmp="$NIXBENCH_SCORE_FILE.tmp.$$"
+if ! nix eval --json --file "$tmpdir/test.nix" >"$score_tmp"; then
+  printf '%s\n' '{"schema_version":2,"criteria":{"nixos-system":false,"module-integration":false,"forwards-inputs":false,"user-imports":false},"notes":[]}' >"$score_tmp"
+fi
+mv "$score_tmp" "$NIXBENCH_SCORE_FILE"
+python3 "$NIXBENCH_EVALUATOR_EXIT" "$NIXBENCH_TASK_DIR/metadata.toml" "$NIXBENCH_SCORE_FILE"

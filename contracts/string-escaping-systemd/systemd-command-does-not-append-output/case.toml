@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "string-escaping-systemd"
+outcome = "reject"
+criterion_id = "safe-append-and-purity"
+description = "Systemd command does not append output"

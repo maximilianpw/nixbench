@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "fetcher-source-pin"
+outcome = "pass"
+criterion_id = "fetch-options"
+description = "The reordered source declaration preserves the required fetcher options."

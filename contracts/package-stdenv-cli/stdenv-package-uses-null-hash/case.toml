@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "package-stdenv-cli"
+outcome = "reject"
+criterion_id = "package-source"
+description = "Stdenv package uses null hash"

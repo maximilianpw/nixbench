@@ -4,9 +4,14 @@ set -eu
 workdir=${1:-$PWD}
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
+command -v nix >/dev/null 2>&1 || exit 2
+command -v python3 >/dev/null 2>&1 || exit 2
 
 cat > "$tmpdir/test.nix" <<EOF
 let
+  passes = value:
+    let attempt = builtins.tryEval (builtins.deepSeq value value);
+    in attempt.success && attempt.value == true;
   merge = left: right:
     if builtins.isAttrs left && builtins.isAttrs right then
       builtins.mapAttrs
@@ -45,17 +50,30 @@ let
       (builtins.split "\n" nuConfig)
   );
   disabledNuConfig = withoutNushell.programs.nushell.extraConfig or {};
-in
-assert builtins.match ".*command-not-found[.]sh.*" enabled.programs.bash.interactiveShellInit != null;
-assert builtins.match ".*command-not-found[.]sh.*" withoutNushell.programs.bash.interactiveShellInit != null;
-assert builtins.elem pkgs.nix-index enabled.environment.systemPackages;
-assert builtins.isString nuConfig;
-assert builtins.match "(.|\n)*(upsert[[:space:]]+hooks[.]command_not_found|hooks[.]command_not_found[[:space:]]*=)(.|\n)*(append|/nix/store/nix-index/bin/command-not-found)(.|\n)*" nuCode != null;
-assert builtins.match "(.|\n)*/nix/store/nix-index/bin/command-not-found[[:space:]]+[$]?[A-Za-z_][A-Za-z0-9_]*(.|\n)*" nuCode != null;
-assert builtins.match "(.|\n)*hooks[.]command_not_found[[:space:]]*=[[:space:]]*\[[[:space:]]*\](.|\n)*" nuCode == null;
-assert disabledNuConfig == {};
-assert disabled == {};
-"ok"
+in {
+  schema_version = 2;
+  criteria = {
+    "preserve-bash" = passes (
+      builtins.match ".*command-not-found[.]sh.*" enabled.programs.bash.interactiveShellInit != null
+      && builtins.match ".*command-not-found[.]sh.*" withoutNushell.programs.bash.interactiveShellInit != null
+    );
+    "package-installed" = passes (builtins.elem pkgs.nix-index enabled.environment.systemPackages);
+    "gated-nushell-hook" = passes (
+      builtins.isString nuConfig && disabledNuConfig == {} && disabled == {}
+    );
+    "command-not-found-call" = passes (
+      builtins.match "(.|\n)*(upsert[[:space:]]+hooks[.]command_not_found|hooks[.]command_not_found[[:space:]]*=)(.|\n)*(append|/nix/store/nix-index/bin/command-not-found)(.|\n)*" nuCode != null
+      && builtins.match "(.|\n)*/nix/store/nix-index/bin/command-not-found[[:space:]]+[$]?[A-Za-z_][A-Za-z0-9_]*(.|\n)*" nuCode != null
+      && builtins.match "(.|\n)*hooks[.]command_not_found[[:space:]]*=[[:space:]]*\[[[:space:]]*\](.|\n)*" nuCode == null
+    );
+  };
+  notes = [];
+}
 EOF
 
-nix eval --json --file "$tmpdir/test.nix" >/dev/null
+score_tmp="$NIXBENCH_SCORE_FILE.tmp.$$"
+if ! nix eval --json --file "$tmpdir/test.nix" >"$score_tmp"; then
+  printf '%s\n' '{"schema_version":2,"criteria":{"preserve-bash":false,"package-installed":false,"gated-nushell-hook":false,"command-not-found-call":false},"notes":[]}' >"$score_tmp"
+fi
+mv "$score_tmp" "$NIXBENCH_SCORE_FILE"
+python3 "$NIXBENCH_EVALUATOR_EXIT" "$NIXBENCH_TASK_DIR/metadata.toml" "$NIXBENCH_SCORE_FILE"

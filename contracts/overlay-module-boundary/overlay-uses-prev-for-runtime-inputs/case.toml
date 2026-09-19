@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "overlay-module-boundary"
+outcome = "reject"
+criterion_id = "overlay-package"
+description = "Overlay uses prev for runtime inputs"

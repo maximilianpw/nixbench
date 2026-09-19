@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "python-cuda-uv2nix-patch"
+outcome = "reject"
+criterion_id = "python-inputs"
+description = "Cuda package hard codes a dependency name"

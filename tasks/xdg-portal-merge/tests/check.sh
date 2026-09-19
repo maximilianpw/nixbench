@@ -4,9 +4,14 @@ set -eu
 workdir=${1:-$PWD}
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
+command -v nix >/dev/null 2>&1 || exit 2
+command -v python3 >/dev/null 2>&1 || exit 2
 
 cat > "$tmpdir/test.nix" <<EOF
 let
+  passes = value:
+    let attempt = builtins.tryEval (builtins.deepSeq value value);
+    in attempt.success && attempt.value == true;
   lib.mkIf = condition: content: {
     __mkIf = condition;
     inherit content;
@@ -37,20 +42,34 @@ let
   commonDefaults = portal.content.config.common.default or [];
   hyprlandDefaults = portal.content.config.hyprland.default or [];
   mergedPortals = existingPortals ++ portal.content.extraPortals;
-  mergedConfigPackages = existingConfigPackages ++ portal.content.configPackages;
+  mergedConfigPackages = existingConfigPackages ++ (portal.content.configPackages or []);
   mergedDefaults = existingDefaults ++ commonDefaults ++ hyprlandDefaults;
-in
-assert portal.__mkIf == true;
-assert disabledPortal.__mkIf == false;
-assert portal.content.enable == true;
-assert builtins.elem pkgs.xdg-desktop-portal-hyprland mergedPortals;
-assert builtins.elem "/nix/store/existing-cosmic-portal" mergedPortals;
-assert builtins.elem "/nix/store/existing-gtk-portal" mergedPortals;
-assert builtins.elem pkgs.xdg-desktop-portal-hyprland mergedConfigPackages;
-assert builtins.elem "/nix/store/existing-cosmic-session" mergedConfigPackages;
-assert builtins.elem "hyprland" mergedDefaults;
-assert builtins.any (fallback: fallback != "hyprland") mergedDefaults;
-"ok"
+in {
+  schema_version = 2;
+  criteria = {
+    "conditional-enable" = passes (
+      portal.__mkIf == true && disabledPortal.__mkIf == false && portal.content.enable == true
+    );
+    "portal-package-merge" = passes (
+      builtins.elem pkgs.xdg-desktop-portal-hyprland mergedPortals
+      && builtins.elem "/nix/store/existing-cosmic-portal" mergedPortals
+      && builtins.elem "/nix/store/existing-gtk-portal" mergedPortals
+    );
+    "config-package-preservation" = passes (
+      builtins.elem "/nix/store/existing-cosmic-session" mergedConfigPackages
+    );
+    "fallback-merge" = passes (
+      builtins.elem "hyprland" mergedDefaults
+      && builtins.any (fallback: fallback != "hyprland") mergedDefaults
+    );
+  };
+  notes = [];
+}
 EOF
 
-nix eval --json --file "$tmpdir/test.nix" >/dev/null
+score_tmp="$NIXBENCH_SCORE_FILE.tmp.$$"
+if ! nix eval --json --file "$tmpdir/test.nix" >"$score_tmp"; then
+  printf '%s\n' '{"schema_version":2,"criteria":{"conditional-enable":false,"portal-package-merge":false,"config-package-preservation":false,"fallback-merge":false},"notes":[]}' >"$score_tmp"
+fi
+mv "$score_tmp" "$NIXBENCH_SCORE_FILE"
+python3 "$NIXBENCH_EVALUATOR_EXIT" "$NIXBENCH_TASK_DIR/metadata.toml" "$NIXBENCH_SCORE_FILE"

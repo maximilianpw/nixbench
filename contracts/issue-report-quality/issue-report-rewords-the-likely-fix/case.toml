@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "issue-report-quality"
+outcome = "pass"
+criterion_id = "bounded-analysis"
+description = "Issue report rewords the likely fix"

@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "service-shape"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "bash-package"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "runtime-variables"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "safe-append-and-purity"
+points = 25
+required = true
+failure_class = "impurity"

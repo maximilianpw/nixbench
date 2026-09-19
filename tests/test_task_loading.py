@@ -38,6 +38,7 @@ class TaskLoadingTests(unittest.TestCase):
             "id-uppercase": {"id": "Toy"},
             "empty-name": {"name": ""},
             "empty-category": {"category": ""},
+            "unknown-category": {"category": "toy"},
             "unknown-difficulty": {"difficulty": "expert"},
             "zero-timeout": {"timeout_seconds": 0},
             "fractional-timeout": {"timeout_seconds": 1.5},
@@ -58,6 +59,99 @@ class TaskLoadingTests(unittest.TestCase):
         for label, overrides in cases.items():
             with self.subTest(case=label), tempfile.TemporaryDirectory() as temp:
                 task_dir = make_task(Path(temp), overrides=overrides)
+
+                with self.assertRaises(TaskError):
+                    load_task(task_dir)
+
+    def test_loads_structured_scoring_criteria(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            task_dir = make_task(Path(temp))
+            with (task_dir / "metadata.toml").open("a") as handle:
+                handle.write(
+                    """
+[[criteria]]
+id = "evaluates"
+points = 70
+required = true
+failure_class = "evaluation"
+
+[[criteria]]
+id = "formatting"
+points = 30
+required = false
+failure_class = "formatting"
+"""
+                )
+
+            task = load_task(task_dir)
+
+            self.assertEqual(task.scoring_schema, "criteria-v2")
+            self.assertEqual(
+                [criterion.id for criterion in task.criteria],
+                ["evaluates", "formatting"],
+            )
+            self.assertEqual(sum(criterion.points for criterion in task.criteria), 100)
+
+    def test_rejects_invalid_scoring_criteria(self) -> None:
+        cases = {
+            "duplicate": """
+[[criteria]]
+id = "same"
+points = 50
+required = true
+failure_class = "evaluation"
+[[criteria]]
+id = "same"
+points = 50
+required = true
+failure_class = "wrong-value"
+""",
+            "unknown-class": """
+[[criteria]]
+id = "evaluates"
+points = 100
+required = true
+failure_class = "subjective"
+""",
+            "point-sum": """
+[[criteria]]
+id = "evaluates"
+points = 99
+required = true
+failure_class = "evaluation"
+""",
+            "non-finite": """
+[[criteria]]
+id = "evaluates"
+points = nan
+required = true
+failure_class = "evaluation"
+""",
+            "malformed-required": """
+[[criteria]]
+id = "evaluates"
+points = 100
+required = "yes"
+failure_class = "evaluation"
+""",
+            "optional-functional": """
+[[criteria]]
+id = "evaluates"
+points = 70
+required = true
+failure_class = "evaluation"
+[[criteria]]
+id = "correct-value"
+points = 30
+required = false
+failure_class = "wrong-value"
+""",
+        }
+        for label, criteria in cases.items():
+            with self.subTest(case=label), tempfile.TemporaryDirectory() as temp:
+                task_dir = make_task(Path(temp))
+                with (task_dir / "metadata.toml").open("a") as handle:
+                    handle.write(criteria)
 
                 with self.assertRaises(TaskError):
                     load_task(task_dir)
@@ -128,7 +222,7 @@ def make_task(
     metadata: dict[str, object] = {
         "id": "toy",
         "name": "Toy Task",
-        "category": "toy",
+        "category": "packages",
         "difficulty": "easy",
         "timeout_seconds": 5,
         "max_score": 100,

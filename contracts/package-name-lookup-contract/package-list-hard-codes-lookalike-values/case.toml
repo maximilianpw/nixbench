@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "package-name-lookup-contract"
+outcome = "reject"
+criterion_id = "exact-package-set"
+description = "Package list hard codes lookalike values"

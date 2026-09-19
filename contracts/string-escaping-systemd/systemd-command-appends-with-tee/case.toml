@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "string-escaping-systemd"
+outcome = "pass"
+criterion_id = "runtime-variables"
+description = "Systemd command appends with tee"

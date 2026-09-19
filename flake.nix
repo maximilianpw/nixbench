@@ -42,6 +42,7 @@
           nativeBuildInputs = [
             pkgs.python3
             pkgs.nix
+            pkgs.bubblewrap
           ];
         } ''
           cd ${self}
@@ -65,6 +66,7 @@
           pkgs.statix
           pkgs.deadnix
           pkgs.nil
+          pkgs.bubblewrap
         ];
       };
     });

@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "package-name-lookup-contract"
+outcome = "pass"
+criterion_id = "nix-tools"
+description = "The alternate package ordering includes all required Nix tools."

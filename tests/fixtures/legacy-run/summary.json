@@ -1,0 +1,27 @@
+{
+  "run_id": "legacy-run",
+  "passed": 1,
+  "failed": 0,
+  "score": 100,
+  "max_score": 100,
+  "tasks": [
+    {
+      "task_id": "legacy-task",
+      "name": "Legacy task",
+      "category": "packages",
+      "difficulty": "medium",
+      "solution_mode": "agent",
+      "passed": true,
+      "score": 100,
+      "max_score": 100,
+      "agent": {
+        "duration_seconds": 3.0,
+        "timed_out": false
+      },
+      "check": {
+        "duration_seconds": 0.2,
+        "timed_out": false
+      }
+    }
+  ]
+}

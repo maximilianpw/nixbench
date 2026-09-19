@@ -17,6 +17,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+from .adapters import get_trusted_adapter
+from .agent_status import read_agent_status
+from .scoring import Criterion, score_schema_two_payload
 from .task import Task
 
 SolutionMode = Literal["agent", "starter", "reference"]
@@ -51,6 +54,15 @@ class TaskRunResult:
     check: CommandResult
     score_valid: bool
     score_detail: dict[str, Any] | None
+    measurement_status: str
+    task_outcome: str | None
+    invalid_reason: str | None
+    scoring_schema: str
+    criteria: dict[str, bool]
+    failure_classes: list[str]
+    infrastructure_events: list[str]
+    completion_attestation: str
+    agent_status: dict[str, Any] | None
 
     def to_json(self) -> dict[str, Any]:
         data = asdict(self)
@@ -91,6 +103,12 @@ def run_task(
     agent_timeout_seconds: int = 300,
     keep_workdir: bool = False,
     extra_env: dict[str, str] | None = None,
+    completion_attestation: Literal["required", "unattested"] = "unattested",
+    agent_adapter: str | None = None,
+    wrapper_prompt_path: Path | None = None,
+    isolation_profile: str | None = None,
+    network_policy: str | None = None,
+    corpus_root: Path | None = None,
 ) -> TaskRunResult:
     if solution_mode == "agent" and not agent_cmd:
         raise ValueError("agent solution mode requires --agent-cmd")
@@ -98,7 +116,14 @@ def run_task(
     result_dir = results_dir / run_id / task.id
     result_dir.mkdir(parents=True, exist_ok=True)
 
-    temp_parent = Path(tempfile.mkdtemp(prefix=f"nixbench-{task.id}-"))
+    isolated_run = solution_mode == "agent" and isolation_profile is not None
+    temp_prefix = "nixbench-isolated-" if isolated_run else f"nixbench-{task.id}-"
+    temp_parent = Path(
+        tempfile.mkdtemp(
+            prefix=temp_prefix,
+            dir="/tmp" if isolated_run else None,
+        )
+    )
     workdir = temp_parent / "work"
     original_dir = temp_parent / "original"
 
@@ -111,46 +136,190 @@ def run_task(
         _copy_overlay(task.reference_dir, workdir)
 
     score_file = (result_dir / "score.json").resolve()
+    attestation_dir = Path(tempfile.mkdtemp(prefix="nixbench-attestation-"))
+    agent_status_file = attestation_dir / "status.json"
     agent_env, evaluator_env = _build_command_envs(
         task=task,
         workdir=workdir,
         score_file=score_file,
+        agent_status_file=(
+            agent_status_file
+            if completion_attestation == "required" and agent_adapter is not None
+            else None
+        ),
         extra_env=extra_env,
     )
 
     agent_result: CommandResult | None = None
+    parsed_agent_status = None
+    agent_status_error: str | None = None
     if solution_mode == "agent":
-        agent_result = _run_shell_command(
-            agent_cmd or "",
-            cwd=workdir,
-            env=agent_env,
-            timeout_seconds=agent_timeout_seconds,
-            log_path=result_dir / "agent.log",
-        )
+        if agent_adapter is None:
+            agent_result = _run_shell_command(
+                agent_cmd or "",
+                cwd=workdir,
+                env=agent_env,
+                timeout_seconds=agent_timeout_seconds,
+                log_path=result_dir / "agent.log",
+            )
+        else:
+            adapter = get_trusted_adapter(agent_adapter)
+            adapter_options: dict[str, Any] = {}
+            if adapter.isolation_profile is not None:
+                if isolation_profile != adapter.isolation_profile:
+                    raise ValueError(
+                        "trusted isolation adapter does not match the resolved protocol"
+                    )
+                adapter_options = {
+                    "workspace": workdir,
+                    "network_policy": network_policy,
+                }
+            agent_result = _run_exec_command(
+                adapter.command(
+                    agent_cmd or "",
+                    wrapper_prompt_path=wrapper_prompt_path,
+                    **adapter_options,
+                ),
+                cwd=workdir,
+                env=agent_env,
+                timeout_seconds=agent_timeout_seconds,
+                log_path=result_dir / "agent.log",
+            )
+        if completion_attestation == "required":
+            parsed_agent_status, agent_status_error = read_agent_status(agent_status_file)
+        agent_status_file.unlink(missing_ok=True)
+        shutil.rmtree(attestation_dir, ignore_errors=True)
+    else:
+        shutil.rmtree(attestation_dir, ignore_errors=True)
 
     score_file.unlink(missing_ok=True)
 
-    check_result = _run_exec_command(
-        ["/bin/sh", str(task.evaluator_path), str(workdir)],
-        cwd=workdir,
-        env=evaluator_env,
-        timeout_seconds=task.timeout_seconds,
-        log_path=result_dir / "check.log",
+    workspace_escape = (
+        solution_mode == "agent"
+        and isolation_profile is not None
+        and _workspace_symlink_escapes(workdir)
     )
+    if workspace_escape:
+        check_log = result_dir / "check.log"
+        check_log.write_text(
+            "Evaluator not run because the workspace contains an escaping symlink.\n",
+            encoding="utf-8",
+        )
+        check_result = CommandResult(
+            command="evaluator not run: workspace-escape",
+            returncode=2,
+            duration_seconds=0.0,
+            timed_out=False,
+            log_path=str(check_log),
+        )
+    else:
+        check_result = _run_exec_command(
+            ["/bin/sh", str(task.evaluator_path), str(workdir)],
+            cwd=workdir,
+            env=evaluator_env,
+            timeout_seconds=task.timeout_seconds,
+            log_path=result_dir / "check.log",
+        )
 
     diff_path = result_dir / "diff.patch"
     _write_unified_dir_diff(original_dir, workdir, diff_path)
 
     agent_timed_out = agent_result.timed_out if agent_result is not None else False
     check_passed = check_result.returncode == 0 and not check_result.timed_out
-    passed = check_passed and not agent_timed_out
+    default_passed = check_passed and not agent_timed_out
     score, score_detail, score_is_valid = _read_score(
         score_file,
-        default_score=task.max_score if passed else 0.0,
+        default_score=task.max_score if default_passed else 0.0,
         max_score=task.max_score,
+        criteria=task.criteria,
     )
-    if not score_is_valid:
-        passed = False
+    measurement_status = "valid"
+    invalid_reason: str | None = None
+    infrastructure_events: list[str] = []
+    if workspace_escape:
+        measurement_status = "invalid"
+        invalid_reason = "workspace-escape"
+        infrastructure_events.append("workspace-escape")
+    elif check_result.timed_out:
+        measurement_status = "invalid"
+        invalid_reason = "evaluator-timeout"
+        infrastructure_events.append("evaluator-timeout")
+    elif check_result.returncode not in {0, 1}:
+        measurement_status = "invalid"
+        invalid_reason = "evaluator-error"
+        infrastructure_events.append("evaluator-error")
+    elif not score_is_valid:
+        measurement_status = "invalid"
+        invalid_reason = "invalid-score-payload"
+        infrastructure_events.append("invalid-score-payload")
+    elif task.criteria and score_detail is not None:
+        required_passed = score_detail.get("required_passed") is True
+        if (check_result.returncode == 0) != required_passed:
+            measurement_status = "invalid"
+            invalid_reason = "exit-criteria-disagreement"
+            infrastructure_events.append("exit-criteria-disagreement")
+
+    if (
+        measurement_status == "valid"
+        and agent_result is not None
+        and not agent_result.timed_out
+        and agent_result.returncode != 0
+    ):
+        measurement_status = "invalid"
+        invalid_reason = "agent-process-error"
+        infrastructure_events.append("agent-process-error")
+
+    agent_status = None
+    if solution_mode == "agent" and completion_attestation == "required":
+        parsed_status, status_error = parsed_agent_status, agent_status_error
+        if parsed_status is not None:
+            agent_status = parsed_status.to_json()
+        if measurement_status == "valid" and status_error is not None:
+            measurement_status = "invalid"
+            invalid_reason = status_error
+            infrastructure_events.append(status_error)
+        elif measurement_status == "valid" and parsed_status is not None:
+            if not parsed_status.preflight_successful:
+                measurement_status = "invalid"
+                invalid_reason = "agent-preflight-failed"
+                infrastructure_events.append("agent-preflight-failed")
+            elif not agent_timed_out and parsed_status.transport_error is not None:
+                measurement_status = "invalid"
+                invalid_reason = "agent-transport-error"
+                infrastructure_events.append("agent-transport-error")
+            elif not agent_timed_out and not parsed_status.completed:
+                measurement_status = "invalid"
+                invalid_reason = "agent-completion-missing"
+                infrastructure_events.append("agent-completion-missing")
+            elif not agent_timed_out and (
+                agent_result is None
+                or parsed_status.launcher_exit != agent_result.returncode
+            ):
+                measurement_status = "invalid"
+                invalid_reason = "agent-exit-mismatch"
+                infrastructure_events.append("agent-exit-mismatch")
+    elif solution_mode == "agent":
+        infrastructure_events.append("unattested-agent")
+
+    if measurement_status != "valid":
+        task_outcome = None
+    elif agent_timed_out:
+        task_outcome = "agent-timeout"
+    elif check_result.returncode == 0:
+        task_outcome = "pass"
+    else:
+        task_outcome = "fail"
+    passed = measurement_status == "valid" and task_outcome == "pass"
+    normalized_criteria = (
+        dict(score_detail.get("criteria", {}))
+        if score_detail is not None and score_detail.get("format") == "criteria-v2"
+        else {}
+    )
+    failure_classes = (
+        list(score_detail.get("failure_classes", []))
+        if score_detail is not None and score_detail.get("format") == "criteria-v2"
+        else []
+    )
 
     result = TaskRunResult(
         task_id=task.id,
@@ -169,6 +338,17 @@ def run_task(
         check=check_result,
         score_valid=score_is_valid,
         score_detail=score_detail,
+        measurement_status=measurement_status,
+        task_outcome=task_outcome,
+        invalid_reason=invalid_reason,
+        scoring_schema=task.scoring_schema,
+        criteria=normalized_criteria,
+        failure_classes=failure_classes,
+        infrastructure_events=infrastructure_events,
+        completion_attestation=(
+            completion_attestation if solution_mode == "agent" else "not-required"
+        ),
+        agent_status=agent_status,
     )
 
     result_path = result_dir / "result.json"
@@ -185,6 +365,7 @@ def _build_command_envs(
     task: Task,
     workdir: Path,
     score_file: Path,
+    agent_status_file: Path | None,
     extra_env: dict[str, str] | None,
 ) -> tuple[dict[str, str], dict[str, str]]:
     base_env = os.environ.copy()
@@ -200,14 +381,22 @@ def _build_command_envs(
     agent_env = base_env.copy()
     agent_env.pop("NIXBENCH_TASK_DIR", None)
     agent_env.pop("NIXBENCH_SCORE_FILE", None)
+    agent_env.pop("NIXBENCH_AGENT_STATUS_FILE", None)
+    agent_env.pop("NIXBENCH_EVALUATOR_EXIT", None)
     agent_env.update(public_env)
+    if agent_status_file is not None:
+        agent_env["NIXBENCH_AGENT_STATUS_FILE"] = str(agent_status_file)
 
     evaluator_env = base_env.copy()
+    evaluator_env.pop("NIXBENCH_AGENT_STATUS_FILE", None)
     evaluator_env.update(public_env)
     evaluator_env.update(
         {
             "NIXBENCH_TASK_DIR": str(task.root),
             "NIXBENCH_SCORE_FILE": str(score_file),
+            "NIXBENCH_EVALUATOR_EXIT": str(
+                Path(__file__).with_name("evaluator_exit.py")
+            ),
         }
     )
 
@@ -248,6 +437,20 @@ def _copy_overlay(src: Path, dst: Path) -> None:
         else:
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(item, target)
+
+
+def _workspace_symlink_escapes(workdir: Path) -> bool:
+    root = workdir.resolve()
+    for directory, directory_names, file_names in os.walk(root, followlinks=False):
+        for name in [*directory_names, *file_names]:
+            path = Path(directory) / name
+            if not path.is_symlink():
+                continue
+            try:
+                path.resolve(strict=False).relative_to(root)
+            except (OSError, RuntimeError, ValueError):
+                return True
+    return False
 
 
 def _run_shell_command(
@@ -365,10 +568,17 @@ def _read_score(
     *,
     default_score: float,
     max_score: float,
+    criteria: tuple[Criterion, ...] = (),
 ) -> tuple[float, dict[str, Any] | None, bool]:
     try:
         score_stat = score_file.lstat()
     except FileNotFoundError:
+        if criteria:
+            return (
+                0.0,
+                {"format": "invalid", "error": "missing criteria-v2 score file"},
+                False,
+            )
         return _clamp_score(default_score, max_score), None, True
     except OSError as exc:
         return 0.0, {"format": "invalid", "error": type(exc).__name__}, False
@@ -395,6 +605,13 @@ def _read_score(
         json_safe = False
     if not json_safe:
         return 0.0, {"format": "invalid", "error": "score payload contains non-finite numbers"}, False
+
+    if criteria:
+        try:
+            score, detail = score_schema_two_payload(parsed, criteria)
+        except ValueError as exc:
+            return 0.0, {"format": "invalid", "error": str(exc)}, False
+        return score, detail, True
 
     if isinstance(parsed, dict) and "score" in parsed:
         score = _coerce_score(parsed["score"], max_score=max_score)

@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "fhs-binary-wrapper"
+outcome = "pass"
+criterion_id = "appimage-package"
+description = "Keeps an unrelated root passthru value"

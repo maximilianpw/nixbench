@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "overlay-module-boundary"
+outcome = "reject"
+criterion_id = "module-timer-boundary"
+description = "Overlay exports an unrelated attribute"

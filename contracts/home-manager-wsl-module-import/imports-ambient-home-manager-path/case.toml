@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "home-manager-wsl-module-import"
+outcome = "reject"
+criterion_id = "imports-module-argument"
+description = "Imports Home Manager from an ambient NIX_PATH"

@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "overlay-override-package"
+outcome = "pass"
+criterion_id = "patch-and-check"
+description = "Renamed patch binding"

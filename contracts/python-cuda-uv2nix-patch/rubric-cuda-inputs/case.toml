@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "python-cuda-uv2nix-patch"
+outcome = "pass"
+criterion_id = "cuda-inputs"
+description = "The split runtime-input representation keeps both CUDA build inputs and CUDA_HOME."

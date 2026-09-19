@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "python-cuda-uv2nix-patch"
+outcome = "pass"
+criterion_id = "python-inputs"
+description = "Uses the current Python dependencies attribute"

@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "devshell-tooling-contract"
+outcome = "pass"
+criterion_id = "required-tools"
+description = "Development tools use a different order"

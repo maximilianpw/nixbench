@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "overlay-override-package"
+outcome = "pass"
+criterion_id = "base-override"
+description = "The renamed patch binding still overrides the base package once."

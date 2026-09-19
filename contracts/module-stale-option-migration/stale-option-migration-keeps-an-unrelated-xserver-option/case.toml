@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-stale-option-migration"
+outcome = "pass"
+criterion_id = "kdeconnect-no-stale"
+description = "Stale option migration keeps an unrelated xserver option"

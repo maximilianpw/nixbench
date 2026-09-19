@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "container-native-vs-oci"
+outcome = "pass"
+criterion_id = "native-container-shape"
+description = "Uses valid top-level NixOS module shorthand"

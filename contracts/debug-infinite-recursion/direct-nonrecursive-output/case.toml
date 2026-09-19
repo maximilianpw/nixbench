@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "debug-infinite-recursion"
+outcome = "pass"
+criterion_id = "evaluates-default-lib"
+description = "Builds the expected output without a recursive merge"

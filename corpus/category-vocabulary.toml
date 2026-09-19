@@ -1,0 +1,11 @@
+categories = [
+  "debugging",
+  "devshells",
+  "fetchers",
+  "flakes",
+  "modules",
+  "nix-language",
+  "overlays",
+  "packages",
+  "purity",
+]

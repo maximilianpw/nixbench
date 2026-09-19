@@ -8,6 +8,7 @@ let
 in
   if linkUp && hasAddress && hasDefaultRoute && gatewayArp == "FAILED" then {
     rootCause = "l2-arp-failure";
+    facts = [ "physical-link-up" "ipv4-address-present" "default-route-present" "gateway-arp-failed" ];
     evidence = [
       "physical link is up"
       "ipv4 address and default route are present"
@@ -27,6 +28,7 @@ in
     ];
   } else if gatewayArp == "REACHABLE" && dnsFails then {
     rootCause = "dns-resolution";
+    facts = [ "gateway-arp-reachable" "dns-lookup-failed" ];
     evidence = [
       "gateway arp is reachable"
       "dns lookup fails"
@@ -42,6 +44,7 @@ in
     ];
   } else {
     rootCause = "unknown";
+    facts = [];
     evidence = [];
     discarded = [
       "audio"

@@ -77,6 +77,42 @@ The `validate` command exits successfully only when every reference passes at fu
 
 Those two checks are only corpus smoke tests. Evaluator contract tests should additionally prove that known-invalid mutations fail and valid alternative implementations pass. This prevents hidden checks from becoming either a reference-solution snapshot or a loose shape check that can be gamed with hard-coded values.
 
+The corpus-health command records these checks in versioned JSON keyed by the
+corpus digest:
+
+```sh
+python3 bench.py corpus-health \
+  --studies-dir results/studies \
+  --output results/corpus-health.json
+```
+
+It runs each reference and contract fixture twice to record evaluator
+determinism and runtime. The artifact also includes starter rejection,
+pass/reject fixture counts, criterion coverage, observed pass and timeout
+rates, invalid-measurement rates, and per-task, per-configuration Wilson
+intervals. A pooled empirical pass rate may be shown as a descriptive rate,
+but it has no Wilson interval and is not labeled configuration stability.
+Historical aggregate-only studies do not contribute invented task
+observations.
+
+The discrimination statistic is the point-biserial correlation between a
+task's binary outcome and the sum of the same trial's normalized task scores
+with that task removed. Thresholds are applied after trials without a usable
+leave-one-task-out score are removed. The default threshold requires at least
+20 valid observations across at least two correctness configurations. Reports
+return null with a reason below either threshold or when either input has zero
+variance. Author-assigned
+difficulty and the empirical solve-rate band remain separate fields; health
+reporting never changes the author label. The bands are `low` below 25%,
+`mixed` from 25% through less than 75%, and `high` at 75% or above.
+
+Category and difficulty results describe the fixed tasks in that group. Groups
+with fewer than five tasks are descriptive only. NixBench does not treat the
+corpus as a random sample of all Nix work.
+
+Publishable whole-corpus, category, difficulty, and task strata include the
+timeout count and timeout rate alongside their valid-observation denominator.
+
 ## Benchmark Integrity
 
 For fair runs:

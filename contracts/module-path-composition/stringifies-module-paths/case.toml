@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-path-composition"
+outcome = "reject"
+criterion_id = "path-types"
+description = "Returns strings instead of Nix path values"

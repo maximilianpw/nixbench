@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "container-native-vs-oci"
+outcome = "pass"
+criterion_id = "network-and-mounts"
+description = "Nested container module uses mkIf and mkForce from the documented evaluator interface"

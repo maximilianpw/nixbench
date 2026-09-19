@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "conditional-enable"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "portal-package-merge"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "config-package-preservation"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "fallback-merge"
+points = 25
+required = true
+failure_class = "wrong-value"

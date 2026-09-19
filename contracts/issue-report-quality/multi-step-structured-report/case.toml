@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "issue-report-quality"
+outcome = "pass"
+criterion_id = "report-fields"
+description = "Valid report has multiple reproduction steps, logs, observations, and open questions"

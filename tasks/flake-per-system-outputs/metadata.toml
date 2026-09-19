@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "systems-output"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "packages-and-apps"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "checks-and-shells"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "flake-evaluates"
+points = 25
+required = true
+failure_class = "evaluation"

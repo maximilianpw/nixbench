@@ -1,0 +1,17 @@
+schema_version = 1
+id = "linux-bwrap-v1"
+adapter = "codex-json-bwrap"
+platform = "linux"
+workspace = "/workspace"
+host_workspace = "/tmp/nixbench-isolated-<random>/work"
+host_agent = "/tmp/nixbench-isolated-agent-<random>/agent"
+fresh_home = "/home/agent"
+fresh_tmp = "/tmp"
+nix_store_read_only = true
+nix_daemon = "absent"
+status_owner = "trusted-outer-launcher"
+model_process_is_pid_1 = true
+path = "/run/nixbench:/usr/bin:/bin"
+preflight_evidence = "linux-bwrap-v1:generic-surfaces-absent,neutral-mounts,workspace-writable,nix-daemon-absent"
+workspace_escape_policy = "reject-before-evaluator"
+preflight_record = "verified-structured-fields"

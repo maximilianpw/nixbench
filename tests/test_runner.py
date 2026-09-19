@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import base64
 import os
 import shutil
 import tempfile
@@ -9,12 +10,315 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, call, patch
 
+from nixbench.agent_status import read_agent_status
 from nixbench.runner import _read_score, _run_shell_command, run_task, write_summary
-from nixbench.study import build_study_trial, count_study_trials, estimate_95, write_study_summary
+from nixbench.scoring import Criterion
+from nixbench.study import (
+    build_study_attempt,
+    build_study_trial,
+    count_study_trials,
+    estimate_95,
+    write_study_summary,
+)
 from nixbench.task import load_task
 
 
 class RunnerTests(unittest.TestCase):
+    def test_attestation_path_swapped_to_symlink_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            status_path = root / "status.json"
+            target = root / "target.json"
+            target.write_text('{}')
+            status_path.write_text('{}')
+            status_path.unlink()
+            status_path.symlink_to(target)
+
+            status, error = read_agent_status(status_path)
+
+            self.assertIsNone(status)
+            self.assertEqual(error, "invalid-agent-attestation")
+
+    def test_evaluator_cannot_rewrite_snapshotted_attestation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(
+                root,
+                check_script=(
+                    "set -eu\n"
+                    "test -z \"${NIXBENCH_AGENT_STATUS_FILE:-}\"\n"
+                    "test \"$(cat answer.txt)\" = reference\n"
+                ),
+            )
+            command = fake_codex_command(
+                root,
+                [{"type": "thread.started"}, {"type": "turn.completed"}],
+                edit_answer=True,
+            )
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="agent",
+                agent_cmd=command,
+                completion_attestation="required",
+                agent_adapter="codex-json",
+            )
+
+            self.assertEqual(result.measurement_status, "valid")
+            self.assertTrue(result.passed)
+            self.assertFalse(Path(result.result_dir, "agent-status.json").exists())
+
+    def test_required_agent_attestation_rejects_transport_failure_with_zero_exit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            command = fake_codex_command(
+                root,
+                [{"type": "thread.started"}, {"type": "error", "message": "reset"}],
+            )
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="agent",
+                agent_cmd=command,
+                completion_attestation="required",
+                agent_adapter="codex-json",
+            )
+
+            self.assertEqual(result.agent.returncode, 0)
+            self.assertEqual(result.measurement_status, "invalid")
+            self.assertEqual(result.invalid_reason, "agent-transport-error")
+            self.assertFalse(result.passed)
+
+    def test_required_agent_attestation_rejects_missing_status(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="agent",
+                agent_cmd="true",
+                completion_attestation="required",
+            )
+
+            self.assertEqual(result.measurement_status, "invalid")
+            self.assertEqual(result.invalid_reason, "missing-agent-attestation")
+
+    def test_raw_command_cannot_self_assert_attestation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="agent",
+                agent_cmd='printf "not-json" > "${NIXBENCH_AGENT_STATUS_FILE:-missing}"',
+                completion_attestation="required",
+            )
+
+            self.assertEqual(result.measurement_status, "invalid")
+            self.assertEqual(result.invalid_reason, "missing-agent-attestation")
+
+    def test_required_agent_attestation_rejects_failed_preflight(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            command = fake_codex_command(root, [{"type": "error"}])
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="agent",
+                agent_cmd=command,
+                completion_attestation="required",
+                agent_adapter="codex-json",
+            )
+
+            self.assertEqual(result.measurement_status, "invalid")
+            self.assertEqual(result.invalid_reason, "agent-preflight-failed")
+
+    def test_required_agent_attestation_rejects_launcher_exit_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            command = fake_codex_command(
+                root, [{"type": "thread.started"}, {"type": "turn.completed"}], exit_code=7
+            )
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="agent",
+                agent_cmd=command,
+                completion_attestation="required",
+                agent_adapter="codex-json",
+            )
+
+            self.assertEqual(result.measurement_status, "invalid")
+            self.assertEqual(result.invalid_reason, "agent-process-error")
+
+    def test_valid_agent_attestation_allows_a_valid_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            command = fake_codex_command(
+                root,
+                [{"type": "thread.started"}, {"type": "turn.completed"}],
+                edit_answer=True,
+            )
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="agent",
+                agent_cmd=command,
+                completion_attestation="required",
+                agent_adapter="codex-json",
+            )
+
+            self.assertEqual(result.measurement_status, "valid")
+            self.assertEqual(result.task_outcome, "pass")
+            self.assertTrue(result.passed)
+            trial = build_study_trial("unit", [result])
+            self.assertEqual(
+                trial["agent_status"],
+                {
+                    "task_count": 1,
+                    "preflight_successful": True,
+                    "completed": True,
+                    "preflight_evidence": "codex-thread.started",
+                },
+            )
+
+    def test_agent_timeout_uses_harness_event_and_successful_preflight(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            command = fake_codex_command(
+                root, [{"type": "thread.started"}], sleep_seconds=5
+            )
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="unit",
+                solution_mode="agent",
+                agent_cmd=command,
+                agent_timeout_seconds=1,
+                completion_attestation="required",
+                agent_adapter="codex-json",
+            )
+
+            self.assertEqual(result.measurement_status, "valid")
+            self.assertEqual(result.task_outcome, "agent-timeout")
+            self.assertFalse(result.passed)
+
+    def test_schema_two_score_is_computed_from_declared_criteria(self) -> None:
+        criteria = (
+            Criterion("evaluates", 60, True, "evaluation"),
+            Criterion("preserves-inputs", 40, True, "wrong-value"),
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            score_file = Path(temp) / "score.json"
+            score_file.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "criteria": {"evaluates": True, "preserves-inputs": False},
+                        "notes": ["runtime input check failed"],
+                    }
+                )
+            )
+
+            score, detail, valid = _read_score(
+                score_file,
+                default_score=0,
+                max_score=100,
+                criteria=criteria,
+            )
+
+            self.assertTrue(valid)
+            self.assertEqual(score, 60)
+            self.assertEqual(detail["failed_criteria"], ["preserves-inputs"])
+            self.assertEqual(detail["failure_classes"], ["wrong-value"])
+            self.assertEqual(detail["format"], "criteria-v2")
+
+    def test_schema_two_rejects_missing_unknown_and_nonboolean_criteria(self) -> None:
+        criteria = (Criterion("evaluates", 100, True, "evaluation"),)
+        payloads = (
+            {"schema_version": 2, "criteria": {}},
+            {"schema_version": 2, "criteria": {"evaluates": True, "extra": False}},
+            {"schema_version": 2, "criteria": {"evaluates": 1}},
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            score_file = Path(temp) / "score.json"
+            for payload in payloads:
+                with self.subTest(payload=payload):
+                    score_file.write_text(json.dumps(payload))
+                    score, detail, valid = _read_score(
+                        score_file,
+                        default_score=0,
+                        max_score=100,
+                        criteria=criteria,
+                    )
+                    self.assertFalse(valid)
+                    self.assertEqual(score, 0)
+                    self.assertEqual(detail["format"], "invalid")
+
+    def test_schema_two_task_rejects_legacy_scalar_score(self) -> None:
+        criteria = (Criterion("evaluates", 100, True, "evaluation"),)
+        with tempfile.TemporaryDirectory() as temp:
+            score_file = Path(temp) / "score.json"
+            score_file.write_text('{"score":100}')
+
+            score, detail, valid = _read_score(
+                score_file,
+                default_score=0,
+                max_score=100,
+                criteria=criteria,
+            )
+
+            self.assertFalse(valid)
+            self.assertEqual(score, 0)
+            self.assertEqual(
+                detail["error"],
+                "criteria-v2 task requires schema_version 2",
+            )
+
+    def test_required_criteria_and_evaluator_exit_must_agree(self) -> None:
+        cases = ((0, False), (1, True))
+        for exit_code, criterion_value in cases:
+            with self.subTest(exit_code=exit_code), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                task = make_rubric_task(
+                    root,
+                    exit_code=exit_code,
+                    evaluates=criterion_value,
+                )
+
+                result = run_task(
+                    task,
+                    results_dir=root / "results",
+                    run_id="unit",
+                    solution_mode="starter",
+                )
+
+                self.assertFalse(result.passed)
+                self.assertEqual(result.measurement_status, "invalid")
+                self.assertEqual(result.invalid_reason, "exit-criteria-disagreement")
+                self.assertIn("exit-criteria-disagreement", result.infrastructure_events)
     def test_reference_solution_passes_and_writes_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -505,6 +809,24 @@ class RunnerTests(unittest.TestCase):
                 build_study_trial("starter", [starter]),
             ]
 
+            with self.assertRaisesRegex(ValueError, "every task digest"):
+                build_study_trial(
+                    "identified",
+                    [reference],
+                    corpus_digest="corpus-a",
+                    configuration_id="cfg-a",
+                )
+            identified = build_study_trial(
+                "identified",
+                [reference],
+                corpus_digest="corpus-a",
+                configuration_id="cfg-a",
+                task_digests={"toy": "task-digest"},
+            )
+            self.assertEqual(
+                identified["observations"][0]["task_digest"], "task-digest"
+            )
+
             summary_path = write_study_summary(
                 results_dir,
                 "study",
@@ -513,12 +835,127 @@ class RunnerTests(unittest.TestCase):
             )
             summary = json.loads(summary_path.read_text())
 
-            self.assertEqual(summary["schema_version"], 1)
+            self.assertEqual(summary["schema_version"], 3)
             self.assertEqual(summary["trial_count"], 2)
             self.assertEqual(summary["task_count"], 1)
             self.assertEqual(summary["metadata"]["model"], "toy-model")
             self.assertEqual(summary["estimates"]["passed_tasks"]["mean"], 0.5)
             self.assertEqual([trial["run_id"] for trial in summary["trials"]], ["reference", "starter"])
+            self.assertEqual(summary["trials"][0]["observations"][0]["task_id"], "toy")
+            self.assertEqual(
+                summary["trials"][0]["score"],
+                sum(item["score"] for item in summary["trials"][0]["observations"]),
+            )
+            self.assertEqual(summary["report"]["schema_version"], 1)
+
+            inconsistent = {**trials[0], "score": 9}
+            with self.assertRaisesRegex(ValueError, "inconsistent score"):
+                write_study_summary(
+                    results_dir,
+                    "inconsistent",
+                    [inconsistent],
+                )
+
+    def test_invalid_measurement_is_kept_in_attempts_but_excluded_from_trials(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(
+                root,
+                check_script="set -eu\nprintf '{bad json' > \"$NIXBENCH_SCORE_FILE\"\nexit 1\n",
+            )
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="invalid",
+                solution_mode="starter",
+            )
+            attempt = build_study_attempt(
+                "invalid",
+                [result],
+                expected_task_count=1,
+                corpus_digest="corpus-a",
+                configuration_id="cfg-a",
+            )
+
+            self.assertEqual(attempt["measurement_status"], "invalid")
+            self.assertFalse(attempt["included_in_trials"])
+            self.assertIn("invalid-score-payload", attempt["exclusion_reasons"])
+            with self.assertRaisesRegex(ValueError, "valid measurements"):
+                build_study_trial("invalid", [result])
+
+            summary_path = write_study_summary(
+                root / "results",
+                "study",
+                [],
+                attempts=[attempt],
+                task_count=1,
+                metadata={"corpus_digest": "corpus-a", "configuration_id": "cfg-a"},
+            )
+            summary = json.loads(summary_path.read_text())
+            self.assertEqual(summary["schema_version"], 3)
+            self.assertEqual(summary["trial_count"], 0)
+            self.assertEqual(summary["attempt_count"], 1)
+            self.assertEqual(summary["trials"], [])
+            self.assertEqual(summary["estimates"], {})
+            self.assertEqual(summary["report"]["attempts"]["invalid_count"], 1)
+
+    def test_evaluator_timeout_is_invalid_and_retained_in_attempt_ledger(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root, check_script="sleep 2\n")
+            metadata = task.root / "metadata.toml"
+            metadata.write_text(metadata.read_text().replace("timeout_seconds = 5", "timeout_seconds = 1"))
+            task = load_task(task.root)
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="timeout",
+                solution_mode="starter",
+            )
+            attempt = build_study_attempt("timeout", [result], expected_task_count=1)
+
+            self.assertEqual(result.invalid_reason, "evaluator-timeout")
+            self.assertEqual(attempt["measurement_status"], "invalid")
+            self.assertFalse(attempt["included_in_trials"])
+
+    def test_evaluator_error_is_invalid_and_retained_in_attempt_ledger(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root, check_script="exit 2\n")
+
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="error",
+                solution_mode="starter",
+            )
+            attempt = build_study_attempt("error", [result], expected_task_count=1)
+
+            self.assertEqual(result.invalid_reason, "evaluator-error")
+            self.assertEqual(attempt["measurement_status"], "invalid")
+            self.assertFalse(attempt["included_in_trials"])
+
+    def test_partial_task_set_is_an_incomplete_attempt(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task = make_toy_task(root)
+            result = run_task(
+                task,
+                results_dir=root / "results",
+                run_id="partial",
+                solution_mode="reference",
+            )
+
+            attempt = build_study_attempt(
+                "partial",
+                [result],
+                expected_task_count=2,
+            )
+
+            self.assertEqual(attempt["measurement_status"], "incomplete")
+            self.assertIsNone(attempt["score"])
+            self.assertIn("incomplete-task-set", attempt["exclusion_reasons"])
 
     def test_count_study_trials_filters_by_configuration(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -555,6 +992,93 @@ class RunnerTests(unittest.TestCase):
             )
 
             self.assertEqual(count, 5)
+
+    def test_count_study_trials_uses_content_identities(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            results_dir = Path(temp)
+            for study_id, configuration_id, corpus_digest, trial_count in (
+                ("matching-a", "cfg-a", "corpus-a", 2),
+                ("matching-b", "cfg-a", "corpus-a", 3),
+                ("other-config", "cfg-b", "corpus-a", 7),
+                ("other-corpus", "cfg-a", "corpus-b", 11),
+            ):
+                path = results_dir / "studies" / study_id / "summary.json"
+                path.parent.mkdir(parents=True)
+                path.write_text(
+                    json.dumps(
+                        {
+                            "metadata": {
+                                "configuration_id": configuration_id,
+                                "corpus_digest": corpus_digest,
+                            },
+                            "trial_count": trial_count,
+                        }
+                    )
+                )
+
+            count = count_study_trials(
+                results_dir,
+                configuration_id="cfg-a",
+                corpus_digest="corpus-a",
+            )
+
+            self.assertEqual(count, 5)
+
+    def test_count_study_trials_accepts_zero_trial_attempt_ledgers(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            results_dir = Path(temp)
+            for study_id, trial_count in (("invalid-attempt", 0), ("valid", 2)):
+                path = results_dir / "studies" / study_id / "summary.json"
+                path.parent.mkdir(parents=True)
+                path.write_text(
+                    json.dumps(
+                        {
+                            "metadata": {
+                                "configuration_id": "cfg-a",
+                                "corpus_digest": "corpus-a",
+                            },
+                            "trial_count": trial_count,
+                        }
+                    )
+                )
+
+            count = count_study_trials(
+                results_dir,
+                configuration_id="cfg-a",
+                corpus_digest="corpus-a",
+            )
+
+            self.assertEqual(count, 2)
+
+    def test_study_summary_rejects_mixed_content_identities(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            results_dir = Path(temp)
+            trial = {
+                "run_id": "one",
+                "created_at": "2026-01-01T00:00:00+00:00",
+                "passed_tasks": 1,
+                "failed_tasks": 0,
+                "task_count": 1,
+                "score": 10,
+                "max_score": 10,
+                "score_rate": 1.0,
+                "agent_time_seconds": 1.0,
+                "agent_seconds_per_task": 1.0,
+                "timeouts": 0,
+                "corpus_digest": "corpus-a",
+                "configuration_id": "cfg-a",
+            }
+
+            with self.assertRaisesRegex(ValueError, "same corpus_digest"):
+                write_study_summary(
+                    results_dir,
+                    "mixed",
+                    [trial, {**trial, "run_id": "two", "configuration_id": "cfg-b"}],
+                    metadata={
+                        "corpus_digest": "corpus-a",
+                        "configuration_id": "cfg-a",
+                    },
+                )
 
     def test_diff_artifacts_do_not_follow_symlinks(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -613,7 +1137,39 @@ class RunnerTests(unittest.TestCase):
             self.assertIn("\\ No newline at end of file", diff)
 
 
+def fake_codex_command(
+    root: Path,
+    events: list[dict[str, object]],
+    *,
+    edit_answer: bool = False,
+    exit_code: int = 0,
+    sleep_seconds: int = 0,
+) -> str:
+    executable = root / f"fake-codex-{len(list(root.glob('fake-codex-*')))}.py"
+    executable.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json, time\n"
+        "from pathlib import Path\n"
+        + ("Path('answer.txt').write_text('reference\\n')\n" if edit_answer else "")
+        + f"events = {events!r}\n"
+        + "for event in events:\n    print(json.dumps(event), flush=True)\n"
+        + (f"time.sleep({sleep_seconds})\n" if sleep_seconds else "")
+        + f"raise SystemExit({exit_code})\n"
+    )
+    executable.chmod(0o755)
+    return f"{executable} exec --json"
+
+
 def make_toy_task(root: Path, *, check_script: str | None = None):
+    root.mkdir(parents=True, exist_ok=True)
+    manifest_path = root / "corpus.toml"
+    if not manifest_path.exists():
+        manifest_path.write_text(
+            "schema_version = 1\n"
+            'id = "toy-corpus"\n'
+            'version = "1.0.0"\n'
+            'visibility = "public"\n'
+        )
     task_dir = root / "toy"
     (task_dir / "starter").mkdir(parents=True)
     (task_dir / "reference").mkdir()
@@ -628,7 +1184,7 @@ def make_toy_task(root: Path, *, check_script: str | None = None):
             [
                 'id = "toy"',
                 'name = "Toy"',
-                'category = "toy"',
+                'category = "packages"',
                 'difficulty = "easy"',
                 "timeout_seconds = 5",
                 "max_score = 10",
@@ -653,6 +1209,46 @@ def default_check_script() -> str:
         )
         + "\n"
     )
+
+
+def atomic_status_command(payload: dict[str, object]) -> str:
+    encoded = base64.b64encode(json.dumps(payload).encode()).decode()
+    return (
+        "python3 -c 'import base64,json,os,pathlib,tempfile; "
+        "target=pathlib.Path(os.environ[\"NIXBENCH_AGENT_STATUS_FILE\"]); "
+        "fd,name=tempfile.mkstemp(dir=target.parent); os.close(fd); "
+        f"payload=json.loads(base64.b64decode(\"{encoded}\")); "
+        "pathlib.Path(name).write_text(json.dumps(payload)); "
+        "os.replace(name,target)'"
+    )
+
+
+def make_rubric_task(root: Path, *, exit_code: int, evaluates: bool):
+    payload = json.dumps(
+        {
+            "schema_version": 2,
+            "criteria": {"evaluates": evaluates},
+        }
+    )
+    task = make_toy_task(
+        root,
+        check_script=(
+            "set -eu\n"
+            f"printf '%s' '{payload}' > \"$NIXBENCH_SCORE_FILE\"\n"
+            f"exit {exit_code}\n"
+        ),
+    )
+    with (task.root / "metadata.toml").open("a") as handle:
+        handle.write(
+            """
+[[criteria]]
+id = "evaluates"
+points = 10
+required = true
+failure_class = "evaluation"
+"""
+        )
+    return load_task(task.root)
 
 
 def make_partial_score_task(root: Path, *, score: int):
@@ -680,7 +1276,7 @@ def make_partial_score_task(root: Path, *, score: int):
             [
                 'id = "partial"',
                 'name = "Partial"',
-                'category = "toy"',
+                'category = "packages"',
                 'difficulty = "easy"',
                 "timeout_seconds = 5",
                 "max_score = 10",

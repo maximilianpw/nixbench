@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-stale-option-migration"
+outcome = "pass"
+criterion_id = "graphics-current"
+description = "The current-option shorthand enables the current graphics option."

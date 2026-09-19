@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "derivation-identity"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "wrapper-inputs"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "pure-install-phase"
+points = 25
+required = true
+failure_class = "impurity"
+
+[[criteria]]
+id = "purity-marker"
+points = 25
+required = true
+failure_class = "wrong-value"

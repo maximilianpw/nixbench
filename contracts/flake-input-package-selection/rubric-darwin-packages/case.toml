@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "flake-input-package-selection"
+outcome = "pass"
+criterion_id = "darwin-packages"
+description = "The alternate package ordering selects the documented Darwin packages."

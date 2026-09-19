@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .scoring import Criterion, parse_criteria
+
 try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
@@ -28,6 +30,17 @@ REQUIRED_METADATA_FIELDS = {
 }
 TASK_ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 VALID_DIFFICULTIES = {"easy", "medium", "hard"}
+VALID_CATEGORIES = {
+    "debugging",
+    "devshells",
+    "fetchers",
+    "flakes",
+    "modules",
+    "nix-language",
+    "overlays",
+    "packages",
+    "purity",
+}
 
 
 @dataclass(frozen=True)
@@ -58,6 +71,20 @@ class Task:
     @property
     def max_score(self) -> float:
         return float(self.metadata["max_score"])
+
+    @property
+    def criteria(self) -> tuple[Criterion, ...]:
+        try:
+            return parse_criteria(
+                self.metadata.get("criteria"),
+                max_score=self.max_score,
+            )
+        except ValueError as exc:
+            raise TaskError(f"{self.id}: {exc}") from exc
+
+    @property
+    def scoring_schema(self) -> str:
+        return "criteria-v2" if self.criteria else "legacy-binary"
 
     @property
     def systems(self) -> list[str]:
@@ -102,6 +129,11 @@ class Task:
             if not isinstance(value, str) or not value.strip():
                 raise TaskError(f"{task_id}: {field} must be a non-empty string")
 
+        category = self.metadata["category"]
+        if category not in VALID_CATEGORIES:
+            choices = ", ".join(sorted(VALID_CATEGORIES))
+            raise TaskError(f"{task_id}: category must be one of: {choices}")
+
         difficulty = self.metadata["difficulty"]
         if not isinstance(difficulty, str) or difficulty not in VALID_DIFFICULTIES:
             choices = ", ".join(sorted(VALID_DIFFICULTIES))
@@ -114,6 +146,7 @@ class Task:
         max_score = self.metadata["max_score"]
         if not _is_positive_finite_number(max_score):
             raise TaskError(f"{task_id}: max_score must be a positive finite number")
+        self.criteria
 
         systems = self.metadata["systems"]
         if (

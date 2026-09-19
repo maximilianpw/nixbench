@@ -1,16 +1,26 @@
-# Running Agents
+# Running agents
 
-NixBench accepts any agent that can be invoked as a shell command.
+NixBench accepts any agent that can be invoked as a shell command. Generic
+commands are suitable for local runs. Publishable protocols also require a
+trusted completion adapter.
 
 The harness copies a task starter into a temporary directory and runs the agent command with that temporary directory as the current working directory. The agent should read `NIXBENCH_PROMPT.md`, edit local files, and exit.
 
-The agent environment includes `NIXBENCH_TASK_ID`, `NIXBENCH_WORKDIR`, and `NIXBENCH_PROMPT`. It intentionally does not include the original task directory, hidden evaluator path, reference solution path, or score file path.
+The agent environment includes `NIXBENCH_TASK_ID`, `NIXBENCH_WORKDIR`, and
+`NIXBENCH_PROMPT`. It does not include the original task directory, hidden
+evaluator path, reference solution path, or score file path. When a complete
+protocol requires attestation, only the registered adapter receives
+`NIXBENCH_AGENT_STATUS_FILE`. It removes that path and every other
+harness-private path from the model-controlled child environment.
 
 ## Generic Pattern
 
 ```sh
 python3 bench.py run-all \
+  --protocol-file protocols/example.toml \
+  --wrapper-prompt-file protocols/agent-wrapper.txt \
   --agent-timeout-seconds 240 \
+  --agent-adapter codex-json \
   --agent-cmd 'your-agent-command'
 ```
 
@@ -22,13 +32,22 @@ python3 bench.py run package-stdenv-cli \
   --agent-cmd 'your-agent-command'
 ```
 
-## Repeated Studies
+`protocols/example.toml` is a template. Copy it and set its system, timeout,
+model, harness, effort, network, isolation, tool policy, and registered adapter
+to the values used by the run. The timeout, system, and adapter must match the
+command-line values. The harness hashes the wrapper, agent command, and
+registered adapter executable. It stores the hashes, not the raw command, in
+publication metadata.
+
+## Repeated studies
 
 A publishable comparison should repeat the entire corpus. `--trials` writes every trial as a normal run and also writes a study summary containing the mean, observed range, standard deviation, and Student's t 95% confidence interval:
 
 ```sh
 python3 bench.py run-all \
   --trials 5 \
+  --protocol-file protocols/example.toml \
+  --wrapper-prompt-file protocols/agent-wrapper.txt \
   --model gpt-5.6-sol \
   --series gpt56Sol \
   --effort high \
@@ -38,18 +57,26 @@ python3 bench.py run-all \
   --agent-version "$(codex --version)" \
   --network unknown \
   --agent-timeout-seconds 240 \
+  --agent-adapter codex-json \
   --agent-cmd 'your-agent-command'
 ```
 
-Each trial remains available at `results/<run-id>/summary.json`. The combined study is checkpointed after every valid trial at `results/studies/<study-id>/summary.json`, so a later infrastructure or quota failure does not discard earlier evidence. A single trial intentionally has no confidence interval: uncertainty cannot be estimated from one observation.
+Each attempt remains available at `results/<run-id>/summary.json`. The combined
+study is checkpointed after every attempt at
+`results/studies/<study-id>/summary.json`, so a later infrastructure or quota
+failure does not discard earlier evidence. Only complete, valid attempts enter
+the `trials` list and estimates. A single trial intentionally has no confidence
+interval because one observation cannot estimate uncertainty.
 
-For a resumable configuration matrix, query completed evidence before scheduling another trial:
+For a resumable configuration matrix, query completed evidence with the same protocol, wrapper, command, timeout, and corpus before scheduling another trial:
 
 ```sh
 python3 bench.py --results-dir results study-count \
-  --series gpt56Sol \
-  --effort high \
-  --task-count 29
+  --protocol-file protocols/example.toml \
+  --wrapper-prompt-file protocols/agent-wrapper.txt \
+  --agent-timeout-seconds 240 \
+  --agent-adapter codex-json \
+  --agent-cmd 'your-agent-command'
 ```
 
 [`scripts/run-current-studies.sh`](../scripts/run-current-studies.sh) uses this checkpoint to visit each current model/effort configuration once per round and resume until every configuration reaches the requested trial count.
@@ -65,7 +92,14 @@ python3 bench.py --results-dir results export-site \
   --output site/src/data/benchmark-trials.json
 ```
 
-The publication gate fails without modifying the output when a configuration is missing or has fewer than the required trials.
+The publication gate fails without modifying the output when a configuration
+is missing, has fewer than the required trials, mixes corpus or protocol
+identities, lacks a complete protocol and registered completion adapter,
+contains invalid observations, or uses legacy scoring. It skips zero-trial
+attempt ledgers so an infrastructure failure does not hide valid sibling
+studies or block resumption. Provisional same-UID attestation cannot publish a
+private or held-out corpus. Historical studies require the explicit
+`--allow-legacy-protocol` compatibility flag.
 
 When the local results archive contains only newly collected studies, merge those checked rows into the existing site dataset instead of replacing prior evidence:
 
@@ -86,8 +120,11 @@ Example:
 
 ```sh
 python3 bench.py run-all \
+  --protocol-file protocols/example.toml \
+  --wrapper-prompt-file protocols/agent-wrapper.txt \
   --agent-timeout-seconds 240 \
-  --agent-cmd 'codex exec --ephemeral --skip-git-repo-check --sandbox workspace-write "You are in a temporary NixBench benchmark task workspace. Read NIXBENCH_PROMPT.md, then edit the local starter files to satisfy it. Only modify files in this directory. Do not inspect hidden evaluator files or the original task directory. Run local checks if useful, then stop."'
+  --agent-adapter codex-json \
+  --agent-cmd 'codex exec --json --ephemeral --skip-git-repo-check --sandbox workspace-write'
 ```
 
 Notes:
@@ -95,8 +132,11 @@ Notes:
 - `--ephemeral` avoids persistent session noise.
 - `--skip-git-repo-check` is useful because task workdirs are temporary copies.
 - `--sandbox workspace-write` allows editing local starter files.
+- `--json` provides native events for the trusted adapter. The adapter records
+  `thread.started`, `turn.completed`, native error events, and the launcher exit
+  code. It does not search logs for success phrases.
 
-## Agent Prompt Contract
+## Agent prompt contract
 
 Good benchmark prompts for agents should include:
 
@@ -114,7 +154,10 @@ The agent timeout is controlled separately from task evaluator timeout:
 
 ```sh
 python3 bench.py run-all \
-  --agent-timeout-seconds 300 \
+  --protocol-file protocols/example.toml \
+  --wrapper-prompt-file protocols/agent-wrapper.txt \
+  --agent-timeout-seconds 240 \
+  --agent-adapter codex-json \
   --agent-cmd '...'
 ```
 
@@ -126,7 +169,43 @@ timeout_seconds = 60
 
 After each agent or evaluator command finishes, the harness terminates any remaining processes in that command's process group; it does the same immediately when a timeout expires. This prevents ordinary background children from continuing into the evaluator or later tasks. Commands that deliberately detach into a separate session still require external sandboxing; the harness is not a container or VM boundary.
 
-## Keeping Workdirs
+## Held-out isolation
+
+Public development runs may use the provisional `codex-json` adapter. A
+private held-out publication must use a protocol with:
+
+```toml
+isolation_profile = "linux-bwrap-v1"
+agent_adapter = "codex-json-bwrap"
+network_policy = "disabled" # or "enabled", when the protocol requires it
+```
+
+Select the same adapter on the command line. The trusted launcher constructs
+the bubblewrap process itself. A raw command cannot claim this profile. The
+launcher mounts only the copied workspace read-write, creates a fresh home and
+`/tmp`, mounts required system paths read-only, and omits the repository,
+corpus, evaluator, reference, results, host home, and Nix daemon socket.
+
+Before starting Codex, a generic in-namespace preflight checks that the Nix
+daemon socket is absent and `/workspace` is writable. The launcher uses a
+fixed PATH and does not put forbidden host paths in the model process's
+arguments or environment. The cleared inner command runs as PID 1 so the
+outer environment is not visible through `/proc/1/environ`. The outer
+launcher owns the attestation path and records the preflight and Codex JSON
+completion state. After Codex exits, the
+runner rejects workspace symlinks that resolve outside `/workspace` before it
+runs the evaluator. `publication-check` rejects the study if this evidence is
+missing or failed.
+
+Held-out workspaces use `/tmp/nixbench-isolated-<random>/work` on the host.
+The staging path contains no task, corpus, run, model, or configuration
+identity. The preflight verifies that neutral source shape against
+`/proc/self/mountinfo` before starting the model command. An agent executable
+outside the workspace is copied to
+`/tmp/nixbench-isolated-agent-<random>/agent` before its read-only bind, so its
+original host path is not exposed either.
+
+## Keeping workdirs
 
 Use `--keep-workdir` when debugging a run:
 
@@ -138,7 +217,7 @@ python3 bench.py run lang-attrsets-normalize \
 
 The resulting `result.json` will include the workdir path. Without `--keep-workdir`, temporary task workdirs are removed after evaluation.
 
-## Reading Results
+## Reading results
 
 The fastest way to inspect a run:
 

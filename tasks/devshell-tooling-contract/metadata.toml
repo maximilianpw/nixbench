@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "shell-construction"
+points = 25
+required = true
+failure_class = "evaluation"
+
+[[criteria]]
+id = "required-tools"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "formatter-contract"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "experimental-features"
+points = 25
+required = true
+failure_class = "wrong-value"

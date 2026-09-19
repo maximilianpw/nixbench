@@ -1,0 +1,4 @@
+schema_version = 1
+id = "nixbench-public"
+version = "2.0.0"
+visibility = "public"

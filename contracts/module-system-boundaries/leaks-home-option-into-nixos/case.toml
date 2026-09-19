@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-system-boundaries"
+outcome = "reject"
+criterion_id = "nixos-module"
+description = "Adds a Home Manager option to the NixOS module"

@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "linux-packages"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "darwin-packages"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "named-input-output"
+points = 25
+required = true
+failure_class = "missing-attr"
+
+[[criteria]]
+id = "package-values"
+points = 25
+required = true
+failure_class = "wrong-value"

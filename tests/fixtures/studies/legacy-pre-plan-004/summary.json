@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "study_id": "legacy-pre-plan-004",
+  "metadata": {
+    "model": "historical-model"
+  },
+  "trial_count": 1,
+  "task_count": 1,
+  "trials": [
+    {
+      "run_id": "legacy-run",
+      "passed_tasks": 1,
+      "failed_tasks": 0,
+      "task_count": 1,
+      "score": 100,
+      "max_score": 100,
+      "score_rate": 1.0,
+      "agent_time_seconds": 3.0,
+      "agent_seconds_per_task": 3.0,
+      "timeouts": 0
+    }
+  ]
+}

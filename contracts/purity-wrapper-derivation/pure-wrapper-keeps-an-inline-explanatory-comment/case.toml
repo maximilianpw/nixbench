@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "purity-wrapper-derivation"
+outcome = "pass"
+criterion_id = "derivation-identity"
+description = "Pure wrapper keeps an inline explanatory comment"

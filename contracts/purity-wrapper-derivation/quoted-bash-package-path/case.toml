@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "purity-wrapper-derivation"
+outcome = "pass"
+criterion_id = "wrapper-inputs"
+description = "Quotes the Bash package path passed to makeWrapper"

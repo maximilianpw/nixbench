@@ -4,9 +4,14 @@ set -eu
 workdir=${1:-$PWD}
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
+command -v nix >/dev/null 2>&1 || exit 2
+command -v python3 >/dev/null 2>&1 || exit 2
 
 cat > "$tmpdir/test.nix" <<EOF
 let
+  passes = value:
+    let attempt = builtins.tryEval (builtins.deepSeq value value);
+    in attempt.success && attempt.value == true;
   lib = {
     mkEnableOption = description: {
       __enable = true;
@@ -52,30 +57,46 @@ let
   exec = service.serviceConfig.ExecStart;
   alternateService = alternate.config.content.systemd.services.nixbench-agent;
   alternateExec = alternateService.serviceConfig.ExecStart;
-in
-assert module.options.services.nixbench-agent.enable.__enable == true;
-assert module.options.services.nixbench-agent.package.__option == true;
-assert module.options.services.nixbench-agent.package.type == lib.types.package;
-assert module.options.services.nixbench-agent.package.default == pkgs.nixbench-agent;
-assert module.options.services.nixbench-agent.port.__option == true;
-assert module.options.services.nixbench-agent.port.type == lib.types.port;
-assert module.options.services.nixbench-agent.port.default == 8080;
-assert module.options.services.nixbench-agent.extraArgs.__option == true;
-assert module.options.services.nixbench-agent.extraArgs.type.kind == "list";
-assert module.options.services.nixbench-agent.extraArgs.type.type == lib.types.str;
-assert module.options.services.nixbench-agent.extraArgs.default == [];
-assert module.config.__mkIf == true;
-assert alternate.config.__mkIf == true;
-assert disabled.config.__mkIf == false;
-assert builtins.match ".*custom-agent/bin/nixbench-agent.*" exec != null;
-assert builtins.match ".*--port 9191.*" exec != null;
-assert builtins.match ".*--verbose --json.*" exec != null;
-assert module.config.content.networking.firewall.allowedTCPPorts == [ 9191 ];
-assert builtins.match ".*alternate-agent/bin/nixbench-agent.*" alternateExec != null;
-assert builtins.match ".*--port 4242.*" alternateExec != null;
-assert builtins.match ".*--quiet.*" alternateExec != null;
-assert alternate.config.content.networking.firewall.allowedTCPPorts == [ 4242 ];
-"ok"
+in {
+  schema_version = 2;
+  criteria = {
+    "option-schema" = passes (
+      module.options.services.nixbench-agent.enable.__enable == true
+      && module.options.services.nixbench-agent.package.__option == true
+      && module.options.services.nixbench-agent.package.type == lib.types.package
+      && module.options.services.nixbench-agent.package.default == pkgs.nixbench-agent
+      && module.options.services.nixbench-agent.port.__option == true
+      && module.options.services.nixbench-agent.port.type == lib.types.port
+      && module.options.services.nixbench-agent.port.default == 8080
+      && module.options.services.nixbench-agent.extraArgs.__option == true
+      && module.options.services.nixbench-agent.extraArgs.type.kind == "list"
+      && module.options.services.nixbench-agent.extraArgs.type.type == lib.types.str
+      && module.options.services.nixbench-agent.extraArgs.default == []
+    );
+    "conditional-service" = passes (
+      module.config.__mkIf == true && alternate.config.__mkIf == true && disabled.config.__mkIf == false
+    );
+    "exec-arguments" = passes (
+      builtins.match ".*custom-agent/bin/nixbench-agent.*" exec != null
+      && builtins.match ".*--port 9191.*" exec != null
+      && builtins.match ".*--verbose.*" exec != null
+      && builtins.match ".*--json.*" exec != null
+      && builtins.match ".*alternate-agent/bin/nixbench-agent.*" alternateExec != null
+      && builtins.match ".*--port 4242.*" alternateExec != null
+      && builtins.match ".*--quiet.*" alternateExec != null
+    );
+    "firewall-port" = passes (
+      module.config.content.networking.firewall.allowedTCPPorts == [ 9191 ]
+      && alternate.config.content.networking.firewall.allowedTCPPorts == [ 4242 ]
+    );
+  };
+  notes = [];
+}
 EOF
 
-nix eval --json --file "$tmpdir/test.nix" >/dev/null
+score_tmp="$NIXBENCH_SCORE_FILE.tmp.$$"
+if ! nix eval --json --file "$tmpdir/test.nix" >"$score_tmp"; then
+  printf '%s\n' '{"schema_version":2,"criteria":{"option-schema":false,"conditional-service":false,"exec-arguments":false,"firewall-port":false},"notes":[]}' >"$score_tmp"
+fi
+mv "$score_tmp" "$NIXBENCH_SCORE_FILE"
+python3 "$NIXBENCH_EVALUATOR_EXIT" "$NIXBENCH_TASK_DIR/metadata.toml" "$NIXBENCH_SCORE_FILE"

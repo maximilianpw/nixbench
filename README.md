@@ -67,6 +67,8 @@ We also refresh this research-derived slice weekly by scanning new NixOS Discour
   bench.py                 # CLI entry point
   nixbench/                # Python harness package
     cli.py
+    release.py
+    isolation.py
     runner.py
     task.py
   tasks/                   # benchmark corpus
@@ -77,6 +79,8 @@ We also refresh this research-derived slice weekly by scanning new NixOS Discour
       reference/
       tests/check.sh
   docs/                    # design and authoring docs
+  corpus/                  # release manifests and governance registries
+  launchers/               # approved isolation profiles
   tests/                   # Python unit tests for the harness
   flake.nix                # development shell and package wrapper
 ```
@@ -148,6 +152,22 @@ python3 bench.py run-all \
 The agent command is executed inside a copied starter directory. The hidden evaluator is outside that directory and runs only after the agent exits.
 
 For more details, see [Running Agents](docs/running-agents.md).
+
+## Corpus releases
+
+The checked public corpus is the reproducible development corpus. Stronger
+held-out claims require a separately stored private corpus and the approved
+isolation profile. See [Benchmark governance](docs/benchmark-governance.md).
+
+Check the current public release with:
+
+```sh
+python3 bench.py release-check --corpus-root . --json
+```
+
+This command recomputes evaluator evidence by default. `publication-check`
+then validates a study's protocol, attestation, trial completeness, and, for a
+held-out corpus, trusted isolation evidence.
 
 ## How A Task Runs
 

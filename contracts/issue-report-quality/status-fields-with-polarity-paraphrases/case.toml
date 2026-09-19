@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "issue-report-quality"
+outcome = "pass"
+criterion_id = "outcome-evidence"
+description = "Outcome status fields permit prose using accept, without errors, and completely"

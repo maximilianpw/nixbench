@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "debug-infinite-recursion"
+outcome = "pass"
+criterion_id = "exact-output-shape"
+description = "The independent finite implementation returns only the documented fields."

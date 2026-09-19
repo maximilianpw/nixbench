@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "home-manager-xdg-files"
+outcome = "reject"
+criterion_id = "user-directories"
+description = "Home manager hard coded directory"

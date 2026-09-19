@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "option-schema"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "conditional-service"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "exec-arguments"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "firewall-port"
+points = 25
+required = true
+failure_class = "wrong-value"

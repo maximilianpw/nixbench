@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "package-identity"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "python-inputs"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "cuda-inputs"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "patchelf-and-pure-phases"
+points = 25
+required = true
+failure_class = "impurity"

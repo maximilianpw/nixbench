@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-system-boundaries"
+outcome = "pass"
+criterion_id = "darwin-module"
+description = "Returns separate module attrsets instead of module functions"

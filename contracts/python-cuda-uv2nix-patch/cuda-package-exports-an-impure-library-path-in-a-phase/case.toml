@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "python-cuda-uv2nix-patch"
+outcome = "reject"
+criterion_id = "patchelf-and-pure-phases"
+description = "Cuda package exports an impure library path in a phase"

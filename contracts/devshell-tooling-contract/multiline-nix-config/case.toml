@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "devshell-tooling-contract"
+outcome = "pass"
+criterion_id = "shell-construction"
+description = "Enables both features in a multiline NIX_CONFIG assignment"

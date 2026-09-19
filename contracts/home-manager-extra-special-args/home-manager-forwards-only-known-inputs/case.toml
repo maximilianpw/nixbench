@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "home-manager-extra-special-args"
+outcome = "reject"
+criterion_id = "forwards-inputs"
+description = "Home manager forwards only known inputs"

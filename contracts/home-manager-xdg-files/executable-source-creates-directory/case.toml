@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "home-manager-xdg-files"
+outcome = "reject"
+criterion_id = "no-imperative-hooks"
+description = "An executable home.file source creates a directory imperatively"

@@ -1,68 +1,152 @@
 # Scoring
 
-NixBench uses task-level objective scoring first.
+Current NixBench tasks declare objective binary criteria in `metadata.toml`.
+Each criterion has a stable ID, point value, required flag, and failure class.
+The points must sum exactly to the task's `max_score`.
 
-Default scoring:
+```toml
+[[criteria]]
+id = "preserves-runtime-inputs"
+points = 25
+required = true
+failure_class = "wrong-value"
+```
 
-- Evaluator exits `0`: full `max_score`.
-- Evaluator exits non-zero or times out: `0`.
-- Agent times out: the run is marked failed and receives `0` by default.
-
-Evaluators can provide partial credit by writing JSON to `$NIXBENCH_SCORE_FILE`, which is an evaluator-only absolute path:
+Evaluators write a schema-2 payload to the evaluator-only
+`$NIXBENCH_SCORE_FILE` path:
 
 ```json
 {
-  "score": 70,
-  "max_score": 100,
-  "notes": [
-    "evaluation passes",
-    "metadata missing mainProgram"
-  ]
+  "schema_version": 2,
+  "criteria": {
+    "evaluates": true,
+    "preserves-runtime-inputs": false
+  },
+  "notes": ["runtime input preservation check failed"]
 }
 ```
 
-The harness records this detail in `result.json`.
+The criterion keys must exactly match task metadata, and each value must be a
+JSON boolean. Evaluators do not submit totals or failure classes. The harness
+computes both from metadata. Notes are bounded diagnostics and cannot change a
+score.
 
-Evaluator-provided scores are clamped to the task's `[0, max_score]` range. Partial credit can be recorded even when the evaluator exits non-zero or the agent timed out, but `passed` remains false unless the agent completed and the evaluator exited `0`.
+An evaluator exits `0` only when every required criterion passes. Exit `1`
+rejects the candidate and may retain partial credit. A disagreement between
+the exit code and required criteria makes the measurement invalid.
 
-If no score file exists, the evaluator exit status determines the default score. Once an evaluator creates a score file, it must be a reasonably sized regular file containing valid UTF-8 JSON with either a finite JSON number or an object with a finite numeric `score` field. Symlinks, streams, empty, oversized, malformed, excessively nested, boolean, numeric-string, non-finite, and unsupported payloads fail closed with zero credit. Invalid score details are still recorded in JSON-safe form for diagnosis.
+## Measurement validity and task outcome
 
-## Recommended Rubric
+`measurement_status` records whether the run measured the candidate:
 
-For larger tasks, split hidden checks roughly like this:
+- `valid` means the evaluator, score payload, agent process, and any required
+  completion attestation were usable.
+- `invalid` means an evaluator, process, transport, score, or attestation
+  failure prevented measurement.
+- `incomplete` means a study attempt stopped before it ran the selected task
+  set.
 
-- 70% functional correctness: evaluation, build behavior, generated config, or expected attributes.
-- 15% Nix idiom: correct use of `mkIf`, `overrideAttrs`, fixed-output fetchers, phases, and per-system helpers.
-- 10% maintainability: minimal unrelated changes, readable structure, clear attr names.
-- 5% formatting and lint: `nixfmt-rfc-style`, `statix`, and `deadnix` where applicable.
+For valid measurements, `task_outcome` is `pass`, `fail`, or `agent-timeout`.
+The harness records its own timeout event, so an attested agent timeout is a
+valid outcome. Evaluator timeouts, evaluator exit codes `2` or greater,
+malformed score payloads, non-timeout agent process errors, and missing or
+failed required attestations are invalid measurements. Invalid and incomplete
+attempts stay in the study `attempts` ledger but never enter `trials`, score
+denominators, or estimates.
 
-Keep the public prompt stable. Add hidden cases when models overfit obvious examples.
+## Failure classes
 
-## Failure Classes
+Task metadata may use these controlled classes:
 
-When analyzing failed runs, tag failures with one or more classes:
+- `syntax`
+- `evaluation`
+- `missing-attr`
+- `wrong-value`
+- `unavailable-helper`
+- `impurity`
+- `overfit`
+- `maintainability`
+- `formatting`
 
-- `timeout`: the agent exceeded `--agent-timeout-seconds`.
-- `syntax`: Nix parsing failed.
-- `evaluation`: Nix parsed but evaluation failed.
-- `missing-attr`: required attribute was absent.
-- `wrong-value`: required attribute existed but had the wrong value.
-- `unavailable-helper`: solution used helpers not present in the evaluator.
-- `impurity`: solution referenced host paths, environment variables, or external state.
-- `overfit`: solution hardcoded the visible example and failed hidden inputs.
+Optional criteria are limited to objective `maintainability` or `formatting`
+checks. Infrastructure events do not use these classes.
 
-These tags are not enforced by the harness yet, but they are useful for comparing models.
+## Compatibility
 
-## Reporting Results
+The harness can read historical scalar score files for legacy tasks and marks
+them `legacy-binary`. Current publishable corpus releases require
+`criteria-v2`. `export-site` accepts legacy scoring only with the explicit
+`--allow-legacy-protocol` compatibility flag. Historical binary scores are not
+converted and must not be pooled with rubric-scored trials.
 
-A useful result report should include:
+## Study observations
 
-- NixBench commit.
-- Agent command.
-- Model name.
-- Timeout.
-- Overall score.
-- Per-task pass/fail.
-- Per-task duration.
-- Failure classes.
-- Links to `check.log` and `diff.patch` for failed tasks.
+Study schema version 3 retains one normalized observation for every task in
+every valid trial. Each observation includes the task digest, category,
+author-assigned difficulty, score and maximum score, criterion outcomes,
+failure classes, timeout state, infrastructure events, and agent and evaluator
+durations. The writer derives the compatibility totals from these observations
+and rejects inconsistent totals.
+
+Historical study summaries are hydrated from their referenced run summaries
+when those files remain available. A historical summary without those files is
+marked `aggregate_only = true`. Reports do not infer task observations from a
+corpus total.
+
+## Reported estimands
+
+`nixbench.reporting` is the canonical implementation for new statistical
+reports. Reports define three score summaries:
+
+- Macro task score averages each task's normalized score over valid trials,
+  then averages those task means without task weights.
+- Macro pass rate applies the same calculation to each task's binary pass
+  outcome.
+- Point-weighted score divides all earned points by all available points in
+  the included task-trial cells.
+
+Reports never pool task-trial cells first when calculating a macro result.
+They publish the task count, valid observation count, trial count, raw points,
+range, invalid-attempt count, timeout rate where applicable, and exclusion
+reasons beside the estimates. Category and difficulty groups contain no
+editorial weights. Groups with fewer than five tasks have
+`descriptive_only = true` and no task-resampling interval.
+
+## Uncertainty methods
+
+The `student-t-fixed-corpus-run-variation` method estimates the mean statistic
+from hypothetical independent repetitions of the same fixed corpus under the
+same correctness configuration. It assumes the repeated-trial statistic is
+approximately normal. The report retains raw interval bounds. It may also
+provide bounds clipped to the display range as separate values. One trial has
+no interval, and fewer than five trials produces a warning.
+
+This interval does not estimate a single future-run prediction interval,
+evaluator correctness, representativeness of all Nix work, model identity
+certainty, or a direct significance test between configurations.
+
+The `wilson-task-pass-stability` method reports per-task pass stability over
+valid repeated observations within one correctness configuration. Corpus
+health reports keep these intervals separated by configuration. Their pooled
+empirical pass rate is descriptive only and does not receive a Wilson interval.
+Criterion and failure-class reports use raw numerators and denominators rather
+than intervals for small samples.
+
+Task discrimination uses the point-biserial correlation between the binary
+task outcome and the sum of the other valid normalized task scores in the same
+trial. Sample-size and configuration-diversity thresholds are reapplied after
+rows without a leave-one-task-out score are excluded.
+
+The `trial-task-resampling-sensitivity` method measures sensitivity to the
+observed trial and fixed-corpus task composition. It requires a complete
+rectangular matrix for one corpus and configuration and never imputes missing
+cells. Each of 10,000 replicates samples trial indices with replacement, then
+samples task IDs with replacement and computes the macro normalized score. The
+seed is the SHA-256 digest of the corpus ID, configuration ID, stratum ID, and
+method version. Bounds use linear interpolation equivalent to Hyndman-Fan type
+7. This is a sensitivity interval, not evidence of generalization to all Nix
+work.
+
+Timing summaries are grouped by `timing_environment_id`. A correctness
+configuration with more than one timing environment receives separate timing
+results and no combined timing interval.

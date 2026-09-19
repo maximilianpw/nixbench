@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "package-source"
+points = 25
+required = true
+failure_class = "impurity"
+
+[[criteria]]
+id = "build-contract"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "install-contract"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "package-metadata"
+points = 25
+required = true
+failure_class = "wrong-value"

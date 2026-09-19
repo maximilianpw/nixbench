@@ -1,0 +1,14 @@
+schema_version = 2
+id = "codex-example"
+harness_id = "nixbench"
+harness_version = "2.0.0"
+model_id = "gpt-example"
+model_identity_evidence = "unverified"
+effort = "high"
+network_policy = "unknown"
+isolation_profile = "local-workspace"
+tool_policy = "agent-default"
+completion_attestation = "required"
+agent_adapter = "codex-json"
+agent_timeout_seconds = 240
+system = "x86_64-linux"

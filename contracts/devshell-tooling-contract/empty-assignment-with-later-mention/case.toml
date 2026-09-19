@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "devshell-tooling-contract"
+outcome = "reject"
+criterion_id = "experimental-features"
+description = "An empty NIX_CONFIG assignment is followed by an unrelated feature mention"

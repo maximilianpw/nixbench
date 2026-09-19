@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "debug-network-false-lead"
+outcome = "pass"
+criterion_id = "dns-diagnosis"
+description = "Uses the published observation shape with non-keyword evidence"

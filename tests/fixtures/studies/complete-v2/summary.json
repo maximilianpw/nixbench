@@ -1,0 +1,61 @@
+{
+  "schema_version": 3,
+  "study_id": "complete-v2",
+  "metadata": {
+    "corpus_id": "fixture-corpus",
+    "corpus_digest": "fixture-corpus-digest",
+    "configuration_id": "fixture-configuration",
+    "timing_environment_id": "fixture-timing"
+  },
+  "trial_count": 1,
+  "task_count": 1,
+  "trials": [
+    {
+      "run_id": "fixture-run",
+      "created_at": "2026-09-16T00:00:00+00:00",
+      "measurement_status": "valid",
+      "passed_tasks": 1,
+      "failed_tasks": 0,
+      "task_count": 1,
+      "score": 100,
+      "max_score": 100,
+      "score_rate": 1.0,
+      "agent_time_seconds": 3.0,
+      "agent_seconds_per_task": 3.0,
+      "timeouts": 0,
+      "scoring_schema": "criteria-v2",
+      "corpus_digest": "fixture-corpus-digest",
+      "configuration_id": "fixture-configuration",
+      "observations": [
+        {
+          "task_id": "fixture-task",
+          "task_digest": "fixture-task-digest",
+          "category": "packages",
+          "difficulty": "medium",
+          "measurement_status": "valid",
+          "task_outcome": "pass",
+          "passed": true,
+          "score": 100,
+          "max_score": 100,
+          "normalized_score": 1.0,
+          "passed_criteria": ["behavior"],
+          "failed_criteria": [],
+          "failure_classes": [],
+          "agent_duration_seconds": 3.0,
+          "evaluator_duration_seconds": 0.2,
+          "agent_timeout": false,
+          "infrastructure_events": []
+        }
+      ]
+    }
+  ],
+  "attempt_count": 1,
+  "attempts": [
+    {
+      "run_id": "fixture-run",
+      "measurement_status": "valid",
+      "included_in_trials": true,
+      "exclusion_reasons": []
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "fhs-binary-wrapper"
+outcome = "reject"
+criterion_id = "no-host-mutation"
+description = "A valid wrapper also creates FHS paths in a system activation script"

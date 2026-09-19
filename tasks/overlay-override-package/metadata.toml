@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "base-override"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "patch-and-check"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "meta-preservation"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "debug-from-final"
+points = 25
+required = true
+failure_class = "wrong-value"

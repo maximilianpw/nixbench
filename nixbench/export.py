@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
+
+from .reporting import (
+    build_configuration_report,
+    build_study_report,
+    load_study_summary,
+)
 
 
 REQUIRED_SITE_METADATA = (
@@ -14,7 +21,6 @@ REQUIRED_SITE_METADATA = (
     "marker",
     "kind",
     "agent_version",
-    "corpus_revision",
     "host",
     "network",
 )
@@ -28,6 +34,7 @@ def export_studies_for_site(
     minimum_trials: int = 1,
     expected_configurations: int | None = None,
     merge_existing: bool = False,
+    allow_legacy_protocol: bool = False,
 ) -> int:
     if minimum_trials < 1:
         raise ValueError("minimum_trials must be at least 1")
@@ -39,18 +46,24 @@ def export_studies_for_site(
     if not study_paths:
         raise ValueError(f"no study summaries found under {studies_dir}")
 
-    rows: list[dict[str, Any]] = []
+    loaded_studies: dict[Path, dict[str, Any]] = {}
     for study_path in study_paths:
         try:
-            study = json.loads(study_path.read_text())
+            shallow = json.loads(study_path.read_text())
         except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise ValueError(f"cannot read study summary {study_path}: {exc}") from exc
-
-        metadata = study.get("metadata")
+        if not isinstance(shallow, dict):
+            raise ValueError(f"study summary {study_path} must be a JSON object")
+        metadata = shallow.get("metadata")
         if not isinstance(metadata, dict):
-            raise ValueError(f"study summary {study_path} has no metadata object")
+            continue
         if metadata.get("publish") is False:
             continue
+        visibility = metadata.get("corpus_visibility")
+        if visibility in {"private-heldout", "retired"}:
+            raise ValueError(
+                f"study summary {study_path} with {visibility} visibility cannot be exported to the public site"
+            )
         present_site_metadata = [
             key for key in REQUIRED_SITE_METADATA if metadata.get(key)
         ]
@@ -61,29 +74,159 @@ def export_studies_for_site(
             raise ValueError(
                 f"study summary {study_path} is missing site metadata: {', '.join(missing)}"
             )
+        shallow_trials = shallow.get("trials")
+        shallow_trial_count = shallow.get(
+            "trial_count", len(shallow_trials) if isinstance(shallow_trials, list) else None
+        )
+        if shallow_trial_count == 0 and shallow_trials == []:
+            continue
+        loaded_studies[study_path] = load_study_summary(study_path)
+    report_groups: dict[tuple[str, str] | tuple[str, Path], list[dict[str, Any]]] = {}
+    group_key_by_path: dict[Path, tuple[str, str] | tuple[str, Path]] = {}
+    for study_path, study in loaded_studies.items():
+        metadata = study.get("metadata")
+        configuration_id = metadata.get("configuration_id") if isinstance(metadata, dict) else None
+        corpus_digest = metadata.get("corpus_digest") if isinstance(metadata, dict) else None
+        key: tuple[str, str] | tuple[str, Path]
+        participates = isinstance(metadata, dict)
+        if (
+            participates
+            and isinstance(configuration_id, str)
+            and isinstance(corpus_digest, str)
+        ):
+            key = (corpus_digest, configuration_id)
+        else:
+            key = ("study", study_path)
+        group_key_by_path[study_path] = key
+        report_groups.setdefault(key, []).append(study)
+    canonical_reports = {
+        key: (
+            build_configuration_report(studies)
+            if len(studies) > 1 and isinstance(key[1], str)
+            else build_study_report(studies[0])
+        )
+        for key, studies in report_groups.items()
+    }
 
+    rows: list[dict[str, Any]] = []
+    for study_path, study in loaded_studies.items():
+
+        metadata = study.get("metadata")
+        if not isinstance(metadata, dict):
+            raise ValueError(f"study summary {study_path} has no metadata object")
+        trials = study.get("trials")
+        trial_count = study.get("trial_count", len(trials) if isinstance(trials, list) else None)
+        if trial_count == 0 and trials == []:
+            continue
         study_task_count = _positive_int(
             study.get("task_count"), f"{study_path}: task_count"
         )
         if task_count is not None and study_task_count != task_count:
             continue
-        trials = study.get("trials")
         if not isinstance(trials, list) or not trials:
             raise ValueError(f"study summary {study_path} has no trials")
-
-        configuration_id = (
-            f"{metadata['series']}-{metadata['effort']}-{study_task_count}"
-        )
         study_id = _nonempty_string(
             study.get("study_id", study_path.parent.name),
             f"{study_path}: study_id",
         )
+        canonical_report = canonical_reports[group_key_by_path[study_path]]
+        stratum_counts = _export_stratum_counts(canonical_report)
+
+        protocol_complete = metadata.get("protocol_complete") is True
+        if protocol_complete:
+            required_identity = (
+                "corpus_id",
+                "corpus_version",
+                "corpus_digest",
+                "protocol_id",
+                "configuration_id",
+                "timing_environment_id",
+                "completion_attestation",
+                "agent_adapter",
+                "agent_adapter_sha256",
+                "attestation_trust",
+                "wrapper_prompt_sha256",
+                "agent_command_sha256",
+            )
+            missing_identity = [
+                key for key in required_identity if not metadata.get(key)
+            ]
+            if missing_identity:
+                raise ValueError(
+                    f"study summary {study_path} is missing identity metadata: "
+                    + ", ".join(missing_identity)
+                )
+            configuration_id = _nonempty_string(
+                metadata["configuration_id"], f"{study_path}: configuration_id"
+            )
+            corpus_digest = _nonempty_string(
+                metadata["corpus_digest"], f"{study_path}: corpus_digest"
+            )
+            _sha256_string(
+                metadata["wrapper_prompt_sha256"],
+                f"{study_path}: wrapper_prompt_sha256",
+            )
+            _sha256_string(
+                metadata["agent_command_sha256"],
+                f"{study_path}: agent_command_sha256",
+            )
+            if metadata["completion_attestation"] != "required":
+                raise ValueError(
+                    f"{study_path}: completion_attestation must be required"
+                )
+            if metadata["attestation_trust"] == "provisional-same-uid" and metadata.get(
+                "corpus_visibility"
+            ) in {"private", "held-out", "private-heldout"}:
+                raise ValueError(
+                    f"{study_path}: held-out publication requires approved isolation evidence"
+                )
+        elif allow_legacy_protocol:
+            stored_configuration = metadata.get("configuration_id")
+            stored_corpus = metadata.get("corpus_digest")
+            if stored_configuration is not None or stored_corpus is not None:
+                configuration_id = _nonempty_string(
+                    stored_configuration, f"{study_path}: configuration_id"
+                )
+                corpus_digest = _nonempty_string(
+                    stored_corpus, f"{study_path}: corpus_digest"
+                )
+            else:
+                configuration_id = f"legacy-{study_id}"
+                corpus_digest = None
+        else:
+            raise ValueError(
+                f"study summary {study_path} has an incomplete legacy protocol; "
+                "use --allow-legacy-protocol only for explicit compatibility exports"
+            )
         for trial_number, trial in enumerate(trials, start=1):
             if not isinstance(trial, dict):
                 raise ValueError(
                     f"study summary {study_path} contains a non-object trial"
                 )
             run_id = _nonempty_string(trial.get("run_id"), f"{study_path}: run_id")
+            measurement_status = trial.get("measurement_status", "valid")
+            if measurement_status != "valid":
+                raise ValueError(
+                    f"study summary {study_path} contains an invalid or incomplete trial: {run_id}"
+                )
+            scoring_schema = trial.get("scoring_schema", "legacy-binary")
+            if (
+                protocol_complete
+                and scoring_schema != "criteria-v2"
+                and not allow_legacy_protocol
+            ):
+                raise ValueError(
+                    f"study summary {study_path} uses legacy scoring for current publication; "
+                    "use --allow-legacy-protocol only for an explicit compatibility export"
+                )
+            has_stored_identity = corpus_digest is not None
+            if has_stored_identity and (
+                trial.get("configuration_id") != configuration_id
+                or trial.get("corpus_digest") != corpus_digest
+            ):
+                raise ValueError(
+                    f"study summary {study_path} trial {run_id} has mixed corpus or protocol identities"
+                )
             passed_tasks = _nonnegative_int(
                 trial.get("passed_tasks"), f"{study_path}: passed_tasks"
             )
@@ -116,7 +259,23 @@ def export_studies_for_site(
                     "model": metadata["model"],
                     "kind": metadata["kind"],
                     "corpus": f"{study_task_count}-task corpus",
-                    "corpusRevision": metadata["corpus_revision"],
+                    "corpusRevision": metadata.get("corpus_revision"),
+                    "corpusId": metadata.get("corpus_id"),
+                    "corpusVersion": metadata.get("corpus_version"),
+                    "corpusDigest": corpus_digest,
+                    "corpusVisibility": metadata.get("corpus_visibility"),
+                    "protocolId": metadata.get("protocol_id"),
+                    "protocolSchemaVersion": metadata.get("protocol_schema_version"),
+                    "protocolComplete": protocol_complete,
+                    "modelIdentityEvidence": metadata.get("model_identity_evidence"),
+                    "wrapperPromptSha256": metadata.get("wrapper_prompt_sha256"),
+                    "agentCommandSha256": metadata.get("agent_command_sha256"),
+                    "timingEnvironmentId": metadata.get("timing_environment_id"),
+                    "completionAttestation": metadata.get("completion_attestation"),
+                    "agentAdapter": metadata.get("agent_adapter"),
+                    "agentAdapterSha256": metadata.get("agent_adapter_sha256"),
+                    "attestationTrust": metadata.get("attestation_trust"),
+                    "scoringSchema": scoring_schema,
                     "host": metadata["host"],
                     "network": metadata["network"],
                     "platform": metadata.get("platform"),
@@ -139,6 +298,18 @@ def export_studies_for_site(
                     "completedTasks": study_task_count,
                     "totalTasks": study_task_count,
                     "status": "complete",
+                    "observations": trial.get("observations"),
+                    "aggregateOnly": canonical_report["aggregate_only"],
+                    "canonicalReport": canonical_report,
+                    "invalidMeasurementCount": canonical_report["attempts"]["invalid_count"],
+                    "incompleteAttemptCount": canonical_report["attempts"]["incomplete_count"],
+                    "stratumCounts": stratum_counts,
+                    "descriptiveOnly": (
+                        canonical_report["strata"]["whole_corpus"]["descriptive_only"]
+                        if canonical_report.get("strata")
+                        and canonical_report["strata"].get("whole_corpus")
+                        else None
+                    ),
                 }
             )
 
@@ -155,6 +326,16 @@ def export_studies_for_site(
         raise ValueError(
             "duplicate run IDs in exportable studies: " + ", ".join(duplicate_run_ids)
         )
+
+    corpus_by_configuration: dict[str, str | None] = {}
+    for row in rows:
+        configuration_id = row["configurationId"]
+        corpus_digest = row["corpusDigest"]
+        previous = corpus_by_configuration.setdefault(configuration_id, corpus_digest)
+        if previous != corpus_digest:
+            raise ValueError(
+                f"configuration {configuration_id} contains mixed corpus digests"
+            )
 
     configuration_counts = Counter(row["configurationId"] for row in rows)
     if (
@@ -235,6 +416,13 @@ def _nonempty_string(value: object, label: str) -> str:
     return value
 
 
+def _sha256_string(value: object, label: str) -> str:
+    text = _nonempty_string(value, label)
+    if re.fullmatch(r"[0-9a-f]{64}", text) is None:
+        raise ValueError(f"{label} must be a lowercase SHA-256 digest")
+    return text
+
+
 def _positive_int(value: object, label: str) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
         raise ValueError(f"{label} must be a positive integer")
@@ -260,3 +448,36 @@ def _format_duration(seconds: float) -> str:
         return f"{minutes}m {remainder:02d}s"
     hours, minutes = divmod(minutes, 60)
     return f"{hours}h {minutes:02d}m {remainder:02d}s"
+
+
+def _export_stratum_counts(report: dict[str, Any]) -> dict[str, Any] | None:
+    strata = report.get("strata")
+    if not isinstance(strata, dict) or not isinstance(strata.get("whole_corpus"), dict):
+        return None
+    whole = strata["whole_corpus"]
+    return {
+        "wholeCorpusTaskCount": whole["task_count"],
+        "wholeCorpusValidObservationCount": whole["valid_observation_count"],
+        "wholeCorpusTimeoutCount": whole["timeout_count"],
+        "wholeCorpusTimeoutRate": whole["timeout_rate"],
+        "categories": {
+            key: {
+                "taskCount": value["task_count"],
+                "validObservationCount": value["valid_observation_count"],
+                "timeoutCount": value["timeout_count"],
+                "timeoutRate": value["timeout_rate"],
+                "descriptiveOnly": value["descriptive_only"],
+            }
+            for key, value in strata["categories"].items()
+        },
+        "difficulties": {
+            key: {
+                "taskCount": value["task_count"],
+                "validObservationCount": value["valid_observation_count"],
+                "timeoutCount": value["timeout_count"],
+                "timeoutRate": value["timeout_rate"],
+                "descriptiveOnly": value["descriptive_only"],
+            }
+            for key, value in strata["difficulties"].items()
+        },
+    }

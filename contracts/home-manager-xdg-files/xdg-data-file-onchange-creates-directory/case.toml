@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "home-manager-xdg-files"
+outcome = "reject"
+criterion_id = "no-imperative-hooks"
+description = "An xdg.dataFile onChange hook creates a directory imperatively"

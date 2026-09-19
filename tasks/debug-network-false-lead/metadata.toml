@@ -6,3 +6,33 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "arp-diagnosis"
+points = 20
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "dns-diagnosis"
+points = 20
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "unknown-cases"
+points = 20
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "structured-human-output"
+points = 20
+required = true
+failure_class = "missing-attr"
+
+[[criteria]]
+id = "diagnostic-discipline"
+points = 20
+required = true
+failure_class = "wrong-value"

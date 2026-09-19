@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "flake-per-system-outputs"
+outcome = "pass"
+criterion_id = "flake-evaluates"
+description = "The renamed system mapper remains a valid all-systems flake."

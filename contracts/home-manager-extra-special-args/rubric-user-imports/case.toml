@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "home-manager-extra-special-args"
+outcome = "pass"
+criterion_id = "user-imports"
+description = "The reordered module configuration imports both supplied Home Manager modules."

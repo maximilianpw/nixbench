@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "github-source"
+points = 25
+required = true
+failure_class = "evaluation"
+
+[[criteria]]
+id = "repository-identity"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "pinned-revision-hash"
+points = 25
+required = true
+failure_class = "impurity"
+
+[[criteria]]
+id = "fetch-options"
+points = 25
+required = true
+failure_class = "wrong-value"

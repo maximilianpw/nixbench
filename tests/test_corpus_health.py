@@ -17,6 +17,35 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipIf(shutil.which("nix") is None, "nix is required for corpus evaluator tests")
 class CorpusHealthTests(unittest.TestCase):
+    def test_bundled_evaluators_exit_from_required_criteria(self) -> None:
+        for task in iter_tasks(REPO_ROOT / "tasks"):
+            with self.subTest(task=task.id):
+                source = task.evaluator_path.read_text()
+                self.assertIn("NIXBENCH_EVALUATOR_EXIT", source)
+                self.assertNotIn('all(json.load(open(sys.argv[1]))["criteria"].values())', source)
+                self.assertNotIn("all(criteria.values())", source)
+
+    def test_flake_evaluation_criterion_does_not_repeat_output_assertions(self) -> None:
+        source = (
+            REPO_ROOT / "tasks" / "flake-per-system-outputs" / "tests" / "check.sh"
+        ).read_text()
+        criterion = source.split('"flake-evaluates" = passes (', 1)[1].split(
+            ");", 1
+        )[0]
+
+        self.assertIn("flake.inputs", criterion)
+        self.assertIn("flakeAttempt.success", criterion)
+        self.assertIn("outputsAttempt.success", criterion)
+        for overlapping_name in ("packages", "apps", "checks", "devShells", "checkSystem"):
+            self.assertNotIn(overlapping_name, criterion)
+
+    def test_every_task_uses_a_bounded_structured_rubric(self) -> None:
+        for task in iter_tasks(REPO_ROOT / "tasks"):
+            with self.subTest(task=task.id):
+                self.assertEqual(task.scoring_schema, "criteria-v2")
+                self.assertGreaterEqual(len(task.criteria), 4)
+                self.assertLessEqual(len(task.criteria), 8)
+
     def test_nushell_evaluator_does_not_depend_on_ambient_name(self) -> None:
         task = find_task(REPO_ROOT / "tasks", "nushell-command-not-found")
         with tempfile.TemporaryDirectory() as temp, mock.patch.dict(os.environ):
@@ -46,6 +75,10 @@ class CorpusHealthTests(unittest.TestCase):
                 with self.subTest(task=task.id):
                     check_log = Path(result.check.log_path).read_text()
                     self.assertTrue(result.passed, check_log)
+                    self.assertEqual(result.measurement_status, "valid", check_log)
+                    self.assertEqual(result.task_outcome, "pass", check_log)
+                    self.assertEqual(result.scoring_schema, "criteria-v2", check_log)
+                    self.assertTrue(all(result.criteria.values()), check_log)
                     self.assertEqual(result.score, task.max_score, check_log)
 
     def test_starter_solutions_fail(self) -> None:
@@ -63,6 +96,11 @@ class CorpusHealthTests(unittest.TestCase):
                 with self.subTest(task=task.id):
                     check_log = Path(result.check.log_path).read_text()
                     self.assertFalse(result.passed, check_log)
+                    self.assertEqual(result.measurement_status, "valid", check_log)
+                    self.assertEqual(result.task_outcome, "fail", check_log)
+                    self.assertEqual(result.scoring_schema, "criteria-v2", check_log)
+                    self.assertTrue(result.criteria, check_log)
+                    self.assertFalse(all(result.criteria.values()), check_log)
                     self.assertTrue(result.score_valid, check_log)
                     self.assertFalse(result.check.timed_out, check_log)
                     self.assertEqual(result.check.returncode, 1, check_log)

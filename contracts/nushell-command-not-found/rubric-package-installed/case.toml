@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "nushell-command-not-found"
+outcome = "pass"
+criterion_id = "package-installed"
+description = "The alternate hook function also installs the command-not-found package."

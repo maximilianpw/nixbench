@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "home-manager-xdg-files"
+outcome = "reject"
+criterion_id = "placeholder-file"
+description = "Home manager placeholder is not text"

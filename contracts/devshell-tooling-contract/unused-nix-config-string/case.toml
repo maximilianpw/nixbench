@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "devshell-tooling-contract"
+outcome = "reject"
+criterion_id = "experimental-features"
+description = "An unused string mentions NIX_CONFIG while shellHook does not enable features"

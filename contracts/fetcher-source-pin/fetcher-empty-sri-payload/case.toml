@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "fetcher-source-pin"
+outcome = "reject"
+criterion_id = "pinned-revision-hash"
+description = "Fetcher empty sri payload"

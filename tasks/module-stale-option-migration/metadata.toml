@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "sddm-current"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "plasma-current"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "graphics-current"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "kdeconnect-no-stale"
+points = 25
+required = true
+failure_class = "overfit"

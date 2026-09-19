@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "flake-input-package-selection"
+outcome = "reject"
+criterion_id = "named-input-output"
+description = "Selects the forbidden default package output"

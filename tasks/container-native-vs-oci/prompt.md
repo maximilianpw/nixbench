@@ -11,6 +11,7 @@ Requirements:
 - Bind mount host `/dev/bus/usb` into the same path inside the container.
 - The USB bind mount must not be read-only.
 - Inside `containers.ubuntu-lab.config`, enable `services.openssh.enable`.
+- `containers.ubuntu-lab.config` may be an attrset or a module function accepting `{ config, lib, pkgs, ... }`. The evaluator provides `pkgs.openssh`. Its `lib` argument implements `mkDefault` and `mkForce` as value wrappers and `mkIf` as a conditional attrset wrapper.
 - Do not use `virtualisation.oci-containers`, `image`, `extraOptions`, or Docker/Podman-style device options.
 
 ## Source Context

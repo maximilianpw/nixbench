@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "fhs-binary-wrapper"
+outcome = "reject"
+criterion_id = "pinned-source"
+description = "Fhs wrapper fetches an unpinned empty source"

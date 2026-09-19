@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-system-boundaries"
+outcome = "pass"
+criterion_id = "shared-data"
+description = "Shared and module package lists contain the required packages in different orders"

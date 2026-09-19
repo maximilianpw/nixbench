@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "flake-per-system-outputs"
+outcome = "pass"
+criterion_id = "checks-and-shells"
+description = "The renamed system mapper exposes checks and development shells on every system."

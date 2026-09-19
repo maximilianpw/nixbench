@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "thunderbird-config"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "profile-variable"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "managed-policy"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "mutable-state-boundary"
+points = 25
+required = true
+failure_class = "impurity"

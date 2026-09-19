@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "string-escaping-systemd"
+outcome = "pass"
+criterion_id = "bash-package"
+description = "Uses bash -c because login-shell behavior is not required"

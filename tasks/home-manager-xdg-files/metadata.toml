@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "user-directories"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "config-text"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "placeholder-file"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "no-imperative-hooks"
+points = 25
+required = true
+failure_class = "impurity"

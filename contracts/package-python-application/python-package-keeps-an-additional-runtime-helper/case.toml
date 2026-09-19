@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "package-python-application"
+outcome = "pass"
+criterion_id = "test-contract"
+description = "Python package keeps an additional runtime helper"

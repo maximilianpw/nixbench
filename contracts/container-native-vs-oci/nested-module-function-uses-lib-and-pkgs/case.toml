@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "container-native-vs-oci"
+outcome = "pass"
+criterion_id = "nested-service-module"
+description = "Nested container module uses common lib and pkgs arguments"

@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-stale-option-migration"
+outcome = "pass"
+criterion_id = "sddm-current"
+description = "Uses top-level NixOS option shorthand"

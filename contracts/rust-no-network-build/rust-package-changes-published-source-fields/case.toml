@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "rust-no-network-build"
+outcome = "reject"
+criterion_id = "package-source"
+description = "The package changes source and metadata fields that the prompt requires it to preserve"

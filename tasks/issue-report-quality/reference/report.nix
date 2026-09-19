@@ -12,6 +12,8 @@
     "nixos-rebuild test --flake .#workstation"
   ];
 
+  expectedStatus = "evaluation-succeeds";
+  actualStatus = "evaluation-fails";
   expected = "The configuration evaluates using the current SDDM option path.";
   actual = "Evaluation fails because services.xserver.displayManager.sddm.enable does not exist.";
 

@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "mutable-config-home-manager"
+outcome = "reject"
+criterion_id = "mutable-state-boundary"
+description = "Mutable profile hides prefs behind a target"

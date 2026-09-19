@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "mutable-config-home-manager"
+outcome = "pass"
+criterion_id = "thunderbird-config"
+description = "The independent profile module enables Thunderbird."

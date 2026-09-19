@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-service-options"
+outcome = "pass"
+criterion_id = "firewall-port"
+description = "Service does not add an undocumented wanted by target"

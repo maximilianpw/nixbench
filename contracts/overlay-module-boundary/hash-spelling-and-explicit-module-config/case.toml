@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "overlay-module-boundary"
+outcome = "pass"
+criterion_id = "pinned-source-build"
+description = "Uses hash and an explicit module config attrset"

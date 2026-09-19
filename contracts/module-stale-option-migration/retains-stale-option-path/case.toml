@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-stale-option-migration"
+outcome = "reject"
+criterion_id = "kdeconnect-no-stale"
+description = "Keeps the stale xserver display manager option"

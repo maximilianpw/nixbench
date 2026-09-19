@@ -6,3 +6,27 @@ timeout_seconds = 60
 max_score = 100
 systems = ["any"]
 evaluator = "tests/check.sh"
+
+[[criteria]]
+id = "core-tools"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "modern-cli-tools"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "nix-tools"
+points = 25
+required = true
+failure_class = "wrong-value"
+
+[[criteria]]
+id = "exact-package-set"
+points = 25
+required = true
+failure_class = "overfit"

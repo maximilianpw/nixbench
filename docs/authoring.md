@@ -26,7 +26,34 @@ A passing reference and failing starter are necessary, but they do not show that
 - A second input when the candidate is a function, so hard-coded answers do not pass.
 - Opaque sentinel values for fake packages and builders, rather than strings that are identical to their attribute names.
 
-Repository-wide evaluator mutations live in `tests/test_evaluator_contracts.py`. Add a regression there whenever a real benchmark run exposes a false positive or false negative.
+Store evaluator cases under `contracts/<task-id>/<case-id>/`. Add a regression whenever a real benchmark run exposes a false positive or false negative.
+
+Before activation, the corpus release check also requires deterministic
+repeated outcomes, no invalid measurements or known-issue skips, evaluator
+runtime below 80 percent of the task timeout, a release note, and a checked
+release manifest. Follow the calibration and lifecycle rules in
+[benchmark-governance.md](benchmark-governance.md).
+
+Each case uses contract schema 2 and names the rubric criterion it exercises:
+
+```toml
+schema_version = 2
+task_id = "package-stdenv-cli"
+outcome = "reject"
+criterion_id = "install-contract"
+description = "The install command is present only in a comment."
+```
+
+Keep at least one case for every required criterion. A rejecting case leaves
+its named criterion false. A passing case leaves it true.
+
+Evaluators initialize every outcome to false and write the schema-2 score file
+atomically. Evaluate criteria independently where possible so one missing
+attribute does not erase credit for unrelated requirements. Candidate syntax
+or evaluation failures exit `1` with a valid payload. Reserve exit codes `2`
+and greater for evaluator implementation or infrastructure failures.
+
+Hidden cases may vary inputs and expose edge conditions. Hidden evaluators may not require an undocumented representation when common semantic alternatives exist.
 
 ## Task Ideas
 

@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "rust-no-network-build"
+outcome = "pass"
+criterion_id = "no-network-escape"
+description = "Rust package comments that network is forbidden"

@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "purity-wrapper-derivation"
+outcome = "reject"
+criterion_id = "wrapper-inputs"
+description = "Pure wrapper hard codes a bash store path"

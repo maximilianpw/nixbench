@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-service-options"
+outcome = "reject"
+criterion_id = "option-schema"
+description = "Service uses an unavailable lib helper"

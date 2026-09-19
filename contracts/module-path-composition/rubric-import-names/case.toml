@@ -1,0 +1,5 @@
+schema_version = 2
+task_id = "module-path-composition"
+outcome = "pass"
+criterion_id = "import-names"
+description = "The named path implementation records the documented import names."

@@ -8,6 +8,9 @@ Rewrite the derivation so that:
 
 - It still uses `rustPlatform.buildRustPackage`.
 - It keeps `pname = "vision-indexer"` and `version = "0.4.0"`.
+- It preserves the starter's source owner, repository, revision, and fixed
+  source hash, along with its `cargoHash`, MIT license, and
+  `meta.mainProgram = "vision-indexer"`.
 - It does not enable a Cargo feature named `download-binaries`.
 - It uses a system ONNX Runtime dependency instead of asking Cargo to download one.
 - It fetches the model file as a fixed Nix input with `fetchurl`.

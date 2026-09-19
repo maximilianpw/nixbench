@@ -4,9 +4,14 @@ set -eu
 workdir=${1:-$PWD}
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
+command -v nix >/dev/null 2>&1 || exit 2
+command -v python3 >/dev/null 2>&1 || exit 2
 
 cat > "$tmpdir/test.nix" <<EOF
 let
+  passes = value:
+    let attempt = builtins.tryEval (builtins.deepSeq value value);
+    in attempt.success && attempt.value == true;
   makeDrv = attrs:
     attrs
     // {
@@ -28,26 +33,45 @@ let
     curl = "/nix/store/final-curl";
   };
   result = overlay final base;
-  module = import ${workdir}/module.nix { pkgs = result; };
+  rawModule = import ${workdir}/module.nix { pkgs = result; };
+  module = if rawModule ? config then rawModule.config else rawModule;
+  sourceHash = result.petrified.src.hash or result.petrified.src.sha256;
   service = module.systemd.user.services.petrified;
   timer = module.systemd.user.timers.petrified;
-in
-assert builtins.attrNames result == [ "petrified" ];
-assert result.petrified.type == "derivation";
-assert result.petrified.name == "petrified-2.0.3";
-assert result.petrified.src.__fetchurl == true;
-assert result.petrified.src.url == "https://gitlab.com/troyengel/petrified/-/archive/v2.0.3/petrified-v2.0.3.tar.gz";
-assert result.petrified.src.sha256 == "bb01029abc7796d2dd824f88beb2da05fb8da10ceb3ec7a0c1682631d670fc27";
-assert result.petrified.buildInputs == [ "/nix/store/final-iproute" "/nix/store/final-curl" ];
-assert result.petrified.installFlags == [ "DESTDIR=\$(out)" ];
-assert !(builtins.hasAttr "petrified" module);
-assert service.description == "petrified dynamic DNS updater";
-assert service.serviceConfig.ExecStart == "/nix/store/petrified-2.0.3/bin/petrified";
-assert service.wantedBy == [ "default.target" ];
-assert timer.wantedBy == [ "timers.target" ];
-assert timer.partOf == [ "petrified.service" ];
-assert timer.timerConfig.OnCalendar == "hourly";
-"ok"
+in {
+  schema_version = 2;
+  criteria = {
+    "overlay-package" = passes (
+      builtins.attrNames result == [ "petrified" ]
+      && result.petrified.type == "derivation"
+      && result.petrified.name == "petrified-2.0.3"
+      && result.petrified.buildInputs == [ "/nix/store/final-iproute" "/nix/store/final-curl" ]
+      && result.petrified.installFlags == [ "DESTDIR=\$(out)" ]
+    );
+    "pinned-source-build" = passes (
+      result.petrified.src.__fetchurl == true
+      && result.petrified.src.url == "https://gitlab.com/troyengel/petrified/-/archive/v2.0.3/petrified-v2.0.3.tar.gz"
+      && sourceHash == "bb01029abc7796d2dd824f88beb2da05fb8da10ceb3ec7a0c1682631d670fc27"
+    );
+    "module-service" = passes (
+      service.description == "petrified dynamic DNS updater"
+      && service.serviceConfig.ExecStart == "/nix/store/petrified-2.0.3/bin/petrified"
+      && service.wantedBy == [ "default.target" ]
+    );
+    "module-timer-boundary" = passes (
+      !(builtins.hasAttr "petrified" module)
+      && timer.wantedBy == [ "timers.target" ]
+      && timer.partOf == [ "petrified.service" ]
+      && timer.timerConfig.OnCalendar == "hourly"
+    );
+  };
+  notes = [];
+}
 EOF
 
-nix eval --json --file "$tmpdir/test.nix" >/dev/null
+score_tmp="$NIXBENCH_SCORE_FILE.tmp.$$"
+if ! nix eval --json --file "$tmpdir/test.nix" >"$score_tmp"; then
+  printf '%s\n' '{"schema_version":2,"criteria":{"overlay-package":false,"pinned-source-build":false,"module-service":false,"module-timer-boundary":false},"notes":[]}' >"$score_tmp"
+fi
+mv "$score_tmp" "$NIXBENCH_SCORE_FILE"
+python3 "$NIXBENCH_EVALUATOR_EXIT" "$NIXBENCH_TASK_DIR/metadata.toml" "$NIXBENCH_SCORE_FILE"
