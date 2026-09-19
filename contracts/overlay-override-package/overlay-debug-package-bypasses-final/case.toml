@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "overlay-override-package"
 outcome = "reject"
 criterion_id = "debug-from-final"
 description = "Overlay debug package bypasses final"
+
+[expected_criteria]
+"base-override" = true
+"debug-from-final" = false
+"meta-preservation" = true
+"patch-and-check" = true

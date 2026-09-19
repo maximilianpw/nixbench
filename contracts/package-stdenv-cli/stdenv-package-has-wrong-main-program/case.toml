@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "package-stdenv-cli"
+outcome = "reject"
+criterion_id = "package-metadata"
+description = "stdenv package declares the wrong main program"
+
+[expected_criteria]
+"build-contract" = true
+"install-contract" = true
+"package-metadata" = false
+"package-source" = true

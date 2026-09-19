@@ -12,11 +12,16 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
+  get = path: default: value:
+    if path == [] then value
+    else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
+    then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
+    else default;
   module = import ${workdir}/container.nix {};
   cfg = if module ? config then module.config else module;
-  container = cfg.containers.ubuntu-lab;
+  container = get [ "containers" "ubuntu-lab" ] {} cfg;
   rawContainerConfig =
-    if builtins.isFunction container.config
+    if builtins.isFunction (get [ "config" ] {} container)
     then container.config {
       config = {};
       lib = {
@@ -26,7 +31,7 @@ let
       };
       pkgs = { openssh = { package = "openssh"; marker = 211; }; };
     }
-    else container.config;
+    else get [ "config" ] {} container;
   containerConfigAttempt = builtins.tryEval (
     builtins.deepSeq rawContainerConfig rawContainerConfig
   );
@@ -34,19 +39,23 @@ in {
   schema_version = 2;
   criteria = {
     "native-container-shape" = passes (
-      container.autoStart == true
-      && !((cfg ? virtualisation) && (cfg.virtualisation ? oci-containers))
+      get [ "autoStart" ] false container == true
+      && !(get [ "virtualisation" ] {} cfg ? oci-containers)
     );
     "network-and-mounts" = passes (
-      container.privateNetwork == true
-      && container.bindMounts."/dev/bus/usb".hostPath == "/dev/bus/usb"
-      && container.bindMounts."/dev/bus/usb".isReadOnly == false
+      get [ "privateNetwork" ] false container == true
+      && get [ "bindMounts" "/dev/bus/usb" "hostPath" ] null container == "/dev/bus/usb"
+      && get [ "bindMounts" "/dev/bus/usb" "isReadOnly" ] null container == false
     );
     "nested-service-module" = passes (
       containerConfigAttempt.success
-      && containerConfigAttempt.value.services.openssh.enable == true
+      && get [ "services" "openssh" "enable" ] false containerConfigAttempt.value == true
     );
-    "no-oci-fields" = passes (!(container ? image) && !(container ? extraOptions));
+    "no-oci-fields" = passes (
+      !(container ? image)
+      && !(container ? extraOptions)
+      && !(get [ "virtualisation" ] {} cfg ? oci-containers)
+    );
   };
   notes = [];
 }

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "fetcher-source-pin"
 outcome = "pass"
 criterion_id = "repository-identity"
 description = "Reordered fetcher attributes"
+
+[expected_criteria]
+"fetch-options" = true
+"github-source" = true
+"pinned-revision-hash" = true
+"repository-identity" = true

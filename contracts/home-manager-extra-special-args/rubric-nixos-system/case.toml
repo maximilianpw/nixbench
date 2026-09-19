@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "home-manager-extra-special-args"
 outcome = "pass"
 criterion_id = "nixos-system"
 description = "The reordered module configuration keeps the requested NixOS system."
+
+[expected_criteria]
+"forwards-inputs" = true
+"module-integration" = true
+"nixos-system" = true
+"user-imports" = true

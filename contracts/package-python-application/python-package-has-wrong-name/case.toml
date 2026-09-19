@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "package-python-application"
+outcome = "reject"
+criterion_id = "package-identity"
+description = "Python package uses the wrong package name"
+
+[expected_criteria]
+"build-and-runtime-inputs" = true
+"package-identity" = false
+"package-metadata" = true
+"test-contract" = true

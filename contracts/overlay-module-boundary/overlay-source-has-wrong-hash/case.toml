@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "overlay-module-boundary"
+outcome = "reject"
+criterion_id = "pinned-source-build"
+description = "Overlay source uses the wrong hash"
+
+[expected_criteria]
+"module-service" = true
+"module-timer-boundary" = true
+"overlay-package" = true
+"pinned-source-build" = false

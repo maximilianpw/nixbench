@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-stale-option-migration"
 outcome = "reject"
-criterion_id = "kdeconnect-no-stale"
+criterion_id = "sddm-current"
 description = "Keeps the stale xserver display manager option"
+
+[expected_criteria]
+"graphics-current" = true
+"kdeconnect-no-stale" = true
+"plasma-current" = true
+"sddm-current" = false

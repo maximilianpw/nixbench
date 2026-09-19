@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "string-escaping-systemd"
+outcome = "reject"
+criterion_id = "service-shape"
+description = "systemd service uses the wrong type"
+
+[expected_criteria]
+"bash-package" = true
+"runtime-variables" = true
+"safe-append-and-purity" = true
+"service-shape" = false

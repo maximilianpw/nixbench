@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "home-manager-xdg-files"
 outcome = "reject"
 criterion_id = "placeholder-file"
 description = "Home manager placeholder is not text"
+
+[expected_criteria]
+"config-text" = true
+"no-imperative-hooks" = true
+"placeholder-file" = false
+"user-directories" = true

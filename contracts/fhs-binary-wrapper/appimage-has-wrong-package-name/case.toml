@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "fhs-binary-wrapper"
+outcome = "reject"
+criterion_id = "appimage-package"
+description = "AppImage wrapper uses the wrong package name"
+
+[expected_criteria]
+"appimage-package" = false
+"fhs-runtime" = true
+"no-host-mutation" = true
+"pinned-source" = true

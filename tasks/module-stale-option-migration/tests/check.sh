@@ -12,6 +12,11 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
+  get = path: default: value:
+    if path == [] then value
+    else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
+    then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
+    else default;
   module = import ${workdir}/module.nix {};
   cfg = if module ? config then module.config else module;
   oldXserver = cfg.services.xserver or {};
@@ -20,17 +25,20 @@ in {
   schema_version = 2;
   criteria = {
     "sddm-current" = passes (
-      cfg.services.displayManager.sddm.enable == true
+      get [ "services" "displayManager" "sddm" "enable" ] false cfg == true
       && !(oldXserver ? displayManager)
     );
     "plasma-current" = passes (
-      cfg.services.desktopManager.plasma6.enable == true
+      get [ "services" "desktopManager" "plasma6" "enable" ] false cfg == true
       && !(oldDesktopManager ? plasma5)
     );
     "graphics-current" = passes (
-      cfg.hardware.graphics.enable == true && !(cfg.hardware ? opengl)
+      get [ "hardware" "graphics" "enable" ] false cfg == true
+      && !(get [ "hardware" ] {} cfg ? opengl)
     );
-    "kdeconnect-no-stale" = passes (cfg.programs.kdeconnect.enable == true);
+    "kdeconnect-no-stale" = passes (
+      get [ "programs" "kdeconnect" "enable" ] false cfg == true
+    );
   };
   notes = [];
 }

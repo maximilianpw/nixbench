@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "nushell-command-not-found"
+outcome = "reject"
+criterion_id = "gated-nushell-hook"
+description = "Nushell hook ignores the Nushell enable flag"
+
+[expected_criteria]
+"command-not-found-call" = true
+"gated-nushell-hook" = false
+"package-installed" = true
+"preserve-bash" = true

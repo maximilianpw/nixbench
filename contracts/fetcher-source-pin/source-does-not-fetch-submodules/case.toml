@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "fetcher-source-pin"
+outcome = "reject"
+criterion_id = "fetch-options"
+description = "Source does not fetch required submodules"
+
+[expected_criteria]
+"fetch-options" = false
+"github-source" = true
+"pinned-revision-hash" = true
+"repository-identity" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "python-cuda-uv2nix-patch"
 outcome = "pass"
 criterion_id = "python-inputs"
 description = "Runtime inputs in alternate order"
+
+[expected_criteria]
+"cuda-inputs" = true
+"package-identity" = true
+"patchelf-and-pure-phases" = true
+"python-inputs" = true

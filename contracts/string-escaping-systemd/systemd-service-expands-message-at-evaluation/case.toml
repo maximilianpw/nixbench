@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "string-escaping-systemd"
+outcome = "reject"
+criterion_id = "runtime-variables"
+description = "systemd service does not reference the runtime message variable"
+
+[expected_criteria]
+"service-shape" = true
+"bash-package" = true
+"runtime-variables" = false
+"safe-append-and-purity" = true

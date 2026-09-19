@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "issue-report-quality"
 outcome = "reject"
-criterion_id = "outcome-evidence"
+criterion_id = "report-fields"
 description = "Issue report missing expected behavior"
+
+[expected_criteria]
+"bounded-analysis" = true
+"outcome-evidence" = true
+"report-fields" = false
+"reproduction-and-system" = true

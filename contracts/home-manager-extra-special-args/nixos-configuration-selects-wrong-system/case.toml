@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "home-manager-extra-special-args"
+outcome = "reject"
+criterion_id = "nixos-system"
+description = "NixOS configuration selects the wrong system"
+
+[expected_criteria]
+"forwards-inputs" = true
+"module-integration" = true
+"nixos-system" = false
+"user-imports" = true

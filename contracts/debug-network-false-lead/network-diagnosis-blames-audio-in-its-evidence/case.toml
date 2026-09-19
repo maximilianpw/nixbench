@@ -1,5 +1,12 @@
-schema_version = 2
+schema_version = 3
 task_id = "debug-network-false-lead"
 outcome = "reject"
 criterion_id = "diagnostic-discipline"
 description = "Correct ARP facts do not compensate for retaining false diagnostic leads"
+
+[expected_criteria]
+"arp-diagnosis" = true
+"diagnostic-discipline" = false
+"dns-diagnosis" = true
+"structured-human-output" = true
+"unknown-cases" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "home-manager-xdg-files"
 outcome = "reject"
 criterion_id = "no-imperative-hooks"
 description = "A home.file onChange hook creates a directory imperatively"
+
+[expected_criteria]
+"config-text" = true
+"no-imperative-hooks" = false
+"placeholder-file" = true
+"user-directories" = true

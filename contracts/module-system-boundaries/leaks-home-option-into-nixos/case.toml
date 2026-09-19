@@ -1,5 +1,14 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-system-boundaries"
 outcome = "reject"
 criterion_id = "nixos-module"
 description = "Adds a Home Manager option to the NixOS module"
+
+[coupled_failures]
+"darwin-module" = "The named mutation also makes darwin-module false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"darwin-module" = false
+"home-manager-module" = true
+"nixos-module" = false
+"shared-data" = true

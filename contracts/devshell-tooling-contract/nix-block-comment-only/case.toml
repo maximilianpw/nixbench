@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "devshell-tooling-contract"
 outcome = "reject"
 criterion_id = "experimental-features"
 description = "A Nix block comment contains the only valid NIX_CONFIG assignment"
+
+[expected_criteria]
+"experimental-features" = false
+"formatter-contract" = true
+"required-tools" = true
+"shell-construction" = true

@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "overlay-override-package"
+outcome = "reject"
+criterion_id = "meta-preservation"
+description = "Overlay replaces package metadata description"
+
+[expected_criteria]
+"base-override" = true
+"debug-from-final" = true
+"meta-preservation" = false
+"patch-and-check" = true

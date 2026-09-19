@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "package-python-application"
 outcome = "pass"
 criterion_id = "build-and-runtime-inputs"
 description = "Python dependencies use a different order"
+
+[expected_criteria]
+"build-and-runtime-inputs" = true
+"package-identity" = true
+"package-metadata" = true
+"test-contract" = true

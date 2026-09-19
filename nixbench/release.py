@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from .adapters import get_trusted_adapter
+from .contracts import collect_contract_evidence, load_contract_cases
 from .corpus import CorpusIdentity, identify_corpus
 from .isolation import APPROVED_HELDOUT_PROFILE, APPROVED_PREFLIGHT_EVIDENCE
 from .reporting import (
@@ -40,7 +41,14 @@ MINIMUM_PUBLICATION_OBSERVATIONS = 20
 
 
 def release_tool_digest() -> str:
-    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    hasher = hashlib.sha256()
+    hasher.update(b"nixbench-release-tool-v2\0")
+    for path in (Path(__file__), Path(__file__).with_name("contracts.py")):
+        payload = path.read_bytes()
+        hasher.update(path.name.encode("utf-8") + b"\0")
+        hasher.update(len(payload).to_bytes(8, "big"))
+        hasher.update(payload)
+    return hasher.hexdigest()
 
 
 def health_report_provenance(
@@ -175,11 +183,13 @@ def check_release(
         all(
             int(item.get("pass_fixture_count", 0)) >= 1
             and int(item.get("reject_fixture_count", 0)) >= 1
+            and int(item.get("alternative_pass_fixture_count", 0)) >= 1
             and item.get("contract_outcomes_match") is True
+            and not item.get("contract_coverage_errors", [])
             for item in evidence
         ),
-        "every task has matching passing and rejecting fixtures",
-        "every task needs at least one passing fixture, one rejecting fixture, and matching outcomes",
+        "every task has an alternative passing fixture and targeted rejecting fixtures with matching vectors",
+        "every task needs an alternative passing fixture, targeted rejecting fixtures, and exact matching vectors",
     )
     _add_gate(
         gates,
@@ -189,8 +199,8 @@ def check_release(
             <= set(_string_list(item.get("criterion_coverage", [])))
             for item in evidence
         ),
-        "contract fixtures map every required rubric criterion",
-        "one or more required rubric criteria lack contract fixture coverage",
+        "targeted rejecting fixtures cover every required rubric criterion",
+        "one or more required rubric criteria lack targeted rejecting fixture coverage",
     )
     _add_gate(
         gates,
@@ -198,6 +208,13 @@ def check_release(
         all(item.get("evaluator_deterministic") is True for item in evidence),
         "reference and representative fixture runs are deterministic",
         "an evaluator produced different results across repeated runs",
+    )
+    _add_gate(
+        gates,
+        "no-contract-evaluator-errors",
+        all(int(item.get("contract_evaluator_error_count", 0)) == 0 for item in evidence),
+        "active contract fixtures emit no evaluator error logs",
+        "an active contract fixture emitted an evaluator error log",
     )
     _add_gate(
         gates,
@@ -825,9 +842,24 @@ def collect_health_evidence(
     tasks: Sequence[Task], contracts_dir: Path
 ) -> list[dict[str, Any]]:
     evidence: list[dict[str, Any]] = []
+    if not tasks:
+        return evidence
+    repo_root = tasks[0].root.parent.parent
+    cases = (
+        load_contract_cases(contracts_dir, tasks_root=repo_root / "tasks")
+        if contracts_dir.is_dir()
+        else ()
+    )
     with tempfile.TemporaryDirectory(prefix="nixbench-release-") as temp:
         root = Path(temp)
         results_dir = root / "results"
+        contract_evidence = collect_contract_evidence(
+            tasks,
+            cases,
+            repo_root=repo_root,
+            results_dir=results_dir,
+            run_prefix="release-contract",
+        )
         for task in tasks:
             reference_runs = [
                 run_task(
@@ -844,60 +876,18 @@ def collect_health_evidence(
                 run_id=f"release-{task.id}-starter",
                 solution_mode="starter",
             )
-            deterministic = _health_signature(reference_runs[0]) == _health_signature(
-                reference_runs[1]
+            contracts = contract_evidence[task.id]
+            deterministic = (
+                _health_signature(reference_runs[0])
+                == _health_signature(reference_runs[1])
+                and contracts["contract_deterministic"] is True
             )
             durations = [run.check.duration_seconds for run in reference_runs]
+            durations.extend(contracts["contract_durations_seconds"])
             invalid_count = sum(
                 run.measurement_status != "valid" for run in reference_runs
             ) + int(starter.measurement_status != "valid")
-            pass_count = 0
-            reject_count = 0
-            known_issue_count = 0
-            covered: set[str] = set()
-            outcomes_match = True
-            for manifest_path in sorted((contracts_dir / task.id).glob("*/case.toml")):
-                with manifest_path.open("rb") as handle:
-                    manifest = tomllib.load(handle)
-                if manifest.get("known_issue"):
-                    known_issue_count += 1
-                    continue
-                outcome = manifest.get("outcome")
-                criterion_id = manifest.get("criterion_id")
-                if outcome not in {"pass", "reject"} or not isinstance(
-                    criterion_id, str
-                ):
-                    raise ValueError(f"invalid contract manifest: {manifest_path}")
-                covered.add(criterion_id)
-                pass_count += int(outcome == "pass")
-                reject_count += int(outcome == "reject")
-                fixture_runs = [
-                    _run_contract_candidate(
-                        task,
-                        manifest_path.parent / "candidate",
-                        results_dir,
-                        root,
-                        manifest_path.parent.name,
-                        index,
-                    )
-                    for index in range(2)
-                ]
-                deterministic = deterministic and (
-                    _health_signature(fixture_runs[0])
-                    == _health_signature(fixture_runs[1])
-                )
-                durations.extend(run.check.duration_seconds for run in fixture_runs)
-                invalid_count += sum(
-                    run.measurement_status != "valid" for run in fixture_runs
-                )
-                outcomes_match = outcomes_match and all(
-                    run.passed
-                    if outcome == "pass"
-                    else run.measurement_status == "valid"
-                    and run.task_outcome == "fail"
-                    and not run.passed
-                    for run in fixture_runs
-                )
+            invalid_count += int(contracts["contract_invalid_measurement_count"])
             evidence.append(
                 {
                     "task_id": task.id,
@@ -912,38 +902,17 @@ def collect_health_evidence(
                     "starter_rejected": starter.measurement_status == "valid"
                     and starter.task_outcome == "fail"
                     and not starter.passed,
-                    "pass_fixture_count": pass_count,
-                    "reject_fixture_count": reject_count,
-                    "criterion_ids": [criterion.id for criterion in task.criteria],
-                    "criterion_coverage": sorted(covered),
+                    "criterion_ids": [
+                        criterion.id for criterion in task.criteria if criterion.required
+                    ],
                     "evaluator_deterministic": deterministic,
-                    "contract_outcomes_match": outcomes_match,
                     "invalid_measurement_count": invalid_count,
                     "evaluator_durations_seconds": durations,
                     "timeout_seconds": task.timeout_seconds,
-                    "known_issue_count": known_issue_count,
+                    **contracts,
                 }
             )
     return evidence
-
-
-def _run_contract_candidate(
-    task: Task,
-    candidate_dir: Path,
-    results_dir: Path,
-    root: Path,
-    case_id: str,
-    index: int,
-) -> TaskRunResult:
-    clone_root = root / "candidates" / task.id / case_id / str(index)
-    shutil.copytree(task.root, clone_root)
-    shutil.copytree(candidate_dir, clone_root / "starter", dirs_exist_ok=True)
-    return run_task(
-        load_task(clone_root),
-        results_dir=results_dir,
-        run_id=f"release-{task.id}-{case_id}-{index}",
-        solution_mode="starter",
-    )
 
 
 def _health_signature(result: TaskRunResult) -> tuple[object, ...]:
@@ -1005,6 +974,7 @@ def _release_gate_digest(
         Path(__file__).with_name("isolation.py"),
         Path(__file__).with_name("adapters.py"),
         Path(__file__).with_name("cli.py"),
+        Path(__file__).with_name("contracts.py"),
         Path(__file__).with_name("corpus.py"),
         Path(__file__).with_name("export.py"),
         Path(__file__).with_name("protocol.py"),
@@ -1165,12 +1135,21 @@ def _stable_health_evidence(item: Mapping[str, Any]) -> dict[str, Any]:
         "starter_rejected": item.get("starter_rejected") is True,
         "pass_fixture_count": int(item.get("pass_fixture_count", 0)),
         "reject_fixture_count": int(item.get("reject_fixture_count", 0)),
+        "alternative_pass_fixture_count": int(
+            item.get("alternative_pass_fixture_count", 0)
+        ),
         "criterion_ids": sorted(_string_list(item.get("criterion_ids", []))),
         "criterion_coverage": sorted(
             _string_list(item.get("criterion_coverage", []))
         ),
         "evaluator_deterministic": item.get("evaluator_deterministic") is True,
         "contract_outcomes_match": item.get("contract_outcomes_match") is True,
+        "contract_evaluator_error_count": int(
+            item.get("contract_evaluator_error_count", 0)
+        ),
+        "contract_coverage_errors": sorted(
+            _string_list(item.get("contract_coverage_errors", []))
+        ),
         "invalid_measurement_count": int(item.get("invalid_measurement_count", 0)),
         "runtime_has_margin": _runtime_has_margin(item),
         "known_issue_count": int(item.get("known_issue_count", 0)),

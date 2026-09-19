@@ -12,6 +12,11 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
+  get = path: default: value:
+    if path == [] then value
+    else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
+    then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
+    else default;
   makeDrv = attrs:
     attrs
     // {
@@ -35,9 +40,10 @@ let
   result = overlay final base;
   rawModule = import ${workdir}/module.nix { pkgs = result; };
   module = if rawModule ? config then rawModule.config else rawModule;
-  sourceHash = result.petrified.src.hash or result.petrified.src.sha256;
-  service = module.systemd.user.services.petrified;
-  timer = module.systemd.user.timers.petrified;
+  sourceHash = get [ "petrified" "src" "hash" ]
+    (get [ "petrified" "src" "sha256" ] null result) result;
+  service = get [ "systemd" "user" "services" "petrified" ] {} module;
+  timer = get [ "systemd" "user" "timers" "petrified" ] {} module;
 in {
   schema_version = 2;
   criteria = {
@@ -54,15 +60,15 @@ in {
       && sourceHash == "bb01029abc7796d2dd824f88beb2da05fb8da10ceb3ec7a0c1682631d670fc27"
     );
     "module-service" = passes (
-      service.description == "petrified dynamic DNS updater"
-      && service.serviceConfig.ExecStart == "/nix/store/petrified-2.0.3/bin/petrified"
-      && service.wantedBy == [ "default.target" ]
+      get [ "description" ] null service == "petrified dynamic DNS updater"
+      && get [ "serviceConfig" "ExecStart" ] null service == "/nix/store/petrified-2.0.3/bin/petrified"
+      && get [ "wantedBy" ] null service == [ "default.target" ]
     );
     "module-timer-boundary" = passes (
       !(builtins.hasAttr "petrified" module)
-      && timer.wantedBy == [ "timers.target" ]
-      && timer.partOf == [ "petrified.service" ]
-      && timer.timerConfig.OnCalendar == "hourly"
+      && get [ "wantedBy" ] null timer == [ "timers.target" ]
+      && get [ "partOf" ] null timer == [ "petrified.service" ]
+      && get [ "timerConfig" "OnCalendar" ] null timer == "hourly"
     );
   };
   notes = [];

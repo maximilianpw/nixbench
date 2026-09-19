@@ -9,13 +9,13 @@ let
 in {
   xdg.portal = lib.mkIf cfg.enable {
     enable = true;
-    extraPortals = [
+    extraPortals = lib.mkForce [
       pkgs.xdg-desktop-portal-hyprland
     ];
-    configPackages = [
+    configPackages = lib.mkForce [
       pkgs.xdg-desktop-portal-hyprland
     ];
-    config.common.default = [
+    config.common.default = lib.mkForce [
       "hyprland"
     ];
   };

@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "mutable-config-home-manager"
+outcome = "reject"
+criterion_id = "managed-policy"
+description = "Managed policy allows application updates"
+
+[expected_criteria]
+"managed-policy" = false
+"mutable-state-boundary" = true
+"profile-variable" = true
+"thunderbird-config" = true

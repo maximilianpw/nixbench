@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "issue-report-quality"
 outcome = "reject"
 criterion_id = "bounded-analysis"
 description = "Logs name the stale path but the analysis does not"
+
+[expected_criteria]
+"bounded-analysis" = false
+"outcome-evidence" = true
+"report-fields" = true
+"reproduction-and-system" = true

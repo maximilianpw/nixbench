@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "overlay-module-boundary"
 outcome = "reject"
 criterion_id = "overlay-package"
 description = "Overlay uses prev for runtime inputs"
+
+[expected_criteria]
+"overlay-package" = false
+"pinned-source-build" = true
+"module-service" = true
+"module-timer-boundary" = true

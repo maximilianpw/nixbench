@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-path-composition"
 outcome = "pass"
 criterion_id = "import-names"
 description = "The named path implementation records the documented import names."
+
+[expected_criteria]
+"home-file-paths" = true
+"import-names" = true
+"imports-paths" = true
+"path-types" = true

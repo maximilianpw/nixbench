@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "home-manager-extra-special-args"
+outcome = "reject"
+criterion_id = "user-imports"
+description = "Home user omits the agenix module import"
+
+[expected_criteria]
+"forwards-inputs" = true
+"module-integration" = true
+"nixos-system" = true
+"user-imports" = false

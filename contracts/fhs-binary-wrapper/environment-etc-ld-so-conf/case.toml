@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "fhs-binary-wrapper"
 outcome = "reject"
 criterion_id = "no-host-mutation"
 description = "A valid wrapper also writes a host ld.so.conf entry"
+
+[expected_criteria]
+"appimage-package" = true
+"fhs-runtime" = true
+"no-host-mutation" = false
+"pinned-source" = true

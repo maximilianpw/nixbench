@@ -1,0 +1,12 @@
+schema_version = 3
+task_id = "debug-network-false-lead"
+outcome = "reject"
+criterion_id = "structured-human-output"
+description = "ARP evidence is returned as a string instead of a list"
+
+[expected_criteria]
+"arp-diagnosis" = true
+"diagnostic-discipline" = true
+"dns-diagnosis" = true
+"structured-human-output" = false
+"unknown-cases" = true

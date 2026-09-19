@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "devshell-tooling-contract"
+outcome = "reject"
+criterion_id = "shell-construction"
+description = "Development shell uses the wrong name"
+
+[expected_criteria]
+"experimental-features" = true
+"formatter-contract" = true
+"required-tools" = true
+"shell-construction" = false

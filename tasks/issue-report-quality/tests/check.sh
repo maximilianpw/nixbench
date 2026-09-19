@@ -12,6 +12,11 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
+  get = path: default: value:
+    if path == [] then value
+    else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
+    then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
+    else default;
   report = import ${workdir}/report.nix;
   text = builtins.toJSON report;
   analysisText = builtins.toJSON report.analysis;
@@ -19,10 +24,10 @@ in {
   schema_version = 2;
   criteria = {
     "report-fields" = passes (
-      builtins.isString report.title && report.title != ""
-      && report.failureClass == "evaluation"
-      && builtins.isString report.expected && report.expected != ""
-      && builtins.isString report.actual && report.actual != ""
+      builtins.isString (get [ "title" ] null report) && get [ "title" ] "" report != ""
+      && get [ "failureClass" ] null report == "evaluation"
+      && builtins.isString (get [ "expected" ] null report) && get [ "expected" ] "" report != ""
+      && builtins.isString (get [ "actual" ] null report) && get [ "actual" ] "" report != ""
     );
     "reproduction-and-system" = passes (
       report.system.system == "x86_64-linux"

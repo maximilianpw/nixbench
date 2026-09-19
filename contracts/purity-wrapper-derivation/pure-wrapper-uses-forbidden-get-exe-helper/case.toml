@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "purity-wrapper-derivation"
 outcome = "reject"
 criterion_id = "pure-install-phase"
 description = "Pure wrapper uses forbidden get exe helper"
+
+[expected_criteria]
+"derivation-identity" = true
+"pure-install-phase" = false
+"purity-marker" = true
+"wrapper-inputs" = true

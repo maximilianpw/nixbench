@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "lang-attrsets-normalize"
+outcome = "reject"
+criterion_id = "names-and-versions"
+description = "Normalizer uses the wrong fallback version"
+
+[expected_criteria]
+"by-system" = true
+"default-packages" = true
+"names-and-versions" = false
+"parameterized-systems" = true

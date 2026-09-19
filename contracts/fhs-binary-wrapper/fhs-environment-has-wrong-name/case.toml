@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "fhs-binary-wrapper"
+outcome = "reject"
+criterion_id = "fhs-runtime"
+description = "FHS runtime uses the wrong environment name"
+
+[expected_criteria]
+"appimage-package" = true
+"fhs-runtime" = false
+"no-host-mutation" = true
+"pinned-source" = true

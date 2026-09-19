@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "mutable-config-home-manager"
+outcome = "reject"
+criterion_id = "profile-variable"
+description = "Profile variable ignores the supplied profile directory"
+
+[expected_criteria]
+"managed-policy" = true
+"mutable-state-boundary" = true
+"profile-variable" = false
+"thunderbird-config" = true

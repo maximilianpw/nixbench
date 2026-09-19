@@ -22,7 +22,7 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
 
-      - name: Install Bubblewrap
+      - name: Install Bubblewrap isolation dependency
         run: sudo apt-get update && sudo apt-get install --yes bubblewrap
 
       - name: Check Python syntax

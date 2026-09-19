@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "package-python-application"
 outcome = "reject"
 criterion_id = "package-metadata"
 description = "Python package uses wrong license"
+
+[expected_criteria]
+"build-and-runtime-inputs" = true
+"package-identity" = true
+"package-metadata" = false
+"test-contract" = true

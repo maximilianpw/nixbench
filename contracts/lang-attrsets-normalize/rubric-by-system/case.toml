@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "lang-attrsets-normalize"
 outcome = "pass"
 criterion_id = "by-system"
 description = "The renamed support predicate computes every by-system package list."
+
+[expected_criteria]
+"by-system" = true
+"default-packages" = true
+"names-and-versions" = true
+"parameterized-systems" = true

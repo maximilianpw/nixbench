@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "overlay-module-boundary"
+outcome = "reject"
+criterion_id = "module-timer-boundary"
+description = "Module timer uses the wrong calendar"
+
+[expected_criteria]
+"overlay-package" = true
+"pinned-source-build" = true
+"module-service" = true
+"module-timer-boundary" = false

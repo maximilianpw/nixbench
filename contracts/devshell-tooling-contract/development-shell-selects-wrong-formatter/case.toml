@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "devshell-tooling-contract"
+outcome = "reject"
+criterion_id = "formatter-contract"
+description = "Development shell selects the wrong formatter"
+
+[expected_criteria]
+"experimental-features" = true
+"formatter-contract" = false
+"required-tools" = true
+"shell-construction" = true

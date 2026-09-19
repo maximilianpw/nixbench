@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-system-boundaries"
+outcome = "reject"
+criterion_id = "home-manager-module"
+description = "Home Manager module omits a shared package"
+
+[expected_criteria]
+"darwin-module" = true
+"home-manager-module" = false
+"nixos-module" = true
+"shared-data" = true

@@ -94,6 +94,7 @@ class ReleaseTests(unittest.TestCase):
             ("independent-contract-fixtures", ("pass_fixture_count", 0)),
             ("required-rubric-coverage", ("criterion_coverage", [])),
             ("deterministic-evaluators", ("evaluator_deterministic", False)),
+            ("no-contract-evaluator-errors", ("contract_evaluator_error_count", 1)),
             ("valid-health-measurements", ("invalid_measurement_count", 1)),
             ("evaluator-runtime-margin", ("evaluator_durations_seconds", [9.0])),
             ("no-active-known-issue-skips", ("known_issue_count", 1)),
@@ -113,6 +114,27 @@ class ReleaseTests(unittest.TestCase):
 
                 self.assertFalse(gates[gate_name]["passed"], gates[gate_name])
                 self.assertFalse(report["eligible"])
+
+    def test_mislabeled_or_named_criterion_true_contract_is_release_ineligible(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.make_corpus(root)
+            for mutation in (
+                {"contract_outcomes_match": False},
+                {"contract_coverage_errors": ["task-a: named criterion behavior stayed true"]},
+            ):
+                with self.subTest(mutation=mutation):
+                    evidence = [{**self.healthy_evidence(), **mutation}]
+                    report = check_release(
+                        root, health_evidence=evidence, verify_manifest=False
+                    )
+                    gate = next(
+                        item
+                        for item in report["gates"]
+                        if item["name"] == "independent-contract-fixtures"
+                    )
+                    self.assertFalse(gate["passed"])
+                    self.assertFalse(report["eligible"])
 
     def test_trusted_bwrap_adapter_attests_and_keeps_status_outside_sandbox(self) -> None:
         with tempfile.TemporaryDirectory(
@@ -1052,10 +1074,13 @@ class ReleaseTests(unittest.TestCase):
             "starter_rejected": True,
             "pass_fixture_count": 1,
             "reject_fixture_count": 1,
+            "alternative_pass_fixture_count": 1,
             "criterion_ids": ["behavior"],
             "criterion_coverage": ["behavior"],
             "evaluator_deterministic": True,
             "contract_outcomes_match": True,
+            "contract_evaluator_error_count": 0,
+            "contract_coverage_errors": [],
             "invalid_measurement_count": 0,
             "evaluator_durations_seconds": [0.01, 0.02],
             "timeout_seconds": 10,

@@ -18,6 +18,7 @@ let
       if paths == [ coreutils ]
       then "/nix/store/nixbench-coreutils-path/bin"
       else throw "makeBinPath must receive only coreutils";
+    getExe = package: "\${package}/bin/bash";
   };
   makeWrapper = "makeWrapper";
   coreutils = "/nix/store/coreutils";

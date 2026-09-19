@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "string-escaping-systemd"
 outcome = "reject"
 criterion_id = "safe-append-and-purity"
 description = "Systemd command does not append output"
+
+[expected_criteria]
+"bash-package" = true
+"runtime-variables" = true
+"safe-append-and-purity" = false
+"service-shape" = true

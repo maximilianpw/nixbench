@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "container-native-vs-oci"
+outcome = "reject"
+criterion_id = "native-container-shape"
+description = "Native container is not configured to start automatically"
+
+[expected_criteria]
+"native-container-shape" = false
+"nested-service-module" = true
+"network-and-mounts" = true
+"no-oci-fields" = true

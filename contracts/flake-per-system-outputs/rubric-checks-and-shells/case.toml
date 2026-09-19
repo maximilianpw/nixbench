@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "flake-per-system-outputs"
 outcome = "pass"
 criterion_id = "checks-and-shells"
 description = "The renamed system mapper exposes checks and development shells on every system."
+
+[expected_criteria]
+"checks-and-shells" = true
+"flake-evaluates" = true
+"packages-and-apps" = true
+"systems-output" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "fhs-binary-wrapper"
 outcome = "pass"
 criterion_id = "fhs-runtime"
 description = "Fhs packages use a different order"
+
+[expected_criteria]
+"appimage-package" = true
+"fhs-runtime" = true
+"no-host-mutation" = true
+"pinned-source" = true

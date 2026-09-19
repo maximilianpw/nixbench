@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "mutable-config-home-manager"
 outcome = "pass"
 criterion_id = "profile-variable"
 description = "The independent profile module exposes the selected mutable profile path."
+
+[expected_criteria]
+"managed-policy" = true
+"mutable-state-boundary" = true
+"profile-variable" = true
+"thunderbird-config" = true

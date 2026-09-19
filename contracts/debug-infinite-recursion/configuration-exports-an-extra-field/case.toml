@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "debug-infinite-recursion"
+outcome = "reject"
+criterion_id = "exact-output-shape"
+description = "Configuration exports an unexpected extra field"
+
+[expected_criteria]
+"evaluates-default-lib" = true
+"evaluates-with-lib" = true
+"exact-output-shape" = false
+"expected-fields" = true

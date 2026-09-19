@@ -63,7 +63,7 @@ in {
       && result.tinygrep-debug.doCheck == result.tinygrep.doCheck
       && result.tinygrep-debug.meta == result.tinygrep.meta
       && result.tinygrep-debug.__overrideCount == 2
-      && result.tinygrep-debug.__fromFinal == 151
+      && (result.tinygrep-debug.__fromFinal or null) == 151
     );
   };
   notes = [];

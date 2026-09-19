@@ -1,5 +1,16 @@
-schema_version = 2
+schema_version = 3
 task_id = "container-native-vs-oci"
 outcome = "reject"
 criterion_id = "no-oci-fields"
 description = "Uses the forbidden OCI container module"
+
+[coupled_failures]
+"native-container-shape" = "The named mutation also makes native-container-shape false under this evaluator; the complete vector records this coupled boundary."
+"nested-service-module" = "The named mutation also makes nested-service-module false under this evaluator; the complete vector records this coupled boundary."
+"network-and-mounts" = "The named mutation also makes network-and-mounts false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"native-container-shape" = false
+"nested-service-module" = false
+"network-and-mounts" = false
+"no-oci-fields" = false

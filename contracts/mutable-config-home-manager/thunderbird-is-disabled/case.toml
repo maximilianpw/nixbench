@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "mutable-config-home-manager"
+outcome = "reject"
+criterion_id = "thunderbird-config"
+description = "Thunderbird configuration is disabled"
+
+[expected_criteria]
+"managed-policy" = true
+"mutable-state-boundary" = true
+"profile-variable" = true
+"thunderbird-config" = false

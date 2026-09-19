@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "devshell-tooling-contract"
+outcome = "reject"
+criterion_id = "required-tools"
+description = "Development shell omits nil"
+
+[expected_criteria]
+"experimental-features" = true
+"formatter-contract" = true
+"required-tools" = false
+"shell-construction" = true

@@ -44,8 +44,11 @@ in {
     "modern-cli-tools" = passes (builtins.all (package: builtins.elem package packages) [ pkgs.bat pkgs.eza ]);
     "nix-tools" = passes (builtins.all (package: builtins.elem package packages) [ pkgs.nixfmt-rfc-style pkgs.nil pkgs.statix pkgs.deadnix ]);
     "exact-package-set" = passes (
-      builtins.length packages == builtins.length required
-      && builtins.all (package: builtins.elem package packages) required
+      builtins.all (package: builtins.elem package required) packages
+      && builtins.all
+        (package:
+          builtins.length (builtins.filter (value: value == package) packages) == 1)
+        packages
     );
   };
   notes = [];

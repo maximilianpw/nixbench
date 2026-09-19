@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-service-options"
 outcome = "pass"
 criterion_id = "exec-arguments"
 description = "Quotes each extra service argument"
+
+[expected_criteria]
+"conditional-service" = true
+"exec-arguments" = true
+"firewall-port" = true
+"option-schema" = true

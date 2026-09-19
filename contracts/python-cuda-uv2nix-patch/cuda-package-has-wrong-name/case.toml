@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "python-cuda-uv2nix-patch"
+outcome = "reject"
+criterion_id = "package-identity"
+description = "CUDA Python package uses the wrong name"
+
+[expected_criteria]
+"cuda-inputs" = true
+"package-identity" = false
+"patchelf-and-pure-phases" = true
+"python-inputs" = true

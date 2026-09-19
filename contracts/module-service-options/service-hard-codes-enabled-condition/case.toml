@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-service-options"
 outcome = "reject"
 criterion_id = "conditional-service"
 description = "Service hard codes enabled condition"
+
+[expected_criteria]
+"conditional-service" = false
+"exec-arguments" = true
+"firewall-port" = true
+"option-schema" = true

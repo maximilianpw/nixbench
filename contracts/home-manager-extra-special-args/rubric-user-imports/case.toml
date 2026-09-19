@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "home-manager-extra-special-args"
 outcome = "pass"
 criterion_id = "user-imports"
 description = "The reordered module configuration imports both supplied Home Manager modules."
+
+[expected_criteria]
+"forwards-inputs" = true
+"module-integration" = true
+"nixos-system" = true
+"user-imports" = true

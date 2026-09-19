@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "flake-per-system-outputs"
 outcome = "reject"
 criterion_id = "packages-and-apps"
 description = "Flake app missing package metadata"
+
+[expected_criteria]
+"checks-and-shells" = true
+"flake-evaluates" = true
+"packages-and-apps" = false
+"systems-output" = true

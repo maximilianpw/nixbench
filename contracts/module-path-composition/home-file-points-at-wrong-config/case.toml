@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-path-composition"
+outcome = "reject"
+criterion_id = "home-file-paths"
+description = "Home file points at the wrong config path"
+
+[expected_criteria]
+"home-file-paths" = false
+"import-names" = true
+"imports-paths" = true
+"path-types" = true

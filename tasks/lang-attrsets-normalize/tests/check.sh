@@ -12,7 +12,11 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
-  normalize = import ${workdir}/lib.nix {
+  normalizeFunction = import ${workdir}/lib.nix;
+  functionArgs = builtins.functionArgs normalizeFunction;
+  hasArgumentDefaults =
+    (functionArgs.allSystems or false) && (functionArgs.defaultSystem or false);
+  normalize = normalizeFunction {
     allSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
     defaultSystem = "aarch64-darwin";
   };
@@ -26,11 +30,11 @@ let
     shellcheck = { systems = [ "x86_64-linux" ]; };
   };
   empty = normalize {};
-  normalizeDefaults = import ${workdir}/lib.nix {};
-  defaultResult = normalizeDefaults {
-    sample = { version = "1.0.0"; };
-  };
-  normalizeSentinelSystems = import ${workdir}/lib.nix {
+  defaultResult =
+    if hasArgumentDefaults
+    then (normalizeFunction {}) { sample = { version = "1.0.0"; }; }
+    else {};
+  normalizeSentinelSystems = normalizeFunction {
     allSystems = [ "riscv64-linux" "loongarch64-linux" ];
     defaultSystem = "loongarch64-linux";
   };
@@ -57,12 +61,13 @@ in {
       && result.defaultPackages == [ "nil" "ripgrep" ]
       && empty.defaultSystem == "aarch64-darwin"
       && empty.defaultPackages == []
+      && hasArgumentDefaults
       && defaultResult.defaultSystem == "x86_64-linux"
       && defaultResult.defaultPackages == [ "sample" ]
+      && builtins.attrNames defaultResult.bySystem == [ "aarch64-darwin" "aarch64-linux" "x86_64-linux" ]
     );
     "parameterized-systems" = passes (
-      builtins.attrNames defaultResult.bySystem == [ "aarch64-darwin" "aarch64-linux" "x86_64-linux" ]
-      && sentinelResult.defaultSystem == "loongarch64-linux"
+      sentinelResult.defaultSystem == "loongarch64-linux"
       && sentinelResult.bySystem == { riscv64-linux = [ "portable" "riscvOnly" ]; loongarch64-linux = [ "portable" ]; }
       && sentinelResult.defaultPackages == [ "portable" ]
     );

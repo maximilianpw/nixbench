@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "package-name-lookup-contract"
+outcome = "reject"
+criterion_id = "nix-tools"
+description = "Package list omits statix"
+
+[expected_criteria]
+"core-tools" = true
+"modern-cli-tools" = true
+"nix-tools" = false
+"exact-package-set" = true

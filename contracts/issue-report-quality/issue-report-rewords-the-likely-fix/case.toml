@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "issue-report-quality"
 outcome = "pass"
 criterion_id = "bounded-analysis"
 description = "Issue report rewords the likely fix"
+
+[expected_criteria]
+"bounded-analysis" = true
+"outcome-evidence" = true
+"report-fields" = true
+"reproduction-and-system" = true

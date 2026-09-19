@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "package-name-lookup-contract"
+outcome = "reject"
+criterion_id = "core-tools"
+description = "Package list omits git"
+
+[expected_criteria]
+"core-tools" = false
+"modern-cli-tools" = true
+"nix-tools" = true
+"exact-package-set" = true

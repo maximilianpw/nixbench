@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-service-options"
+outcome = "reject"
+criterion_id = "exec-arguments"
+description = "Service command uses the wrong port flag"
+
+[expected_criteria]
+"conditional-service" = true
+"exec-arguments" = false
+"firewall-port" = true
+"option-schema" = true

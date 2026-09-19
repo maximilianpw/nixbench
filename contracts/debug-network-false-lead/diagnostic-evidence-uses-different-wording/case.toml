@@ -1,5 +1,12 @@
-schema_version = 2
+schema_version = 3
 task_id = "debug-network-false-lead"
 outcome = "pass"
 criterion_id = "structured-human-output"
 description = "Diagnostic evidence uses different wording"
+
+[expected_criteria]
+"arp-diagnosis" = true
+"diagnostic-discipline" = true
+"dns-diagnosis" = true
+"structured-human-output" = true
+"unknown-cases" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "issue-report-quality"
 outcome = "reject"
 criterion_id = "bounded-analysis"
 description = "Issue report claims a confirmed root cause"
+
+[expected_criteria]
+"bounded-analysis" = false
+"outcome-evidence" = true
+"report-fields" = true
+"reproduction-and-system" = true

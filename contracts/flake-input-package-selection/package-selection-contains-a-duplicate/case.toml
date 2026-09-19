@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "flake-input-package-selection"
+outcome = "reject"
+criterion_id = "package-values"
+description = "Package selection contains an extra duplicate value"
+
+[expected_criteria]
+"darwin-packages" = true
+"linux-packages" = true
+"named-input-output" = true
+"package-values" = false

@@ -12,6 +12,11 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
+  get = path: default: value:
+    if path == [] then value
+    else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
+    then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
+    else default;
   flake = import ${workdir}/flake.nix;
   hmModule = { module = "home-manager-nixos-module"; marker = 113; };
   fakeInputs = {
@@ -48,12 +53,12 @@ in {
       && builtins.isFunction hmCfg.users.alice
     );
     "forwards-inputs" = passes (
-      cfg.specialArgs.inputs.nixvim.homeManagerModules.nixvim == fakeInputs.nixvim.homeManagerModules.nixvim
-      && cfg.specialArgs.inputs.agenix.homeManagerModules.default == fakeInputs.agenix.homeManagerModules.default
-      && cfg.specialArgs.inputs.benchmarkSentinel == fakeInputs.benchmarkSentinel
-      && hmCfg.extraSpecialArgs.inputs.nixvim.homeManagerModules.nixvim == fakeInputs.nixvim.homeManagerModules.nixvim
-      && hmCfg.extraSpecialArgs.inputs.agenix.homeManagerModules.default == fakeInputs.agenix.homeManagerModules.default
-      && hmCfg.extraSpecialArgs.inputs.benchmarkSentinel == fakeInputs.benchmarkSentinel
+      get [ "specialArgs" "inputs" "nixvim" "homeManagerModules" "nixvim" ] null cfg == fakeInputs.nixvim.homeManagerModules.nixvim
+      && get [ "specialArgs" "inputs" "agenix" "homeManagerModules" "default" ] null cfg == fakeInputs.agenix.homeManagerModules.default
+      && get [ "specialArgs" "inputs" "benchmarkSentinel" ] null cfg == fakeInputs.benchmarkSentinel
+      && get [ "extraSpecialArgs" "inputs" "nixvim" "homeManagerModules" "nixvim" ] null hmCfg == fakeInputs.nixvim.homeManagerModules.nixvim
+      && get [ "extraSpecialArgs" "inputs" "agenix" "homeManagerModules" "default" ] null hmCfg == fakeInputs.agenix.homeManagerModules.default
+      && get [ "extraSpecialArgs" "inputs" "benchmarkSentinel" ] null hmCfg == fakeInputs.benchmarkSentinel
     );
     "user-imports" = passes (
       alice.imports == [ fakeInputs.nixvim.homeManagerModules.nixvim fakeInputs.agenix.homeManagerModules.default ]

@@ -1,5 +1,16 @@
-schema_version = 2
+schema_version = 3
 task_id = "package-name-lookup-contract"
 outcome = "reject"
 criterion_id = "exact-package-set"
 description = "Package list hard codes lookalike values"
+
+[coupled_failures]
+"core-tools" = "The named mutation also makes core-tools false under this evaluator; the complete vector records this coupled boundary."
+"modern-cli-tools" = "The named mutation also makes modern-cli-tools false under this evaluator; the complete vector records this coupled boundary."
+"nix-tools" = "The named mutation also makes nix-tools false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"core-tools" = false
+"exact-package-set" = false
+"modern-cli-tools" = false
+"nix-tools" = false

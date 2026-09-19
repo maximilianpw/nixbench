@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-system-boundaries"
+outcome = "reject"
+criterion_id = "darwin-module"
+description = "Darwin module omits a shared package"
+
+[expected_criteria]
+"darwin-module" = false
+"home-manager-module" = true
+"nixos-module" = true
+"shared-data" = true

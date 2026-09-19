@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "home-manager-extra-special-args"
 outcome = "reject"
 criterion_id = "forwards-inputs"
 description = "Home manager forwards only known inputs"
+
+[expected_criteria]
+"forwards-inputs" = false
+"module-integration" = true
+"nixos-system" = true
+"user-imports" = true

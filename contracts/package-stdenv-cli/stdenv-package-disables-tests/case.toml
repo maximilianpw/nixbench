@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "package-stdenv-cli"
+outcome = "reject"
+criterion_id = "build-contract"
+description = "stdenv package disables tests"
+
+[expected_criteria]
+"build-contract" = false
+"install-contract" = true
+"package-metadata" = true
+"package-source" = true

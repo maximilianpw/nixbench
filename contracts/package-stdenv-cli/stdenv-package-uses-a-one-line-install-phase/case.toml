@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "package-stdenv-cli"
 outcome = "pass"
 criterion_id = "package-metadata"
 description = "Stdenv package uses a one line install phase"
+
+[expected_criteria]
+"build-contract" = true
+"install-contract" = true
+"package-metadata" = true
+"package-source" = true

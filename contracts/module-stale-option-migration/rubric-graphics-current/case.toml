@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-stale-option-migration"
 outcome = "pass"
 criterion_id = "graphics-current"
 description = "The current-option shorthand enables the current graphics option."
+
+[expected_criteria]
+"graphics-current" = true
+"kdeconnect-no-stale" = true
+"plasma-current" = true
+"sddm-current" = true

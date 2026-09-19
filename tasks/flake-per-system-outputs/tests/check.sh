@@ -12,35 +12,45 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
+  get = path: default: value:
+    if path == [] then value
+    else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
+    then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
+    else default;
   flakeAttempt = builtins.tryEval (import ${workdir}/flake.nix);
   flake = if flakeAttempt.success then flakeAttempt.value else {};
+  outputsFunction = get [ "outputs" ] null flake;
   outputsAttempt = builtins.tryEval (
-    flake.outputs { self = outputsAttempt.value; }
+    if builtins.isFunction outputsFunction
+    then outputsFunction { self = outputsAttempt.value; }
+    else {}
   );
   outputs = if outputsAttempt.success then outputsAttempt.value else {};
   systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
   packageAndApp = system:
-    let package = (builtins.getAttr system outputs.packages).default;
-        app = (builtins.getAttr system outputs.apps).default;
-    in package.type == "derivation"
-      && package.pname == "nixbench-sample"
-      && package.version == "0.1.0"
-      && package.system == system
-      && app.type == "app"
-      && app.program == (toString package + "/bin/nixbench-sample")
-      && app.meta.package == "nixbench-sample";
+    let package = get [ "packages" system "default" ] {} outputs;
+        app = get [ "apps" system "default" ] {} outputs;
+    in get [ "type" ] null package == "derivation"
+      && get [ "pname" ] null package == "nixbench-sample"
+      && get [ "version" ] null package == "0.1.0"
+      && get [ "system" ] null package == system
+      && get [ "type" ] null app == "app"
+      && get [ "program" ] null app == (toString package + "/bin/nixbench-sample")
+      && get [ "meta" "package" ] null app == "nixbench-sample";
   checkAndShell = system:
-    let package = (builtins.getAttr system outputs.packages).default;
-        check = (builtins.getAttr system outputs.checks).eval;
-        shell = (builtins.getAttr system outputs.devShells).default;
-    in check == package && check.type == "derivation"
-      && shell.type == "derivation" && shell.name == "nixbench-dev"
-      && shell.system == system
-      && builtins.elem "nixfmt" shell.tools && builtins.elem "statix" shell.tools;
+    let package = get [ "packages" system "default" ] {} outputs;
+        check = get [ "checks" system "eval" ] null outputs;
+        shell = get [ "devShells" system "default" ] {} outputs;
+    in check == package && get [ "type" ] null check == "derivation"
+      && get [ "type" ] null shell == "derivation"
+      && get [ "name" ] null shell == "nixbench-dev"
+      && get [ "system" ] null shell == system
+      && builtins.elem "nixfmt" (get [ "tools" ] [] shell)
+      && builtins.elem "statix" (get [ "tools" ] [] shell);
 in {
   schema_version = 2;
   criteria = {
-    "systems-output" = passes (outputs.lib.systems == systems);
+    "systems-output" = passes (get [ "lib" "systems" ] null outputs == systems);
     "packages-and-apps" = passes (builtins.all packageAndApp systems);
     "checks-and-shells" = passes (builtins.all checkAndShell systems);
     "flake-evaluates" = passes (

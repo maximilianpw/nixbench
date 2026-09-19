@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "rust-no-network-build"
 outcome = "pass"
 criterion_id = "no-network-escape"
 description = "Rust package comments that network is forbidden"
+
+[expected_criteria]
+"no-network-escape" = true
+"package-source" = true
+"pinned-model" = true
+"system-onnxruntime" = true

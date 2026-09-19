@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "purity-wrapper-derivation"
+outcome = "reject"
+criterion_id = "purity-marker"
+description = "Wrapper marks itself impure"
+
+[expected_criteria]
+"derivation-identity" = true
+"pure-install-phase" = true
+"purity-marker" = false
+"wrapper-inputs" = true

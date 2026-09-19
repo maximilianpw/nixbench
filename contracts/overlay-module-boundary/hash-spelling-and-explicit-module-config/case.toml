@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "overlay-module-boundary"
 outcome = "pass"
 criterion_id = "pinned-source-build"
 description = "Uses hash and an explicit module config attrset"
+
+[expected_criteria]
+"module-service" = true
+"module-timer-boundary" = true
+"overlay-package" = true
+"pinned-source-build" = true

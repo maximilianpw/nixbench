@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-stale-option-migration"
+outcome = "reject"
+criterion_id = "kdeconnect-no-stale"
+description = "KDE Connect is disabled"
+
+[expected_criteria]
+"graphics-current" = true
+"kdeconnect-no-stale" = false
+"plasma-current" = true
+"sddm-current" = true

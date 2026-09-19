@@ -9,6 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from .contracts import collect_contract_evidence, load_contract_cases
 from .corpus import CorpusIdentity, identify_corpus
 from .export import export_studies_for_site
 from .isolation import APPROVED_PREFLIGHT_EVIDENCE
@@ -358,9 +359,24 @@ def _collect_corpus_health_evidence(
     tasks: list[Task], contracts_dir: Path
 ) -> list[dict[str, object]]:
     evidence: list[dict[str, object]] = []
+    if not tasks:
+        return evidence
+    repo_root = tasks[0].root.parent.parent
+    cases = (
+        load_contract_cases(contracts_dir, tasks_root=repo_root / "tasks")
+        if contracts_dir.is_dir()
+        else ()
+    )
     with tempfile.TemporaryDirectory(prefix="nixbench-health-") as temp:
         root = Path(temp)
         results_dir = root / "results"
+        contract_evidence = collect_contract_evidence(
+            tasks,
+            cases,
+            repo_root=repo_root,
+            results_dir=results_dir,
+            run_prefix="health-contract",
+        )
         for task in tasks:
             reference_runs = [
                 run_task(
@@ -377,62 +393,20 @@ def _collect_corpus_health_evidence(
                 run_id=f"health-{task.id}-starter",
                 solution_mode="starter",
             )
-            deterministic = _health_signature(reference_runs[0]) == _health_signature(
-                reference_runs[1]
+            contracts = contract_evidence[task.id]
+            deterministic = (
+                _health_signature(reference_runs[0])
+                == _health_signature(reference_runs[1])
+                and contracts["contract_deterministic"] is True
             )
             durations = [run.check.duration_seconds for run in reference_runs]
+            durations.extend(contracts["contract_durations_seconds"])
             invalid_measurement_count = sum(
                 run.measurement_status != "valid" for run in reference_runs
             ) + int(starter.measurement_status != "valid")
-            pass_count = 0
-            reject_count = 0
-            known_issue_count = 0
-            covered: set[str] = set()
-            contract_outcomes_match = True
-            task_contracts = contracts_dir / task.id
-            for manifest_path in sorted(task_contracts.glob("*/case.toml")):
-                with manifest_path.open("rb") as handle:
-                    manifest = tomllib.load(handle)
-                if manifest.get("known_issue"):
-                    known_issue_count += 1
-                    continue
-                outcome = manifest.get("outcome")
-                criterion_id = manifest.get("criterion_id")
-                if outcome not in {"pass", "reject"}:
-                    raise ValueError(f"{manifest_path}: invalid outcome")
-                if not isinstance(criterion_id, str) or not criterion_id:
-                    raise ValueError(f"{manifest_path}: missing criterion_id")
-                covered.add(criterion_id)
-                if outcome == "pass":
-                    pass_count += 1
-                else:
-                    reject_count += 1
-                fixture_runs = [
-                    _run_health_contract_candidate(
-                        task,
-                        manifest_path.parent / "candidate",
-                        results_dir=results_dir,
-                        root=root,
-                        case_id=manifest_path.parent.name,
-                        index=index,
-                    )
-                    for index in range(2)
-                ]
-                deterministic = deterministic and (
-                    _health_signature(fixture_runs[0])
-                    == _health_signature(fixture_runs[1])
-                )
-                durations.extend(run.check.duration_seconds for run in fixture_runs)
-                invalid_measurement_count += sum(
-                    run.measurement_status != "valid" for run in fixture_runs
-                )
-                for run in fixture_runs:
-                    expected = run.passed if outcome == "pass" else (
-                        run.measurement_status == "valid"
-                        and run.task_outcome == "fail"
-                        and not run.passed
-                    )
-                    contract_outcomes_match = contract_outcomes_match and expected
+            invalid_measurement_count += int(
+                contracts["contract_invalid_measurement_count"]
+            )
             evidence.append(
                 {
                     "task_id": task.id,
@@ -449,42 +423,17 @@ def _collect_corpus_health_evidence(
                         and starter.task_outcome == "fail"
                         and not starter.passed
                     ),
-                    "pass_fixture_count": pass_count,
-                    "reject_fixture_count": reject_count,
-                    "criterion_ids": [criterion.id for criterion in task.criteria],
-                    "criterion_coverage": sorted(covered),
+                    "criterion_ids": [
+                        criterion.id for criterion in task.criteria if criterion.required
+                    ],
                     "evaluator_deterministic": deterministic,
-                    "contract_outcomes_match": contract_outcomes_match,
                     "evaluator_durations_seconds": durations,
                     "invalid_measurement_count": invalid_measurement_count,
                     "timeout_seconds": task.timeout_seconds,
-                    "known_issue_count": known_issue_count,
+                    **contracts,
                 }
             )
     return evidence
-
-
-def _run_health_contract_candidate(
-    task: Task,
-    candidate_dir: Path,
-    *,
-    results_dir: Path,
-    root: Path,
-    case_id: str,
-    index: int,
-) -> TaskRunResult:
-    if not candidate_dir.is_dir():
-        raise ValueError(f"missing contract candidate directory: {candidate_dir}")
-    clone_root = root / "candidates" / task.id / case_id / str(index)
-    shutil.copytree(task.root, clone_root)
-    shutil.copytree(candidate_dir, clone_root / "starter", dirs_exist_ok=True)
-    candidate_task = load_task(clone_root)
-    return run_task(
-        candidate_task,
-        results_dir=results_dir,
-        run_id=f"health-{task.id}-{case_id}-{index}",
-        solution_mode="starter",
-    )
 
 
 def _health_signature(result: TaskRunResult) -> tuple[object, ...]:

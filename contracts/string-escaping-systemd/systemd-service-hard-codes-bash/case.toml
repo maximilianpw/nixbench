@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "string-escaping-systemd"
+outcome = "reject"
+criterion_id = "bash-package"
+description = "systemd service hard-codes the Bash package path"
+
+[expected_criteria]
+"bash-package" = false
+"runtime-variables" = true
+"safe-append-and-purity" = true
+"service-shape" = true

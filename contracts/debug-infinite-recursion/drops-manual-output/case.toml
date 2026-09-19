@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "debug-infinite-recursion"
 outcome = "reject"
 criterion_id = "expected-fields"
 description = "Returns a finite but incomplete output list"
+
+[expected_criteria]
+"evaluates-default-lib" = true
+"evaluates-with-lib" = true
+"exact-output-shape" = true
+"expected-fields" = false

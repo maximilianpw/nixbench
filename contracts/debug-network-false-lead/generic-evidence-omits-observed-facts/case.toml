@@ -1,5 +1,17 @@
-schema_version = 2
+schema_version = 3
 task_id = "debug-network-false-lead"
 outcome = "reject"
-criterion_id = "structured-human-output"
+criterion_id = "arp-diagnosis"
 description = "Generic nonempty evidence omits the observations behind each diagnosis"
+
+[coupled_failures]
+"diagnostic-discipline" = "The named mutation also makes diagnostic-discipline false under this evaluator; the complete vector records this coupled boundary."
+"dns-diagnosis" = "The named mutation also makes dns-diagnosis false under this evaluator; the complete vector records this coupled boundary."
+"unknown-cases" = "The named mutation also makes unknown-cases false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"arp-diagnosis" = false
+"diagnostic-discipline" = false
+"dns-diagnosis" = false
+"structured-human-output" = true
+"unknown-cases" = false

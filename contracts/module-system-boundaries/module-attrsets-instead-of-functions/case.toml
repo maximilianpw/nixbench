@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-system-boundaries"
 outcome = "pass"
 criterion_id = "darwin-module"
 description = "Returns separate module attrsets instead of module functions"
+
+[expected_criteria]
+"darwin-module" = true
+"home-manager-module" = true
+"nixos-module" = true
+"shared-data" = true

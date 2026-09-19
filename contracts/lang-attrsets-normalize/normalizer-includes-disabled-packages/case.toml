@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "lang-attrsets-normalize"
+outcome = "reject"
+criterion_id = "by-system"
+description = "Normalizer includes disabled packages in per-system outputs"
+
+[expected_criteria]
+"names-and-versions" = true
+"by-system" = false
+"default-packages" = true
+"parameterized-systems" = true

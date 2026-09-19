@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "flake-input-package-selection"
+outcome = "reject"
+criterion_id = "linux-packages"
+description = "Linux package selection omits MangoHud"
+
+[expected_criteria]
+"darwin-packages" = true
+"linux-packages" = false
+"named-input-output" = true
+"package-values" = true

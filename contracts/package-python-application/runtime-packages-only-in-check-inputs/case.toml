@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "package-python-application"
 outcome = "reject"
 criterion_id = "build-and-runtime-inputs"
 description = "Required runtime packages appear only in nativeCheckInputs"
+
+[expected_criteria]
+"build-and-runtime-inputs" = false
+"package-identity" = true
+"package-metadata" = true
+"test-contract" = true

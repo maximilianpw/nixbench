@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "xdg-portal-merge"
+outcome = "reject"
+criterion_id = "portal-package-merge"
+description = "Portal package replaces rather than merges the portal list"
+
+[expected_criteria]
+"conditional-enable" = true
+"config-package-preservation" = true
+"fallback-merge" = true
+"portal-package-merge" = false

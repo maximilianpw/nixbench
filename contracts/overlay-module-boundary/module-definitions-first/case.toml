@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "overlay-module-boundary"
 outcome = "pass"
 criterion_id = "module-service"
 description = "Module definitions first"
+
+[expected_criteria]
+"module-service" = true
+"module-timer-boundary" = true
+"overlay-package" = true
+"pinned-source-build" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "flake-input-package-selection"
 outcome = "pass"
 criterion_id = "linux-packages"
 description = "The alternate package ordering selects the documented Linux packages."
+
+[expected_criteria]
+"darwin-packages" = true
+"linux-packages" = true
+"named-input-output" = true
+"package-values" = true

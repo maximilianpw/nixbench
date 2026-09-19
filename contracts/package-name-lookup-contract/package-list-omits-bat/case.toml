@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "package-name-lookup-contract"
+outcome = "reject"
+criterion_id = "modern-cli-tools"
+description = "Package list omits bat"
+
+[expected_criteria]
+"core-tools" = true
+"modern-cli-tools" = false
+"nix-tools" = true
+"exact-package-set" = true

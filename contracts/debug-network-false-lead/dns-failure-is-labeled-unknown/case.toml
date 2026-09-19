@@ -1,0 +1,12 @@
+schema_version = 3
+task_id = "debug-network-false-lead"
+outcome = "reject"
+criterion_id = "dns-diagnosis"
+description = "Reachable gateway with failing DNS is labeled unknown"
+
+[expected_criteria]
+"arp-diagnosis" = true
+"diagnostic-discipline" = true
+"dns-diagnosis" = false
+"structured-human-output" = true
+"unknown-cases" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "package-name-lookup-contract"
 outcome = "pass"
 criterion_id = "nix-tools"
 description = "The alternate package ordering includes all required Nix tools."
+
+[expected_criteria]
+"core-tools" = true
+"exact-package-set" = true
+"modern-cli-tools" = true
+"nix-tools" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "python-cuda-uv2nix-patch"
 outcome = "reject"
 criterion_id = "patchelf-and-pure-phases"
 description = "Cuda package hard codes the torch library path"
+
+[expected_criteria]
+"cuda-inputs" = true
+"package-identity" = true
+"patchelf-and-pure-phases" = false
+"python-inputs" = true

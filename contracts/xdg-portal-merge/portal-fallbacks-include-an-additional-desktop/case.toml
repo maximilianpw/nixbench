@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "xdg-portal-merge"
 outcome = "pass"
 criterion_id = "fallback-merge"
 description = "Portal fallbacks include an additional desktop"
+
+[expected_criteria]
+"conditional-enable" = true
+"config-package-preservation" = true
+"fallback-merge" = true
+"portal-package-merge" = true

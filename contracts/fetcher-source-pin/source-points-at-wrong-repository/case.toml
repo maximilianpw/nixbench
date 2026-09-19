@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "fetcher-source-pin"
+outcome = "reject"
+criterion_id = "repository-identity"
+description = "Source points at the wrong repository"
+
+[expected_criteria]
+"fetch-options" = true
+"github-source" = true
+"pinned-revision-hash" = true
+"repository-identity" = false

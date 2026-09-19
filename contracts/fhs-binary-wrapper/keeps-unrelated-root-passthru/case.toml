@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "fhs-binary-wrapper"
 outcome = "pass"
 criterion_id = "appimage-package"
 description = "Keeps an unrelated root passthru value"
+
+[expected_criteria]
+"appimage-package" = true
+"fhs-runtime" = true
+"no-host-mutation" = true
+"pinned-source" = true

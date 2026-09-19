@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "issue-report-quality"
 outcome = "reject"
 criterion_id = "outcome-evidence"
 description = "Actual outcome status claims success despite the required failure log"
+
+[expected_criteria]
+"bounded-analysis" = true
+"outcome-evidence" = false
+"report-fields" = true
+"reproduction-and-system" = true

@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "overlay-override-package"
+outcome = "reject"
+criterion_id = "base-override"
+description = "Base override uses the wrong version"
+
+[expected_criteria]
+"base-override" = false
+"patch-and-check" = true
+"meta-preservation" = true
+"debug-from-final" = true

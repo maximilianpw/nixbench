@@ -23,6 +23,7 @@ let
       __mkIf = condition;
       inherit content;
     };
+    concatStringsSep = builtins.concatStringsSep;
     types = rec {
       package = "package";
       port = "port";
@@ -97,6 +98,9 @@ EOF
 score_tmp="$NIXBENCH_SCORE_FILE.tmp.$$"
 if ! nix eval --json --file "$tmpdir/test.nix" >"$score_tmp"; then
   printf '%s\n' '{"schema_version":2,"criteria":{"option-schema":false,"conditional-service":false,"exec-arguments":false,"firewall-port":false},"notes":[]}' >"$score_tmp"
+fi
+if sed 's/[[:space:]]*#.*$//' "$workdir/module.nix" | grep -Eq 'lib[.]concatStringsSep'; then
+  python3 -c 'import json,sys; p=json.load(open(sys.argv[1])); p["criteria"]["option-schema"]=False; json.dump(p,open(sys.argv[1],"w"),separators=(",",":"))' "$score_tmp"
 fi
 mv "$score_tmp" "$NIXBENCH_SCORE_FILE"
 python3 "$NIXBENCH_EVALUATOR_EXIT" "$NIXBENCH_TASK_DIR/metadata.toml" "$NIXBENCH_SCORE_FILE"

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "flake-input-package-selection"
 outcome = "reject"
 criterion_id = "named-input-output"
 description = "Selects the forbidden default package output"
+
+[expected_criteria]
+"darwin-packages" = true
+"linux-packages" = true
+"named-input-output" = false
+"package-values" = true

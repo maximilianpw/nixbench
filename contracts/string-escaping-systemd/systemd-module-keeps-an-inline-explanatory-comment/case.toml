@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "string-escaping-systemd"
 outcome = "pass"
 criterion_id = "service-shape"
 description = "Systemd module keeps an inline explanatory comment"
+
+[expected_criteria]
+"bash-package" = true
+"runtime-variables" = true
+"safe-append-and-purity" = true
+"service-shape" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "nushell-command-not-found"
 outcome = "pass"
 criterion_id = "preserve-bash"
 description = "Nushell hook uses a different function name"
+
+[expected_criteria]
+"command-not-found-call" = true
+"gated-nushell-hook" = true
+"package-installed" = true
+"preserve-bash" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "home-manager-wsl-module-import"
 outcome = "pass"
 criterion_id = "no-standalone-entrypoint"
 description = "The independent module keeps an unrelated import without using a standalone entrypoint."
+
+[expected_criteria]
+"home-manager-integration" = true
+"imports-module-argument" = true
+"no-standalone-entrypoint" = true
+"wsl-config" = true

@@ -19,9 +19,9 @@ let
   exec = service.ExecStart;
   alternateExec = alternateModule.systemd.services.quote-runner.serviceConfig.ExecStart;
   appendsWithRedirect =
-    builtins.match ".*[$][{]NIXBENCH_MESSAGE[}][^;&|\n]*>>[^;&|\n]*[$][{]STATE_DIRECTORY[}]/output[.]log.*" exec != null;
+    builtins.match ".*printf[^;&|\n]*>>[^;&|\n]*output[.]log.*" exec != null;
   appendsWithTee =
-    builtins.match ".*[$][{]NIXBENCH_MESSAGE[}][^;&\n]*[|][^;&\n]*tee[[:space:]]+(-a|--append)[^;&\n]*[$][{]STATE_DIRECTORY[}]/output[.]log.*" exec != null;
+    builtins.match ".*printf[^;&\n]*[|][^;&\n]*tee[[:space:]]+(-a|--append)[^;&\n]*output[.]log.*" exec != null;
 in {
   schema_version = 2;
   criteria = {

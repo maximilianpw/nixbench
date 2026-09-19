@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "home-manager-wsl-module-import"
+outcome = "reject"
+criterion_id = "no-standalone-entrypoint"
+description = "Configuration adds a standalone Home Manager entrypoint"
+
+[expected_criteria]
+"home-manager-integration" = true
+"imports-module-argument" = true
+"no-standalone-entrypoint" = false
+"wsl-config" = true

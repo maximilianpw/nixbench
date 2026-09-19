@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "package-stdenv-cli"
 outcome = "reject"
 criterion_id = "install-contract"
 description = "Stdenv package hides the install in an inline comment"
+
+[expected_criteria]
+"build-contract" = true
+"install-contract" = false
+"package-metadata" = true
+"package-source" = true

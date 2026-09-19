@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "purity-wrapper-derivation"
+outcome = "reject"
+criterion_id = "derivation-identity"
+description = "Wrapper derivation uses the wrong package name"
+
+[expected_criteria]
+"derivation-identity" = false
+"pure-install-phase" = true
+"purity-marker" = true
+"wrapper-inputs" = true

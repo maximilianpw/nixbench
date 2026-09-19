@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "home-manager-wsl-module-import"
+outcome = "reject"
+criterion_id = "home-manager-integration"
+description = "Home Manager integration disables user packages"
+
+[expected_criteria]
+"home-manager-integration" = false
+"imports-module-argument" = true
+"no-standalone-entrypoint" = true
+"wsl-config" = true

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "purity-wrapper-derivation"
 outcome = "pass"
 criterion_id = "purity-marker"
 description = "Pure wrapper keeps an additional native tool"
+
+[expected_criteria]
+"derivation-identity" = true
+"pure-install-phase" = true
+"purity-marker" = true
+"wrapper-inputs" = true

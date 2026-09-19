@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "debug-infinite-recursion"
+outcome = "reject"
+criterion_id = "evaluates-with-lib"
+description = "Configuration fails only when a caller supplies lib"
+
+[expected_criteria]
+"evaluates-default-lib" = true
+"evaluates-with-lib" = false
+"exact-output-shape" = true
+"expected-fields" = true

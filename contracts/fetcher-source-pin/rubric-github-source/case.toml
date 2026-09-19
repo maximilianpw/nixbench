@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "fetcher-source-pin"
 outcome = "pass"
 criterion_id = "github-source"
 description = "The reordered source declaration still uses the supplied GitHub fetcher."
+
+[expected_criteria]
+"fetch-options" = true
+"github-source" = true
+"pinned-revision-hash" = true
+"repository-identity" = true

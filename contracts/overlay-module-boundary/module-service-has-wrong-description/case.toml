@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "overlay-module-boundary"
+outcome = "reject"
+criterion_id = "module-service"
+description = "Module service uses the wrong description"
+
+[expected_criteria]
+"module-service" = false
+"module-timer-boundary" = true
+"overlay-package" = true
+"pinned-source-build" = true

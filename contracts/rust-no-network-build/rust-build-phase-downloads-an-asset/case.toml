@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "rust-no-network-build"
 outcome = "reject"
 criterion_id = "no-network-escape"
 description = "Rust build phase downloads an asset"
+
+[expected_criteria]
+"no-network-escape" = false
+"package-source" = true
+"pinned-model" = true
+"system-onnxruntime" = true

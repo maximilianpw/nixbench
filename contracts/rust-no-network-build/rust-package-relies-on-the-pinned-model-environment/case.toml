@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "rust-no-network-build"
 outcome = "pass"
 criterion_id = "pinned-model"
 description = "Rust package relies on the pinned model environment"
+
+[expected_criteria]
+"no-network-escape" = true
+"package-source" = true
+"pinned-model" = true
+"system-onnxruntime" = true

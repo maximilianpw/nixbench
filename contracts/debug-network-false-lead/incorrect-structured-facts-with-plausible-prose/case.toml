@@ -1,5 +1,16 @@
-schema_version = 2
+schema_version = 3
 task_id = "debug-network-false-lead"
 outcome = "reject"
 criterion_id = "arp-diagnosis"
 description = "Plausible evidence text cannot compensate for incorrect structured facts"
+
+[coupled_failures]
+"diagnostic-discipline" = "The named mutation also makes diagnostic-discipline false under this evaluator; the complete vector records this coupled boundary."
+"dns-diagnosis" = "The named mutation also makes dns-diagnosis false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"arp-diagnosis" = false
+"diagnostic-discipline" = false
+"dns-diagnosis" = false
+"structured-human-output" = true
+"unknown-cases" = true

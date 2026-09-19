@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "debug-infinite-recursion"
 outcome = "pass"
 criterion_id = "exact-output-shape"
 description = "The independent finite implementation returns only the documented fields."
+
+[expected_criteria]
+"evaluates-default-lib" = true
+"evaluates-with-lib" = true
+"exact-output-shape" = true
+"expected-fields" = true

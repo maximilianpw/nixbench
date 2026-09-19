@@ -1,5 +1,14 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-path-composition"
 outcome = "reject"
 criterion_id = "path-types"
 description = "Returns strings instead of Nix path values"
+
+[coupled_failures]
+"imports-paths" = "The named mutation also makes imports-paths false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"home-file-paths" = true
+"import-names" = true
+"imports-paths" = false
+"path-types" = false

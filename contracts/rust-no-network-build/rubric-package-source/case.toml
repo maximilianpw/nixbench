@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "rust-no-network-build"
 outcome = "pass"
 criterion_id = "package-source"
 description = "The independent offline package keeps the documented Rust package source and metadata."
+
+[expected_criteria]
+"no-network-escape" = true
+"package-source" = true
+"pinned-model" = true
+"system-onnxruntime" = true

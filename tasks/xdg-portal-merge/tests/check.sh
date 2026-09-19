@@ -16,7 +16,8 @@ let
     __mkIf = condition;
     inherit content;
   };
-  lib.mkAfter = content: content;
+  lib.mkAfter = content: { __merge = "after"; value = content; };
+  lib.mkForce = content: { __merge = "force"; value = content; };
   lib.mkDefault = content: content;
   pkgs = {
     xdg-desktop-portal-hyprland = "/nix/store/xdg-desktop-portal-hyprland";
@@ -38,12 +39,26 @@ let
   existingConfigPackages = [
     "/nix/store/existing-cosmic-session"
   ];
-  existingDefaults = [];
-  commonDefaults = portal.content.config.common.default or [];
-  hyprlandDefaults = portal.content.config.hyprland.default or [];
-  mergedPortals = existingPortals ++ portal.content.extraPortals;
-  mergedConfigPackages = existingConfigPackages ++ (portal.content.configPackages or []);
-  mergedDefaults = existingDefaults ++ commonDefaults ++ hyprlandDefaults;
+  existingDefaults = [ "gtk" ];
+  isMerge = kind: value:
+    builtins.isAttrs value && (value.__merge or null) == kind;
+  unwrap = value:
+    if builtins.isAttrs value && value ? __merge then value.value else value;
+  mergeList = existing: definition:
+    if definition == null then existing
+    else if isMerge "force" definition then unwrap definition
+    else existing ++ unwrap definition;
+  extraPortals = portal.content.extraPortals or [];
+  configPackages = portal.content.configPackages or null;
+  commonDefaultDefinition = portal.content.config.common.default or [];
+  hyprlandDefaultDefinition = portal.content.config.hyprland.default or [];
+  commonDefaults = unwrap commonDefaultDefinition;
+  hyprlandDefaults = unwrap hyprlandDefaultDefinition;
+  mergedPortals = mergeList existingPortals extraPortals;
+  mergedConfigPackages = mergeList existingConfigPackages configPackages;
+  mergedDefaults =
+    mergeList (mergeList existingDefaults commonDefaultDefinition)
+      hyprlandDefaultDefinition;
 in {
   schema_version = 2;
   criteria = {

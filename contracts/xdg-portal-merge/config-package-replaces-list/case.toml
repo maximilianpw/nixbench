@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "xdg-portal-merge"
+outcome = "reject"
+criterion_id = "config-package-preservation"
+description = "Portal config package replaces rather than merges existing packages"
+
+[expected_criteria]
+"conditional-enable" = true
+"config-package-preservation" = false
+"fallback-merge" = true
+"portal-package-merge" = true

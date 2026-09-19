@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "lang-attrsets-normalize"
 outcome = "reject"
 criterion_id = "parameterized-systems"
 description = "Attrset normalizer hard codes the default system universe"
+
+[expected_criteria]
+"by-system" = true
+"default-packages" = true
+"names-and-versions" = true
+"parameterized-systems" = false

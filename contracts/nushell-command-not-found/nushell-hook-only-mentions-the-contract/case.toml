@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "nushell-command-not-found"
 outcome = "reject"
 criterion_id = "command-not-found-call"
 description = "Nushell hook only mentions the contract"
+
+[expected_criteria]
+"command-not-found-call" = false
+"gated-nushell-hook" = true
+"package-installed" = true
+"preserve-bash" = true

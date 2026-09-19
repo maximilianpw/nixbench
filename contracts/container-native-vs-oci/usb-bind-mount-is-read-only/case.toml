@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "container-native-vs-oci"
+outcome = "reject"
+criterion_id = "network-and-mounts"
+description = "USB bind mount is incorrectly read-only"
+
+[expected_criteria]
+"native-container-shape" = true
+"nested-service-module" = true
+"network-and-mounts" = false
+"no-oci-fields" = true

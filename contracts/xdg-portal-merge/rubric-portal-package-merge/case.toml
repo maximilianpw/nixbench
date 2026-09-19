@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "xdg-portal-merge"
 outcome = "pass"
 criterion_id = "portal-package-merge"
 description = "The additional fallback implementation preserves existing portals and adds Hyprland."
+
+[expected_criteria]
+"conditional-enable" = true
+"config-package-preservation" = true
+"fallback-merge" = true
+"portal-package-merge" = true

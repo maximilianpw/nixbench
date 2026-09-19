@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "container-native-vs-oci"
+outcome = "reject"
+criterion_id = "nested-service-module"
+description = "Nested container module does not enable OpenSSH"
+
+[expected_criteria]
+"native-container-shape" = true
+"nested-service-module" = false
+"network-and-mounts" = true
+"no-oci-fields" = true

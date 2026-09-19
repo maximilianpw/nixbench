@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-path-composition"
 outcome = "pass"
 criterion_id = "home-file-paths"
 description = "The named path implementation composes both Home Manager source paths."
+
+[expected_criteria]
+"home-file-paths" = true
+"import-names" = true
+"imports-paths" = true
+"path-types" = true

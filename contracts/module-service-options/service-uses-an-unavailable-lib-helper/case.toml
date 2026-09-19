@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-service-options"
 outcome = "reject"
 criterion_id = "option-schema"
 description = "Service uses an unavailable lib helper"
+
+[expected_criteria]
+"conditional-service" = true
+"exec-arguments" = true
+"firewall-port" = true
+"option-schema" = false

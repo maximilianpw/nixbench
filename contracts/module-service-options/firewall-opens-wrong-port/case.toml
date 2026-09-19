@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-service-options"
+outcome = "reject"
+criterion_id = "firewall-port"
+description = "Firewall ignores the selected service port"
+
+[expected_criteria]
+"conditional-service" = true
+"exec-arguments" = true
+"firewall-port" = false
+"option-schema" = true

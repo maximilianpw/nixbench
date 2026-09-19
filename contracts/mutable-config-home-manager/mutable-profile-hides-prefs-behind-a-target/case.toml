@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "mutable-config-home-manager"
 outcome = "reject"
 criterion_id = "mutable-state-boundary"
 description = "Mutable profile hides prefs behind a target"
+
+[expected_criteria]
+"managed-policy" = true
+"mutable-state-boundary" = false
+"profile-variable" = true
+"thunderbird-config" = true

@@ -1,5 +1,16 @@
-schema_version = 2
+schema_version = 3
 task_id = "module-system-boundaries"
 outcome = "reject"
 criterion_id = "shared-data"
 description = "Duplicate ripgrep cannot replace the missing fd package"
+
+[coupled_failures]
+"darwin-module" = "The named mutation also makes darwin-module false under this evaluator; the complete vector records this coupled boundary."
+"home-manager-module" = "The named mutation also makes home-manager-module false under this evaluator; the complete vector records this coupled boundary."
+"nixos-module" = "The named mutation also makes nixos-module false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"darwin-module" = false
+"home-manager-module" = false
+"nixos-module" = false
+"shared-data" = false

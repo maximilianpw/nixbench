@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-stale-option-migration"
+outcome = "reject"
+criterion_id = "plasma-current"
+description = "Plasma 6 desktop is disabled"
+
+[expected_criteria]
+"graphics-current" = true
+"kdeconnect-no-stale" = true
+"plasma-current" = false
+"sddm-current" = true

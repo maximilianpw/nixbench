@@ -12,6 +12,11 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
+  get = path: default: value:
+    if path == [] then value
+    else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
+    then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
+    else default;
   diagnose = import ${workdir}/diagnosis.nix;
   arpCase = diagnose {
     observations = {
@@ -73,36 +78,38 @@ in {
   schema_version = 2;
   criteria = {
     "arp-diagnosis" = passes (
-      arpCase.rootCause == "l2-arp-failure" && sameFacts arpCase.facts arpFacts
+      get [ "rootCause" ] null arpCase == "l2-arp-failure"
+      && sameFacts (get [ "facts" ] [] arpCase) arpFacts
     );
     "dns-diagnosis" = passes (
-      dnsCase.rootCause == "dns-resolution" && sameFacts dnsCase.facts dnsFacts
+      get [ "rootCause" ] null dnsCase == "dns-resolution"
+      && sameFacts (get [ "facts" ] [] dnsCase) dnsFacts
     );
     "unknown-cases" = passes (
-      missingPrerequisitesCase.rootCause == "unknown"
-      && missingPrerequisitesCase.facts == []
-      && builtins.length missingPrerequisitesCase.nextChecks > 0
-      && healthyDnsCase.rootCause == "unknown"
-      && healthyDnsCase.facts == []
-      && builtins.length healthyDnsCase.nextChecks > 0
+      get [ "rootCause" ] null missingPrerequisitesCase == "unknown"
+      && get [ "facts" ] null missingPrerequisitesCase == []
+      && builtins.length (get [ "nextChecks" ] [] missingPrerequisitesCase) > 0
+      && get [ "rootCause" ] null healthyDnsCase == "unknown"
+      && get [ "facts" ] null healthyDnsCase == []
+      && builtins.length (get [ "nextChecks" ] [] healthyDnsCase) > 0
     );
     "structured-human-output" = passes (
-      builtins.isList arpCase.evidence
-      && builtins.length arpCase.evidence > 0
-      && builtins.all (item: builtins.isString item && item != "") arpCase.evidence
-      && builtins.isList arpCase.discarded
-      && builtins.all (item: builtins.isString item && item != "") arpCase.discarded
-      && builtins.isList dnsCase.evidence
-      && builtins.length dnsCase.evidence > 0
-      && builtins.all (item: builtins.isString item && item != "") dnsCase.evidence
-      && builtins.isList dnsCase.nextChecks
-      && builtins.isList missingPrerequisitesCase.evidence
-      && builtins.isList missingPrerequisitesCase.discarded
-      && builtins.isList missingPrerequisitesCase.nextChecks
+      builtins.isList (get [ "evidence" ] null arpCase)
+      && builtins.length (get [ "evidence" ] [] arpCase) > 0
+      && builtins.all (item: builtins.isString item && item != "") (get [ "evidence" ] [] arpCase)
+      && builtins.isList (get [ "discarded" ] null arpCase)
+      && builtins.all (item: builtins.isString item && item != "") (get [ "discarded" ] [] arpCase)
+      && builtins.isList (get [ "evidence" ] null dnsCase)
+      && builtins.length (get [ "evidence" ] [] dnsCase) > 0
+      && builtins.all (item: builtins.isString item && item != "") (get [ "evidence" ] [] dnsCase)
+      && builtins.isList (get [ "nextChecks" ] null dnsCase)
+      && builtins.isList (get [ "evidence" ] null missingPrerequisitesCase)
+      && builtins.isList (get [ "discarded" ] null missingPrerequisitesCase)
+      && builtins.isList (get [ "nextChecks" ] null missingPrerequisitesCase)
     );
     "diagnostic-discipline" = passes (
-      builtins.isList arpCase.discarded
-      && builtins.all (code: builtins.elem code arpCase.discarded) [
+      builtins.isList (get [ "discarded" ] null arpCase)
+      && builtins.all (code: builtins.elem code (get [ "discarded" ] [] arpCase)) [
         "audio" "hdmi" "pipewire" "generic-firewall"
       ]
     );

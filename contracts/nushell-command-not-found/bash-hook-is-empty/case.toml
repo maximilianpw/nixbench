@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "nushell-command-not-found"
+outcome = "reject"
+criterion_id = "preserve-bash"
+description = "Bash command-not-found hook is removed"
+
+[expected_criteria]
+"command-not-found-call" = true
+"gated-nushell-hook" = true
+"package-installed" = true
+"preserve-bash" = false

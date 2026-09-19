@@ -12,10 +12,19 @@ let
   passes = value:
     let attempt = builtins.tryEval (builtins.deepSeq value value);
     in attempt.success && attempt.value == true;
+  get = path: default: value:
+    if path == [] then value
+    else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
+    then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
+    else default;
   appimageTools.wrapType2 = attrs: attrs // { __appimage = "wrapType2"; };
   buildFHSUserEnv = attrs: attrs // { __fhs = true; };
   fetchurl = attrs: attrs // { __fetcher = "url"; };
-  makePackage = name: { __package = name; };
+  makePackage = name: {
+    __package = name;
+    outPath = "/nix/store/nixbench-\${name}";
+    __toString = self: self.outPath;
+  };
   pkgs = {
     alsa-lib = makePackage "alsa-lib";
     glib = makePackage "glib";
@@ -61,14 +70,14 @@ let
   ];
   mutationSurfaces = [
     (result.activation or {})
-    (result.environment.extraInit or "")
-    (result.environment.sessionVariables or {})
-    (result.system.activationScripts or {})
-    (result.system.timers or {})
-    (result.system.tmpfiles or {})
-    (result.systemd.timers or {})
-    (result.systemd.tmpfiles or {})
-  ] ++ map (attempt: attempt.value) moduleAttempts;
+    (get [ "environment" "extraInit" ] "" result)
+    (get [ "environment" "sessionVariables" ] {} result)
+    (get [ "system" "activationScripts" ] {} result)
+    (get [ "system" "timers" ] {} result)
+    (get [ "system" "tmpfiles" ] {} result)
+    (get [ "systemd" "timers" ] {} result)
+    (get [ "systemd" "tmpfiles" ] {} result)
+  ] ++ map (attempt: if attempt.success then attempt.value else {}) moduleAttempts;
   mutationStrings = collectStrings mutationSurfaces;
   tmpfilesText = builtins.concatStringsSep "\n" (collectStrings [
     (result.system.tmpfiles or {})
@@ -80,32 +89,38 @@ let
   hasForbiddenMutation = builtins.any isForbiddenMutation mutationStrings;
   hasForbiddenTmpfilesPath =
     builtins.match "(.|\n)*/(usr|lib|bin)(/|[^A-Za-z0-9_-])(.|\n)*" tmpfilesText != null;
-  fhsPackages = result.fhsEnv.targetPkgs pkgs;
+  fhsPackages =
+    if builtins.isFunction (get [ "fhsEnv" "targetPkgs" ] null result)
+    then result.fhsEnv.targetPkgs pkgs
+    else [];
   requiredFhsPackages = [ pkgs.alsa-lib pkgs.glib pkgs.gtk3 ];
 in {
   schema_version = 2;
   criteria = {
     "appimage-package" = passes (
-      result.appimage.__appimage == "wrapType2"
-      && result.appimage.pname == "vendor-tool" && result.appimage.version == "2.0.0"
+      get [ "appimage" "__appimage" ] null result == "wrapType2"
+      && get [ "appimage" "pname" ] null result == "vendor-tool"
+      && get [ "appimage" "version" ] null result == "2.0.0"
     );
     "pinned-source" = passes (
-      result.appimage.src.__fetcher == "url"
-      && builtins.isString result.appimage.src.url
-      && builtins.match "https?://.+" result.appimage.src.url != null
-      && builtins.isString result.appimage.src.hash
-      && builtins.match "sha256-[A-Za-z0-9+/]{43}=" result.appimage.src.hash != null
+      get [ "appimage" "src" "__fetcher" ] null result == "url"
+      && builtins.isString (get [ "appimage" "src" "url" ] null result)
+      && builtins.match "https?://.+" (get [ "appimage" "src" "url" ] "" result) != null
+      && builtins.isString (get [ "appimage" "src" "hash" ] null result)
+      && builtins.match "sha256-[A-Za-z0-9+/]{43}=" (get [ "appimage" "src" "hash" ] "" result) != null
     );
     "fhs-runtime" = passes (
-      result.fhsEnv.__fhs == true && result.fhsEnv.name == "vendor-tool-fhs"
+      get [ "fhsEnv" "__fhs" ] false result == true
+      && get [ "fhsEnv" "name" ] null result == "vendor-tool-fhs"
       && builtins.all (package: builtins.elem package fhsPackages) requiredFhsPackages
-      && result.fhsEnv.runScript == "vendor-tool"
+      && get [ "fhsEnv" "runScript" ] null result == "vendor-tool"
     );
     "no-host-mutation" = passes (
-      !containsLdConfig (result.environment.etc or {})
+      !containsLdConfig (get [ "environment" "etc" ] {} result)
       && builtins.all (attempt: attempt.success) moduleAttempts
       && !hasForbiddenMutation && !hasForbiddenTmpfilesPath
-      && !(result.appimage ? activation) && !(result.fhsEnv ? activation)
+      && !(get [ "appimage" ] {} result ? activation)
+      && !(get [ "fhsEnv" ] {} result ? activation)
     );
   };
   notes = [];

@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "xdg-portal-merge"
 outcome = "reject"
 criterion_id = "conditional-enable"
 description = "Portal configuration hard codes enabled condition"
+
+[expected_criteria]
+"conditional-enable" = false
+"config-package-preservation" = true
+"fallback-merge" = true
+"portal-package-merge" = true

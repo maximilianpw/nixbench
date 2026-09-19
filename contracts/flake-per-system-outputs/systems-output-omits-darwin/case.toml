@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "flake-per-system-outputs"
+outcome = "reject"
+criterion_id = "systems-output"
+description = "Per-system outputs omit the Darwin system"
+
+[expected_criteria]
+"systems-output" = false
+"packages-and-apps" = true
+"checks-and-shells" = true
+"flake-evaluates" = true

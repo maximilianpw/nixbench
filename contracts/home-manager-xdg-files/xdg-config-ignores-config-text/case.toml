@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "home-manager-xdg-files"
+outcome = "reject"
+criterion_id = "config-text"
+description = "XDG config file ignores the supplied config text"
+
+[expected_criteria]
+"config-text" = false
+"no-imperative-hooks" = true
+"placeholder-file" = true
+"user-directories" = true

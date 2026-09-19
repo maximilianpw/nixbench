@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "rust-no-network-build"
 outcome = "reject"
 criterion_id = "pinned-model"
 description = "Rust model fetch has an empty hash"
+
+[expected_criteria]
+"no-network-escape" = true
+"package-source" = true
+"pinned-model" = false
+"system-onnxruntime" = true

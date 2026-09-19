@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "home-manager-extra-special-args"
+outcome = "reject"
+criterion_id = "module-integration"
+description = "Home Manager integration disables global packages"
+
+[expected_criteria]
+"forwards-inputs" = true
+"module-integration" = false
+"nixos-system" = true
+"user-imports" = true

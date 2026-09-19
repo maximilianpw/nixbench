@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-stale-option-migration"
+outcome = "reject"
+criterion_id = "graphics-current"
+description = "Current graphics stack is disabled"
+
+[expected_criteria]
+"graphics-current" = false
+"kdeconnect-no-stale" = true
+"plasma-current" = true
+"sddm-current" = true

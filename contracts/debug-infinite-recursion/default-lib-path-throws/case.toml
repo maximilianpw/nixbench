@@ -1,0 +1,15 @@
+schema_version = 3
+task_id = "debug-infinite-recursion"
+outcome = "reject"
+criterion_id = "evaluates-default-lib"
+description = "Configuration fails when using its default lib"
+
+[coupled_failures]
+"exact-output-shape" = "The named mutation also makes exact-output-shape false under this evaluator; the complete vector records this coupled boundary."
+"expected-fields" = "The named mutation also makes expected-fields false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"evaluates-default-lib" = false
+"evaluates-with-lib" = true
+"exact-output-shape" = false
+"expected-fields" = false

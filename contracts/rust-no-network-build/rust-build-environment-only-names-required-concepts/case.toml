@@ -1,5 +1,14 @@
-schema_version = 2
+schema_version = 3
 task_id = "rust-no-network-build"
 outcome = "reject"
 criterion_id = "system-onnxruntime"
 description = "Rust build environment only names required concepts"
+
+[coupled_failures]
+"pinned-model" = "The named mutation also makes pinned-model false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"no-network-escape" = true
+"package-source" = true
+"pinned-model" = false
+"system-onnxruntime" = false

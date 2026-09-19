@@ -1,5 +1,16 @@
-schema_version = 2
+schema_version = 3
 task_id = "debug-network-false-lead"
 outcome = "reject"
 criterion_id = "unknown-cases"
 description = "Network diagnosis never returns unknown"
+
+[coupled_failures]
+"arp-diagnosis" = "The named mutation also makes arp-diagnosis false under this evaluator; the complete vector records this coupled boundary."
+"dns-diagnosis" = "The named mutation also makes dns-diagnosis false under this evaluator; the complete vector records this coupled boundary."
+
+[expected_criteria]
+"arp-diagnosis" = false
+"diagnostic-discipline" = true
+"dns-diagnosis" = false
+"structured-human-output" = true
+"unknown-cases" = false

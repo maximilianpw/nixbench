@@ -1,5 +1,11 @@
-schema_version = 2
+schema_version = 3
 task_id = "lang-attrsets-normalize"
 outcome = "reject"
 criterion_id = "default-packages"
 description = "Attrset normalizer removes argument defaults"
+
+[expected_criteria]
+"by-system" = true
+"default-packages" = false
+"names-and-versions" = true
+"parameterized-systems" = true

@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "xdg-portal-merge"
+outcome = "reject"
+criterion_id = "fallback-merge"
+description = "Portal fallback replaces rather than merges existing defaults"
+
+[expected_criteria]
+"conditional-enable" = true
+"config-package-preservation" = true
+"fallback-merge" = false
+"portal-package-merge" = true

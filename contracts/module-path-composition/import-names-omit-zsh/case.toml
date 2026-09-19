@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "module-path-composition"
+outcome = "reject"
+criterion_id = "import-names"
+description = "Import name metadata omits zsh"
+
+[expected_criteria]
+"home-file-paths" = true
+"import-names" = false
+"imports-paths" = true
+"path-types" = true
