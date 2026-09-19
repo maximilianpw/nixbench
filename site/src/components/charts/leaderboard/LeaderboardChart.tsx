@@ -57,18 +57,6 @@ export function LeaderboardChart({
             <CardDescription id="leaderboard-chart-description">
               Higher is better; farther left is faster. Select a model to inspect effort levels and uncertainty.
             </CardDescription>
-            <details className="mt-3 text-sm text-muted-foreground">
-              <summary className="cursor-pointer font-semibold text-foreground">How to read this chart</summary>
-              <p className="mt-2 max-w-3xl leading-6">
-                Each point is an average for one effort setting. Paths connect effort settings for the same model.
-                Repeated runs receive 95% Student&apos;s t intervals. The time axis uses {xScale.scale} spacing
-                {xScale.scale === "log" ? " because runtimes span more than one order of magnitude" : ""}.
-                {taskScaleMode === "focused"
-                  ? ` The task axis is zoomed to ${yScale.domain[0]}–${yScale.domain[1]}.`
-                  : " The task axis starts at zero."}
-                {view === "summary" ? " Individual runs are hidden." : " Faint points show individual runs."}
-              </p>
-            </details>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2 lg:max-w-52" aria-label="Chart axis summary">
             <Badge variant="muted">

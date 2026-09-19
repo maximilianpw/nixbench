@@ -31,7 +31,7 @@ export function LeaderboardPanel({
 }: LeaderboardPanelProps) {
   const [corpus, setCorpus] = useState<CorpusFilter>("29-task corpus");
   const [view, setView] = useState<EvidenceView>("summary");
-  const [taskScaleMode, setTaskScaleMode] = useState<TaskScaleMode>("full");
+  const [taskScaleMode, setTaskScaleMode] = useState<TaskScaleMode>("focused");
   const [modelFilter, setModelFilter] = useState<ModelFilter>("all");
   const [evidenceFilter, setEvidenceFilter] = useState<EvidenceFilter>("repeated");
   const [highlightedModel, setHighlightedModel] = useState<ModelKey | null>(null);
