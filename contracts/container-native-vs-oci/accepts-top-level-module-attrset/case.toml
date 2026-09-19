@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "container-native-vs-oci"
+outcome = "pass"
+criterion_id = "native-container-shape"
+description = "Native container may be expressed as a top-level NixOS module attrset"
+
+[expected_criteria]
+"native-container-shape" = true
+"nested-service-module" = true
+"network-and-mounts" = true
+"no-oci-fields" = true

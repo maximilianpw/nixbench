@@ -17,7 +17,8 @@ let
     else if builtins.isAttrs value && builtins.hasAttr (builtins.head path) value
     then get (builtins.tail path) default (builtins.getAttr (builtins.head path) value)
     else default;
-  module = import ${workdir}/container.nix {};
+  imported = import ${workdir}/container.nix;
+  module = if builtins.isFunction imported then imported {} else imported;
   cfg = if module ? config then module.config else module;
   container = get [ "containers" "ubuntu-lab" ] {} cfg;
   rawContainerConfig =

@@ -10,4 +10,4 @@ Requirements:
 - Include `nixfmt-rfc-style`, `statix`, `deadnix`, and `nil` in `packages`.
 - Include `alejandra` only when the argument is not `null`.
 - Set `NIXBENCH_FORMATTER = "nixfmt-rfc-style"`.
-- Add a `shellHook` that enables `nix-command` and `flakes` through `NIX_CONFIG`.
+- Add a `shellHook` that enables `nix-command` and `flakes` through `NIX_CONFIG`. Preserve any existing `NIX_CONFIG` content and separate the new setting with a newline so a pre-existing final line cannot absorb it.

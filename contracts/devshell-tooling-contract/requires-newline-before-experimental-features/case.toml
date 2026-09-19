@@ -1,0 +1,11 @@
+schema_version = 3
+task_id = "devshell-tooling-contract"
+outcome = "reject"
+criterion_id = "experimental-features"
+description = "Development shell appends the experimental-features setting without a newline separator"
+
+[expected_criteria]
+"experimental-features" = false
+"formatter-contract" = true
+"required-tools" = true
+"shell-construction" = true
