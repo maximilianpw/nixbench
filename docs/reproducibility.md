@@ -66,7 +66,22 @@ When publishing or comparing results, record:
 - Whether network access was available.
 - Whether Nix was configured with flakes enabled.
 
-Use `python3 bench.py corpus-id --json` to inspect the current corpus identity. Use a reviewed protocol file for publishable runs:
+Use `python3 bench.py corpus-id --json` to inspect the current corpus identity. Calibration drafts consume only strict schema-3 studies for that exact identity:
+
+```sh
+python3 bench.py calibration-report \
+  --studies-dir results/studies \
+  --output /tmp/nixbench-calibration.json
+```
+
+The command writes only to the explicit output path. It deduplicates
+configuration/run/task cells, retains invalid and incomplete attempts, reports
+unavailable discrimination without inventing a value, and never approves a
+record or changes `corpus/task-lifecycle.toml`. A changed task or corpus digest
+makes prior records stale. Maintainers manually review the draft before copying
+approved records into the checked registry.
+
+Use a reviewed protocol file for publishable runs:
 
 ```sh
 python3 bench.py run-all \
@@ -79,7 +94,12 @@ python3 bench.py run-all \
 
 Runs without `--protocol-file` remain available for local compatibility, but they set `protocol_complete = false`. `export-site` rejects them unless the operator supplies `--allow-legacy-protocol`.
 
-Current-protocol website exports must also name the checked corpus release:
+Current-protocol website exports must also name the checked corpus release.
+The schema-3 release manifest distinguishes all release-controlled tasks from
+the active task set and records activation eligibility. A structurally healthy
+`calibrating` release has no publishable active task set; export and publication
+checks fail closed until reviewed current-digest calibration activates it.
+
 
 ```sh
 python3 bench.py --results-dir results export-site \
@@ -117,9 +137,9 @@ Its trusted outer process writes status evidence while the model runs in a
 bubblewrap namespace without the repository, corpus, evaluator, reference,
 results, host home, or Nix daemon socket. `publication-check` rejects held-out
 studies without a successful approved preflight or when the study, registered
-adapter, and schema-2 release manifest do not carry the same bundle digest.
-Schema-1 release manifests are not silently upgraded. Publication first
-validates the schema-2 release manifest, then requires corpus ID, version,
+adapter, and schema-3 release manifest do not carry the same bundle digest.
+Older release manifests are not silently upgraded. Publication first validates
+the schema-3 release manifest, then requires corpus ID, version,
 digest, visibility, and task count to agree. For a public corpus, every
 observation `task_digest` and the exact task-ID set must match the manifest's
 `task_digests` and `active_tasks`. For a private held-out corpus, the validator

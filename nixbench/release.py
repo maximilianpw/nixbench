@@ -11,6 +11,13 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from .adapters import get_trusted_adapter
+from .calibration import (
+    MINIMUM_CALIBRATION_CONFIGURATIONS,
+    MINIMUM_VALID_OBSERVATIONS_PER_CONFIGURATION,
+    calibration_activation_errors,
+    load_calibration_registry,
+    load_lifecycle_registry,
+)
 from .contracts import collect_contract_evidence, load_contract_cases
 from .corpus import CorpusIdentity, identify_corpus
 from .isolation import APPROVED_HELDOUT_PROFILE, APPROVED_PREFLIGHT_EVIDENCE
@@ -32,8 +39,8 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
     import tomli as tomllib  # type: ignore[no-redef]
 
 
-RELEASE_TOOL_SCHEMA_VERSION = 1
-RELEASE_MANIFEST_SCHEMA_VERSION = 2
+RELEASE_TOOL_SCHEMA_VERSION = 2
+RELEASE_MANIFEST_SCHEMA_VERSION = 3
 REQUIRED_PROTOCOL_SCHEMA_VERSION = 2
 RUNTIME_SAFETY_FRACTION = 0.8
 MINIMUM_PUBLICATION_TASKS = 5
@@ -42,8 +49,12 @@ MINIMUM_PUBLICATION_OBSERVATIONS = 20
 
 def release_tool_digest() -> str:
     hasher = hashlib.sha256()
-    hasher.update(b"nixbench-release-tool-v2\0")
-    for path in (Path(__file__), Path(__file__).with_name("contracts.py")):
+    hasher.update(b"nixbench-release-tool-v3\0")
+    for path in (
+        Path(__file__),
+        Path(__file__).with_name("contracts.py"),
+        Path(__file__).with_name("calibration.py"),
+    ):
         payload = path.read_bytes()
         hasher.update(path.name.encode("utf-8") + b"\0")
         hasher.update(len(payload).to_bytes(8, "big"))
@@ -125,11 +136,36 @@ def check_release(
     vocabulary = _load_category_vocabulary(root / "corpus" / "category-vocabulary.toml")
     deprecations = _load_deprecations(root / "corpus" / "task-deprecations.toml")
     lifecycle_valid = True
+    calibration_registry_valid = True
+    activation_errors: list[str] = []
     try:
-        quarantined = _load_quarantined_tasks(root / "corpus" / "task-lifecycle.toml")
+        lifecycle = load_lifecycle_registry(
+            root / "corpus" / "task-lifecycle.toml",
+            expected_task_ids=identity.task_ids,
+        )
     except ValueError:
         lifecycle_valid = False
-        quarantined = set()
+        lifecycle = None
+    try:
+        calibration_registry = load_calibration_registry(
+            root / "corpus" / "task-calibrations.json", identity=identity
+        )
+    except ValueError:
+        calibration_registry_valid = False
+        calibration_registry = None
+    if lifecycle is not None and calibration_registry is not None:
+        activation_errors = calibration_activation_errors(
+            identity=identity,
+            lifecycle=lifecycle,
+            registry=calibration_registry,
+        )
+        nonactive_release_tasks = sorted(
+            set(identity.task_ids) - lifecycle.task_ids("active")
+        )
+        if nonactive_release_tasks:
+            activation_errors.append(
+                f"{len(nonactive_release_tasks)} release-controlled tasks are not active; corpus remains calibrating"
+            )
     evidence = (
         [dict(item) for item in health_evidence]
         if health_evidence is not None
@@ -238,7 +274,9 @@ def check_release(
         "active contract fixtures contain no known-issue skips",
         "active contract fixtures still contain known-issue skips",
     )
-    active_ids = set(identity.task_ids)
+    release_task_ids = set(identity.task_ids)
+    active_ids = lifecycle.task_ids("active") if lifecycle is not None else set()
+    quarantined_ids = lifecycle.task_ids("quarantined") if lifecycle is not None else set()
     invalid_deprecations = sorted(active_ids & set(deprecations))
     _add_gate(
         gates,
@@ -257,9 +295,26 @@ def check_release(
     _add_gate(
         gates,
         "no-active-quarantined-tasks",
-        lifecycle_valid and not (active_ids & quarantined),
+        lifecycle_valid and not (active_ids & quarantined_ids),
         "quarantined tasks do not contribute to the active corpus",
-        "a quarantined task remains in the active scored corpus",
+        "a task has conflicting active and quarantined lifecycle state",
+    )
+    _add_gate(
+        gates,
+        "valid-calibration-registry",
+        calibration_registry_valid,
+        "calibration registry is current and schema-valid",
+        "corpus/task-calibrations.json is missing, stale, or invalid",
+    )
+    _add_gate(
+        gates,
+        "active-task-calibration",
+        lifecycle_valid and calibration_registry_valid and not activation_errors,
+        (
+            f"every active task has approval across at least {MINIMUM_CALIBRATION_CONFIGURATIONS} configurations "
+            f"with {MINIMUM_VALID_OBSERVATIONS_PER_CONFIGURATION} valid observation per configuration"
+        ),
+        activation_errors[0] if activation_errors else "active task calibration is incomplete",
     )
     release_note = root / "docs" / "releases" / f"{identity.version}.md"
     _add_gate(
@@ -286,18 +341,31 @@ def check_release(
             ),
         },
         "warnings": (
-            ["descriptive-only-category"]
-            if any(count < 5 for count in category_counts.values())
-            else []
+            (["descriptive-only-category"] if any(count < 5 for count in category_counts.values()) else [])
+            + (["calibration-incomplete"] if activation_errors or not active_ids else [])
         ),
+        "lifecycle": {
+            "states": dict(sorted(lifecycle.states.items())) if lifecycle is not None else None,
+            "active_tasks": sorted(active_ids),
+            "calibrating_tasks": sorted(lifecycle.task_ids("calibrating")) if lifecycle is not None else [],
+            "release_tasks": sorted(release_task_ids),
+            "activation_errors": activation_errors,
+        },
         "policy": {
             "governance": "docs/benchmark-governance.md",
             "category_vocabulary": "corpus/category-vocabulary.toml",
             "task_deprecations": "corpus/task-deprecations.toml",
             "task_lifecycle": "corpus/task-lifecycle.toml",
+            "task_calibrations": "corpus/task-calibrations.json",
+            "minimum_calibration_configurations": MINIMUM_CALIBRATION_CONFIGURATIONS,
+            "minimum_valid_observations_per_configuration": MINIMUM_VALID_OBSERVATIONS_PER_CONFIGURATION,
         },
         "tool_versions": _tool_versions(),
     }
+    report["activation_eligible"] = next(
+        gate["passed"] for gate in gates if gate["name"] == "active-task-calibration"
+    )
+    report["release_state"] = "active" if report["activation_eligible"] else "calibrating"
     report["release_gate_result_digest"] = _release_gate_digest(
         report, root=root, evidence=evidence
     )
@@ -314,7 +382,13 @@ def check_release(
             "checked release manifest matches corpus and gate evidence",
             manifest_reason,
         )
+    report["structurally_eligible"] = all(
+        gate["passed"] for gate in gates if gate["name"] != "active-task-calibration"
+    )
     report["eligible"] = all(gate["passed"] for gate in gates)
+    report["release_state"] = "active" if report["eligible"] else (
+        "calibrating" if report["structurally_eligible"] else "invalid"
+    )
     return report
 
 
@@ -326,8 +400,8 @@ def build_release_manifest(
     compatibility: str = "major",
     release_date: str | None = None,
 ) -> dict[str, Any]:
-    if release_report.get("eligible") is not True:
-        raise ValueError("cannot build a release manifest from an ineligible report")
+    if release_report.get("structurally_eligible") is not True and release_report.get("eligible") is not True:
+        raise ValueError("cannot build a release manifest from a structurally ineligible report")
     corpus = release_report.get("corpus")
     if not isinstance(corpus, Mapping):
         raise ValueError("release report has no corpus identity")
@@ -336,15 +410,21 @@ def build_release_manifest(
     task_digests = corpus.get("task_digests", {})
     if not isinstance(task_digests, Mapping):
         task_digests = {}
+    lifecycle = release_report.get("lifecycle")
+    if not isinstance(lifecycle, Mapping):
+        raise ValueError("release report has no lifecycle state")
+    lifecycle_active = _string_list(lifecycle.get("active_tasks", []))
     if visibility == "public":
-        active_tasks = task_ids
+        release_tasks = task_ids
+        active_tasks = lifecycle_active
         manifest_task_digests = {
             task_id: str(task_digests[task_id])
-            for task_id in active_tasks
+            for task_id in release_tasks
             if task_id in task_digests
         }
     else:
-        active_tasks = _string_list(corpus.get("opaque_task_hashes", []))
+        release_tasks = _string_list(corpus.get("opaque_task_hashes", []))
+        active_tasks = release_tasks if release_report.get("activation_eligible") is True else []
         manifest_task_digests = {}
     strata = release_report.get("strata", {})
     trusted_isolation = None
@@ -359,7 +439,7 @@ def build_release_manifest(
             "preflight_evidence": APPROVED_PREFLIGHT_EVIDENCE,
         }
     if previous_version is None:
-        added_tasks = active_tasks
+        added_tasks = release_tasks
         changed_tasks: list[str] = []
         deprecated_tasks: list[str] = []
     else:
@@ -369,11 +449,11 @@ def build_release_manifest(
             )
         if previous_manifest.get("corpus_version") != previous_version:
             raise ValueError("previous release manifest version does not match")
-        previous_active = set(_string_list(previous_manifest.get("active_tasks")))
+        previous_active = set(_string_list(previous_manifest.get("release_tasks")))
         previous_digests = previous_manifest.get("task_digests")
         if not isinstance(previous_digests, Mapping):
             raise ValueError("previous release manifest has no task digest map")
-        current_active = set(active_tasks)
+        current_active = set(release_tasks)
         added_tasks = sorted(current_active - previous_active)
         deprecated_tasks = sorted(previous_active - current_active)
         changed_tasks = sorted(
@@ -401,7 +481,11 @@ def build_release_manifest(
         ),
         "previous_version": previous_version,
         "compatibility": compatibility,
+        "release_tasks": release_tasks,
         "active_tasks": active_tasks,
+        "active_task_count": len(active_tasks),
+        "activation_eligible": release_report.get("activation_eligible") is True,
+        "release_state": release_report.get("release_state"),
         "task_digests": manifest_task_digests,
         "added_tasks": added_tasks,
         "changed_tasks": changed_tasks,
@@ -430,6 +514,8 @@ def check_publication(
     study: Mapping[str, Any], *, release_manifest: Mapping[str, Any]
 ) -> dict[str, Any]:
     reasons = _release_manifest_validation_reasons(release_manifest)
+    if release_manifest.get("activation_eligible") is not True:
+        reasons.append("release manifest is calibration-incomplete and not active")
     if reasons:
         return {"eligible": False, "reasons": reasons}
     try:
@@ -481,7 +567,7 @@ def check_publication(
     required_protocol = release_manifest.get("required_protocol_schema_version")
     if metadata.get("protocol_schema_version") != required_protocol:
         reasons.append("study protocol schema does not match the corpus release")
-    expected_task_count = release_manifest.get("task_count")
+    expected_task_count = release_manifest.get("active_task_count")
     if study.get("task_count") != expected_task_count:
         reasons.append("study task count does not match the release manifest")
     trials = study.get("trials")
@@ -666,19 +752,33 @@ def _release_manifest_validation_reasons(
     required_protocol = manifest.get("required_protocol_schema_version")
     if type(required_protocol) is not int or required_protocol <= 0:
         reasons.append("release manifest required protocol schema is invalid")
+    release_tasks = manifest.get("release_tasks")
+    if not isinstance(release_tasks, list) or not all(
+        isinstance(item, str) and item for item in release_tasks
+    ) or len(release_tasks) != len(set(release_tasks)):
+        reasons.append("release manifest release_tasks is invalid")
+        release_tasks = []
+    elif type(task_count) is int and len(release_tasks) != task_count:
+        reasons.append("release manifest release_tasks disagrees with task_count")
     active_tasks = manifest.get("active_tasks")
     if not isinstance(active_tasks, list) or not all(
         isinstance(item, str) and item for item in active_tasks
-    ) or len(active_tasks) != len(set(active_tasks)):
+    ) or len(active_tasks) != len(set(active_tasks)) or not set(active_tasks) <= set(release_tasks):
         reasons.append("release manifest active_tasks is invalid")
         active_tasks = []
-    elif type(task_count) is int and len(active_tasks) != task_count:
-        reasons.append("release manifest active_tasks disagrees with task_count")
+    if manifest.get("active_task_count") != len(active_tasks):
+        reasons.append("release manifest active_task_count is invalid")
+    activation_eligible = manifest.get("activation_eligible")
+    if type(activation_eligible) is not bool or activation_eligible != (set(active_tasks) == set(release_tasks)):
+        reasons.append("release manifest activation eligibility is invalid")
+    expected_state = "active" if activation_eligible is True else "calibrating"
+    if manifest.get("release_state") != expected_state:
+        reasons.append("release manifest release state is invalid")
     task_digests = manifest.get("task_digests")
     if not isinstance(task_digests, Mapping):
         reasons.append("release manifest task_digests is invalid")
     elif visibility == "public":
-        if set(task_digests) != set(active_tasks) or any(
+        if set(task_digests) != set(release_tasks) or any(
             not isinstance(value, str)
             or len(value) != 64
             or any(character not in "0123456789abcdef" for character in value)
@@ -691,7 +791,7 @@ def _release_manifest_validation_reasons(
         if any(
             len(value) != 64
             or any(character not in "0123456789abcdef" for character in value)
-            for value in active_tasks
+            for value in release_tasks
         ):
             reasons.append("release manifest opaque task hashes are invalid")
         if not isinstance(manifest.get("trusted_isolation"), Mapping):
@@ -811,7 +911,21 @@ def initialize_private_corpus(destination: Path, *, public_repo_root: Path) -> N
         'visibility = "private-heldout"\n'
     )
     (target / "corpus" / "task-lifecycle.toml").write_text(
-        "schema_version = 1\nquarantined_tasks = []\n"
+        "schema_version = 2\ntasks = []\n"
+    )
+    (target / "corpus" / "task-calibrations.template.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "corpus_id": "replace-after-tasks-exist",
+                "corpus_version": "0.1.0-dev",
+                "corpus_digest": "replace-after-tasks-exist",
+                "records": [],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n"
     )
     (target / ".gitignore").write_text(
         "results/\npublication*.json\n*.log\n# Never copy this directory into the public NixBench repository.\n"
@@ -975,6 +1089,7 @@ def _release_gate_digest(
         root / "corpus" / "category-vocabulary.toml",
         root / "corpus" / "task-deprecations.toml",
         root / "corpus" / "task-lifecycle.toml",
+        root / "corpus" / "task-calibrations.json",
         root / "README.md",
         root / "docs" / "benchmark-governance.md",
         root / "docs" / "reproducibility.md",
@@ -1055,7 +1170,11 @@ def _verify_release_manifest(
         "changed_tasks",
         "deprecated_tasks",
         "task_count_restricted",
+        "release_tasks",
         "active_tasks",
+        "active_task_count",
+        "activation_eligible",
+        "release_state",
         "task_digests",
         "trusted_isolation",
     }
@@ -1086,21 +1205,32 @@ def _verify_release_manifest(
             "required_protocol_schema_version"
         ),
         "task_count_restricted": corpus.get("visibility") != "public",
+        "active_task_count": len(report.get("lifecycle", {}).get("active_tasks", [])),
+        "activation_eligible": report.get("activation_eligible"),
+        "release_state": report.get("release_state"),
     }
     for field, expected in live_fields.items():
         if manifest.get(field) != expected:
             label = field.replace("_", " ")
             return False, f"checked release manifest {label} does not match release evidence"
-    active_tasks = (
+    release_tasks = (
         _string_list(corpus.get("task_ids", []))
         if corpus.get("visibility") == "public"
         else _string_list(corpus.get("opaque_task_hashes", []))
+    )
+    lifecycle = report.get("lifecycle") if isinstance(report.get("lifecycle"), Mapping) else {}
+    active_tasks = (
+        _string_list(lifecycle.get("active_tasks", []))
+        if corpus.get("visibility") == "public"
+        else (release_tasks if report.get("activation_eligible") is True else [])
     )
     expected_task_digests = (
         dict(corpus.get("task_digests", {}))
         if corpus.get("visibility") == "public"
         else {}
     )
+    if manifest.get("release_tasks") != release_tasks:
+        return False, "checked release manifest release task set is stale"
     if manifest.get("active_tasks") != active_tasks:
         return False, "checked release manifest active task set is stale"
     if manifest.get("task_digests") != expected_task_digests:
@@ -1296,14 +1426,14 @@ def _verify_task_change_claims(
     manifest_path: Path, manifest: Mapping[str, Any]
 ) -> tuple[bool, str]:
     try:
-        active = set(_string_list(manifest.get("active_tasks")))
+        active = set(_string_list(manifest.get("release_tasks")))
         added = set(_string_list(manifest.get("added_tasks")))
         changed = set(_string_list(manifest.get("changed_tasks")))
         deprecated = set(_string_list(manifest.get("deprecated_tasks")))
     except ValueError:
         return False, "checked release manifest task-change fields are invalid"
-    if len(active) != len(manifest.get("active_tasks", [])):
-        return False, "checked release manifest active task set contains duplicates"
+    if len(active) != len(manifest.get("release_tasks", [])):
+        return False, "checked release manifest release task set contains duplicates"
     previous_version = manifest.get("previous_version")
     if previous_version is None:
         if added != active or changed or deprecated:
@@ -1319,7 +1449,7 @@ def _verify_task_change_claims(
     if not isinstance(previous, Mapping):
         return False, "previous release manifest is invalid"
     try:
-        previous_active = set(_string_list(previous.get("active_tasks")))
+        previous_active = set(_string_list(previous.get("release_tasks")))
     except ValueError:
         return False, "previous release manifest active task set is invalid"
     current_digests = manifest.get("task_digests")

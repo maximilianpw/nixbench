@@ -9,6 +9,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from nixbench.cli import build_parser, main
+from nixbench.corpus import identify_corpus
+from nixbench.protocol import compute_configuration_id
 from tests.test_runner import make_toy_task
 
 
@@ -109,6 +111,83 @@ class CliTests(unittest.TestCase):
         self.assertTrue(health["tasks"]["toy"]["reference_full_score"])
         self.assertTrue(health["tasks"]["toy"]["starter_rejected"])
         self.assertTrue(health["tasks"]["toy"]["evaluator_deterministic"])
+
+    def test_calibration_report_handles_zero_few_and_sufficient_configurations(self) -> None:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as results:
+            root = Path(temp)
+            results_dir = Path(results)
+            make_toy_task(root)
+            studies = results_dir / "studies"
+            studies.mkdir()
+            output = results_dir / "calibration.json"
+
+            returncode, _, stderr = invoke_cli(
+                root, results_dir, "calibration-report", "--studies-dir", str(studies), "--output", str(output)
+            )
+            zero = json.loads(output.read_text())
+            self.assertEqual(returncode, 0)
+            self.assertEqual(stderr, "")
+            self.assertEqual(zero["records"][0]["configurations"], [])
+            self.assertEqual(zero["records"][0]["discrimination"]["unavailable_reason"], "insufficient-sample-size")
+
+            identity = identify_corpus(root, root / "corpus.toml")
+            write_calibration_study(studies, identity, 0)
+            returncode, _, _ = invoke_cli(
+                root, results_dir, "calibration-report", "--studies-dir", str(studies), "--output", str(output)
+            )
+            few = json.loads(output.read_text())
+            self.assertEqual(returncode, 0)
+            self.assertEqual(len(few["records"][0]["configurations"]), 1)
+
+            write_calibration_study(studies, identity, 1)
+            write_calibration_study(studies, identity, 2, attempt_status="incomplete")
+            returncode, _, stderr = invoke_cli(
+                root, results_dir, "calibration-report", "--studies-dir", str(studies), "--output", str(output)
+            )
+            sufficient = json.loads(output.read_text())
+            self.assertEqual(returncode, 0)
+            self.assertEqual(stderr, "")
+            configurations = sufficient["records"][0]["configurations"]
+            self.assertEqual(len(configurations), 3)
+            incomplete = next(item for item in configurations if item["incomplete_attempt_count"] == 1)
+            self.assertEqual(incomplete["invalid_attempt_rate"], 0.5)
+
+    def test_calibration_report_rejects_duplicate_cells_and_mismatched_corpus(self) -> None:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as results:
+            root = Path(temp)
+            results_dir = Path(results)
+            make_toy_task(root)
+            studies = results_dir / "studies"
+            studies.mkdir()
+            output = results_dir / "calibration.json"
+            identity = identify_corpus(root, root / "corpus.toml")
+            first = write_calibration_study(studies, identity, 0)
+            duplicate = studies / "duplicate" / "summary.json"
+            duplicate.parent.mkdir()
+            duplicate.write_bytes(first.read_bytes())
+
+            returncode, _, stderr = invoke_cli(
+                root, results_dir, "calibration-report", "--studies-dir", str(studies), "--output", str(output)
+            )
+            self.assertEqual(returncode, 2)
+            self.assertIn("duplicate calibration cell", stderr)
+
+            duplicate.unlink()
+            payload = json.loads(first.read_text())
+            payload["metadata"]["corpus_id"] = "wrong-corpus"
+            first.write_text(json.dumps(payload))
+            returncode, _, stderr = invoke_cli(
+                root, results_dir, "calibration-report", "--studies-dir", str(studies), "--output", str(output)
+            )
+            self.assertEqual(returncode, 2)
+            self.assertIn("exact current corpus identity", stderr)
+
+            first.write_text(json.dumps({"schema_version": 2, "trials": []}))
+            returncode, _, stderr = invoke_cli(
+                root, results_dir, "calibration-report", "--studies-dir", str(studies), "--output", str(output)
+            )
+            self.assertEqual(returncode, 2)
+            self.assertIn("schema_version must be 3", stderr)
 
     def test_run_all_checkpoints_harness_exception_before_stopping(self) -> None:
         with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as results:
@@ -734,6 +813,127 @@ print(json.dumps({"type": "turn.completed"}))
         self.assertEqual(
             args.release_manifest, Path("corpus/releases/1.0.0.json")
         )
+
+
+def write_calibration_study(
+    studies: Path,
+    identity,
+    index: int,
+    *,
+    attempt_status: str | None = None,
+) -> Path:
+    controlled = {
+        "schema_version": 2,
+        "id": f"calibration-{index}",
+        "harness_id": "nixbench",
+        "harness_version": "test",
+        "model_id": f"model-{index}",
+        "model_identity_evidence": "vendor-api-direct",
+        "effort": "test",
+        "network_policy": "disabled",
+        "isolation_profile": "test",
+        "tool_policy": "test",
+        "completion_attestation": "required",
+        "agent_adapter": "codex-json",
+        "agent_timeout_seconds": 300,
+        "system": "x86_64-linux",
+        "wrapper_prompt_sha256": "a" * 64,
+        "agent_command_sha256": f"{index + 1:064x}",
+        "agent_adapter_sha256": "b" * 64,
+        "agent_adapter_bundle_sha256": "c" * 64,
+        "attestation_trust": "provisional-same-uid",
+    }
+    configuration_id = compute_configuration_id(identity.digest, controlled)
+    run_id = f"run-{index}"
+    observation = {
+        "task_id": "toy",
+        "task_digest": identity.task_digests["toy"],
+        "category": "packages",
+        "difficulty": "easy",
+        "measurement_status": "valid",
+        "task_outcome": "pass",
+        "invalid_reason": None,
+        "scoring_schema": "criteria-v2",
+        "passed": True,
+        "score": 10,
+        "max_score": 10,
+        "normalized_score": 1.0,
+        "criteria": {"behavior": True},
+        "criterion_points": {"behavior": 10},
+        "criterion_failure_classes": {"behavior": "wrong-value"},
+        "required_criteria": ["behavior"],
+        "passed_criteria": ["behavior"],
+        "failed_criteria": [],
+        "failure_classes": [],
+        "agent_duration_seconds": 1,
+        "evaluator_duration_seconds": 0.01,
+        "agent_timeout": False,
+        "infrastructure_events": [],
+    }
+    trial = {
+        "run_id": run_id,
+        "measurement_status": "valid",
+        "passed_tasks": 1,
+        "failed_tasks": 0,
+        "task_count": 1,
+        "score": 10,
+        "max_score": 10,
+        "score_rate": 1.0,
+        "agent_time_seconds": 1,
+        "agent_seconds_per_task": 1,
+        "timeouts": 0,
+        "scoring_schema": "criteria-v2",
+        "corpus_digest": identity.digest,
+        "configuration_id": configuration_id,
+        "observations": [observation],
+    }
+    metadata = {
+        "corpus_id": identity.id,
+        "corpus_version": identity.version,
+        "corpus_visibility": identity.visibility,
+        "corpus_digest": identity.digest,
+        "configuration_id": configuration_id,
+        "controlled_protocol_schema_version": 1,
+        "controlled_protocol": controlled,
+        "protocol_id": controlled["id"],
+        "protocol_schema_version": 2,
+        "model_identity_evidence": controlled["model_identity_evidence"],
+        "completion_attestation": controlled["completion_attestation"],
+        "agent_adapter": controlled["agent_adapter"],
+        "agent_adapter_sha256": controlled["agent_adapter_sha256"],
+        "agent_adapter_bundle_sha256": controlled["agent_adapter_bundle_sha256"],
+        "attestation_trust": controlled["attestation_trust"],
+        "wrapper_prompt_sha256": controlled["wrapper_prompt_sha256"],
+        "agent_command_sha256": controlled["agent_command_sha256"],
+        "isolation_profile": controlled["isolation_profile"],
+        "system": controlled["system"],
+        "agent_timeout_seconds": controlled["agent_timeout_seconds"],
+    }
+    attempts = []
+    if attempt_status is not None:
+        attempts.append(
+            {
+                "run_id": f"attempt-{index}",
+                "measurement_status": attempt_status,
+                "included_in_trials": False,
+                "corpus_digest": identity.digest,
+                "configuration_id": configuration_id,
+                "observations": [observation],
+            }
+        )
+    payload = {
+        "schema_version": 3,
+        "study_id": f"study-{index}",
+        "metadata": metadata,
+        "trial_count": 1,
+        "task_count": 1,
+        "trials": [trial],
+        "attempts": attempts,
+    }
+    path = studies / f"study-{index}" / "summary.json"
+    path.parent.mkdir()
+    path.write_text(json.dumps(payload))
+    return path
 
 
 def attested_agent_command(command: str) -> str:

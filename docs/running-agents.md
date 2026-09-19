@@ -202,7 +202,7 @@ The trusted `codex-json-bwrap` bundle is exactly:
 
 Changing any member changes the adapter bundle digest and therefore the
 configuration identity. Held-out publication requires the study metadata,
-current adapter registration, and schema-2 release manifest to agree on that
+current adapter registration, and schema-3 release manifest to agree on that
 digest. The bundle does not cover provider-controlled remote code, model
 weights, or the external Codex/model executable.
 

@@ -12,6 +12,7 @@
 
 ## Status
 
+- **State**: DONE
 - **Priority**: P1
 - **Effort**: L
 - **Risk**: MED
@@ -222,15 +223,15 @@ corpus digests and no missing calibration records.
 
 ## Done criteria
 
-- [ ] Lifecycle state is explicit per task or per release-controlled task entry.
-- [ ] Active release eligibility requires current calibration evidence.
-- [ ] Calibration records bind corpus, task, configuration, and run identities.
-- [ ] A structurally healthy but uncalibrated corpus is reported as calibrating, not active.
-- [ ] No paid runs or publication occurred without authorization.
-- [ ] Release/report/CLI tests pass.
-- [ ] Governance defines mandatory calibration minimums unambiguously.
-- [ ] Current corpus migration state is honest and reviewed.
-- [ ] `plans/README.md` status row is updated.
+- [x] Lifecycle state is explicit per task or per release-controlled task entry.
+- [x] Active release eligibility requires current calibration evidence.
+- [x] Calibration records bind corpus, task, configuration, and run identities.
+- [x] A structurally healthy but uncalibrated corpus is reported as calibrating, not active.
+- [x] No paid runs or publication occurred without authorization.
+- [x] Release/report/CLI tests pass.
+- [x] Governance defines mandatory calibration minimums unambiguously.
+- [x] Current corpus migration state is honest and reviewed.
+- [x] `plans/README.md` status row is updated.
 
 ## STOP conditions
 

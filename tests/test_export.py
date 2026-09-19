@@ -1027,7 +1027,7 @@ class ExportTests(unittest.TestCase):
     def release_manifest(task_ids: list[str] | None = None) -> dict[str, object]:
         selected = task_ids or ["task-a"]
         return {
-            "schema_version": 2,
+            "schema_version": 3,
             "corpus_id": "test-corpus",
             "corpus_version": "1.0.0",
             "corpus_digest": "d" * 64,
@@ -1035,7 +1035,11 @@ class ExportTests(unittest.TestCase):
             "task_count": len(selected),
             "required_protocol_schema_version": 2,
             "reporting": {"report_schema_version": 1},
+            "release_tasks": selected,
             "active_tasks": selected,
+            "active_task_count": len(selected),
+            "activation_eligible": True,
+            "release_state": "active",
             "task_digests": {
                 task_id: hashlib.sha256(task_id.encode()).hexdigest()
                 for task_id in selected
@@ -1049,6 +1053,7 @@ class ExportTests(unittest.TestCase):
         study: dict[str, object], manifest: dict[str, object]
     ) -> None:
         del study
+        manifest["release_tasks"] = ["task-b"]
         manifest["active_tasks"] = ["task-b"]
         manifest["task_digests"] = {
             "task-b": hashlib.sha256(b"task-b").hexdigest()

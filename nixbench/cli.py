@@ -9,6 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from .calibration import build_calibration_report
 from .contracts import collect_contract_evidence, load_contract_cases
 from .corpus import CorpusIdentity, identify_corpus
 from .export import export_studies_for_site
@@ -90,6 +91,14 @@ def build_parser() -> argparse.ArgumentParser:
     health_parser.add_argument("--contracts-dir", type=Path, default=Path("contracts"))
     health_parser.add_argument("--output", type=Path, required=True)
     health_parser.set_defaults(func=cmd_corpus_health)
+
+    calibration_parser = subparsers.add_parser(
+        "calibration-report",
+        help="Build draft per-task calibration records from validated current studies.",
+    )
+    calibration_parser.add_argument("--studies-dir", type=Path, required=True)
+    calibration_parser.add_argument("--output", type=Path, required=True)
+    calibration_parser.set_defaults(func=cmd_calibration_report)
 
     release_parser = subparsers.add_parser(
         "release-check", help="Evaluate corpus release eligibility."
@@ -293,6 +302,28 @@ def cmd_corpus_health(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_calibration_report(args: argparse.Namespace) -> int:
+    corpus = identify_corpus(args.tasks_dir)
+    tasks = [task for task in iter_tasks(args.tasks_dir) if task.supports_system(args.system)]
+    if {task.id for task in tasks} != set(corpus.task_ids):
+        raise ValueError("calibration requires the complete current corpus task matrix")
+    sources = [
+        (path, _load_json_object(path, "study"))
+        for path in sorted(args.studies_dir.glob("*/summary.json"))
+    ]
+    report = build_calibration_report(
+        identity=corpus,
+        tasks=tasks,
+        study_sources=sources,
+    )
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(
+        json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    )
+    print(f"wrote draft calibration records for {len(tasks)} tasks to {args.output}")
+    return 0
+
+
 def cmd_release_check(args: argparse.Namespace) -> int:
     evidence = (
         load_verified_health_evidence(
@@ -310,7 +341,7 @@ def cmd_release_check(args: argparse.Namespace) -> int:
         print(json.dumps(report, indent=2, sort_keys=True, allow_nan=False))
     else:
         status = "eligible" if report["eligible"] else "ineligible"
-        print(f"release: {status}")
+        print(f"release: {status} ({report.get('release_state', 'invalid')})")
         for gate in report["gates"]:
             marker = "PASS" if gate["passed"] else "FAIL"
             print(f"{marker} {gate['name']}: {gate['reason']}")

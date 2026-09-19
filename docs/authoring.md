@@ -31,8 +31,14 @@ Store evaluator cases under `contracts/<task-id>/<case-id>/`. Add a regression w
 Before activation, the corpus release check also requires deterministic
 repeated outcomes, no invalid measurements or known-issue skips, evaluator
 runtime below 80 percent of the task timeout, a release note, and a checked
-release manifest. Follow the calibration and lifecycle rules in
-[benchmark-governance.md](benchmark-governance.md).
+release manifest. Every task starts or returns to `calibrating` after a digest
+change. Generate draft evidence with `calibration-report`; do not hand-copy
+aggregate claims or edit lifecycle state from the command. Activation requires
+three materially different validated configurations with at least one valid
+observation per task in each, plus manual accepted-alternative and evaluator-
+dispute review and an explicit approval rationale. Optional repetitions improve
+stability but do not replace those mandatory identities and reviews. Follow the
+full workflow in [benchmark-governance.md](benchmark-governance.md).
 
 Each case uses contract schema 3, names the rubric criterion it exercises,
 and declares the complete expected criterion vector:

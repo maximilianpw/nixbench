@@ -42,9 +42,12 @@ contract is repaired and recalibrated. Deprecated tasks remain identifiable
 but do not enter new releases. Retired held-out tasks may move to the public
 archive after disclosure approval.
 
-The checked deprecation registry is `corpus/task-deprecations.toml`, and
-`corpus/task-lifecycle.toml` records quarantine exclusions. Release checks
-reject active tasks that appear in either list.
+The checked deprecation registry is `corpus/task-deprecations.toml`.
+`corpus/task-lifecycle.toml` schema 2 assigns exactly one state to every
+release-controlled task. `corpus/task-calibrations.json` schema 1 binds reviewed
+calibration records to the exact corpus and task digests. Release checks reject
+missing, duplicate, unknown, or stale lifecycle and calibration entries.
+Quarantined, deprecated, and retired tasks never enter active scoring.
 
 ## Release requirements
 
@@ -60,7 +63,14 @@ machine-enforced rules. An active release requires:
 - no invalid release measurements or active known-issue skips;
 - evaluator runtime below 80 percent of its declared timeout;
 - a release note, deprecation records, and a checked release manifest;
-- a declared protocol schema for later publication checks.
+- a declared protocol schema for later publication checks;
+- an explicit lifecycle state for every release-controlled task;
+- current approved calibration for every active task.
+
+Structural release health and activation eligibility are separate. A corpus may
+pass every evaluator, contract, identity, note, and manifest check while its
+release state remains `calibrating`. Such a corpus is not eligible for active
+leaderboard claims, and publication checks reject its manifest.
 
 Release CI recomputes evidence. A cached health report is allowed only outside
 CI and only when its corpus digest, scoring schema, reporting versions,
@@ -75,13 +85,31 @@ evidence. Every trial must carry matching completion evidence.
 
 ## Calibration and corpus balance
 
-Before activation, reviewers record solve rate and uncertainty across at least
-three materially different agent configurations with repeated trials when the
-budget permits. They also review timeout and invalid-measurement rates,
-discrimination when the sample permits it, common failure classes, evaluator
-disputes, accepted valid alternatives, author difficulty, and empirical
-difficulty. Model results do not automatically change author difficulty or
-task status.
+Before activation, a maintainer generates draft records with
+`calibration-report` from schema-3 studies accepted by the strict current-study
+validator. The mandatory minimum for each task is **at least three materially
+different configuration IDs and at least one valid observation in each
+configuration**. This minimum does not imply stable ranking or available
+uncertainty/discrimination estimates. Additional independent trials are
+strongly recommended—five or more per configuration for serious comparisons—
+but are optional when the approved budget cannot support them.
+
+Draft records retain run IDs, study artifact digests, valid observations,
+timeouts, and invalid or incomplete attempts. Reviewers must inspect solve-rate
+stability, unavailable statistical results, common failure behavior, accepted
+valid alternatives, and evaluator disputes. An authorized reviewer then records
+an explicit decision, date, identity, and rationale. Both accepted-alternative
+and evaluator-dispute review must be complete before `approve` can activate a
+task. Model results do not automatically change author difficulty, empirical
+difficulty, or lifecycle state, and the report command never edits lifecycle
+state.
+
+A task moves from `calibrating` to `active` only through a reviewed lifecycle
+and calibration-registry change. Any prompt, starter, reference, evaluator,
+rubric, contract fixture, or other content change that changes the task digest
+invalidates that task's record and returns it to `calibrating`. A disputed or
+broken task moves to `quarantined`, is removed from active scoring, and must be
+repaired and recalibrated against the new digest before reactivation.
 
 Reports show every category. Categories with fewer than five active tasks are
 descriptive only. New work should prioritize independent fetcher, devshell,

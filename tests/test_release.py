@@ -16,6 +16,8 @@ from nixbench.isolation import (
     run_isolation_probe,
 )
 from nixbench.adapters import TrustedAdapter, get_trusted_adapter
+from nixbench.calibration import load_calibration_registry, load_lifecycle_registry
+from nixbench.corpus import identify_corpus
 from nixbench.release import (
     build_release_manifest,
     check_publication,
@@ -438,7 +440,7 @@ class ReleaseTests(unittest.TestCase):
             root = Path(temp)
             self.make_corpus(root)
             (root / "corpus" / "task-lifecycle.toml").write_text(
-                'schema_version = 1\nquarantined_tasks = ["task-a"]\n'
+                'schema_version = 2\n\n[[tasks]]\ntask_id = "task-a"\nstate = "quarantined"\n'
             )
 
             report = check_release(
@@ -448,7 +450,98 @@ class ReleaseTests(unittest.TestCase):
             )
             gates = {item["name"]: item for item in report["gates"]}
 
-            self.assertFalse(gates["no-active-quarantined-tasks"]["passed"])
+            self.assertTrue(gates["no-active-quarantined-tasks"]["passed"])
+            self.assertFalse(gates["active-task-calibration"]["passed"])
+            self.assertEqual(report["release_state"], "calibrating")
+
+    def test_structurally_healthy_uncalibrated_corpus_is_reported_calibrating(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.make_corpus(root)
+            (root / "corpus" / "task-lifecycle.toml").write_text(
+                'schema_version = 2\n\n[[tasks]]\ntask_id = "task-a"\nstate = "calibrating"\n'
+            )
+            calibration = json.loads((root / "corpus" / "task-calibrations.json").read_text())
+            calibration["records"] = []
+            (root / "corpus" / "task-calibrations.json").write_text(json.dumps(calibration))
+
+            report = check_release(
+                root, health_evidence=[self.healthy_evidence()], verify_manifest=False
+            )
+            gates = {item["name"]: item for item in report["gates"]}
+
+            self.assertTrue(report["structurally_eligible"], report)
+            self.assertFalse(report["activation_eligible"])
+            self.assertFalse(report["eligible"])
+            self.assertEqual(report["release_state"], "calibrating")
+            self.assertIn("not active", gates["active-task-calibration"]["reason"])
+
+    def test_active_task_without_current_calibration_fails_precisely(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.make_corpus(root)
+            calibration = json.loads((root / "corpus" / "task-calibrations.json").read_text())
+            calibration["records"] = []
+            (root / "corpus" / "task-calibrations.json").write_text(json.dumps(calibration))
+
+            report = check_release(
+                root, health_evidence=[self.healthy_evidence()], verify_manifest=False
+            )
+            gate = next(item for item in report["gates"] if item["name"] == "active-task-calibration")
+
+            self.assertFalse(gate["passed"])
+            self.assertIn("no current calibration record", gate["reason"])
+
+    def test_active_task_with_fewer_than_three_configurations_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.make_corpus(root)
+            calibration_path = root / "corpus" / "task-calibrations.json"
+            payload = json.loads(calibration_path.read_text())
+            payload["records"][0]["configurations"] = payload["records"][0]["configurations"][:2]
+            calibration_path.write_text(json.dumps(payload))
+
+            report = check_release(
+                root, health_evidence=[self.healthy_evidence()], verify_manifest=False
+            )
+            gate = next(item for item in report["gates"] if item["name"] == "active-task-calibration")
+            self.assertFalse(gate["passed"])
+            self.assertIn("fewer than 3", gate["reason"])
+
+    def test_lifecycle_and_calibration_schemas_reject_duplicates_stale_and_unknown_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.make_corpus(root)
+            identity = identify_corpus(root / "tasks", root / "corpus.toml")
+            lifecycle_path = root / "corpus" / "task-lifecycle.toml"
+            for state in ("draft", "calibrating", "active", "quarantined", "deprecated", "retired"):
+                with self.subTest(state=state):
+                    lifecycle_path.write_text(
+                        f'schema_version = 2\n\n[[tasks]]\ntask_id = "task-a"\nstate = "{state}"\n'
+                    )
+                    loaded = load_lifecycle_registry(
+                        lifecycle_path, expected_task_ids=identity.task_ids
+                    )
+                    self.assertEqual(loaded.states["task-a"], state)
+            lifecycle_path.write_text(
+                'schema_version = 2\n\n[[tasks]]\ntask_id = "task-a"\nstate = "active"\n\n'
+                '[[tasks]]\ntask_id = "task-a"\nstate = "active"\n'
+            )
+            with self.assertRaisesRegex(ValueError, "duplicate lifecycle"):
+                load_lifecycle_registry(lifecycle_path, expected_task_ids=identity.task_ids)
+
+            calibration_path = root / "corpus" / "task-calibrations.json"
+            payload = json.loads(calibration_path.read_text())
+            payload["records"][0]["task_digest"] = "0" * 64
+            calibration_path.write_text(json.dumps(payload))
+            with self.assertRaisesRegex(ValueError, "task digest is stale"):
+                load_calibration_registry(calibration_path, identity=identity)
+
+            payload = json.loads((root / "corpus" / "task-calibrations.json").read_text())
+            payload["extra"] = True
+            calibration_path.write_text(json.dumps(payload))
+            with self.assertRaisesRegex(ValueError, "schema"):
+                load_calibration_registry(calibration_path, identity=identity)
 
     def test_policy_file_gates_reject_category_deprecation_and_missing_note(self) -> None:
         mutations = (
@@ -611,6 +704,7 @@ class ReleaseTests(unittest.TestCase):
             task_ids=["task-a"], trial_count=1, corpus_visibility="private-heldout"
         )
         malformed = self.private_release_manifest(task_ids=["task-a"])
+        malformed["release_tasks"] = ["not-a-hash"]
         malformed["active_tasks"] = ["not-a-hash"]
         rejected = check_publication(study, release_manifest=malformed)
         self.assertIn("opaque task hashes are invalid", " ".join(rejected["reasons"]))
@@ -727,7 +821,7 @@ class ReleaseTests(unittest.TestCase):
         rejected = check_publication(study, release_manifest=manifest)
 
         self.assertFalse(rejected["eligible"])
-        self.assertIn("manifest schema 2", " ".join(rejected["reasons"]))
+        self.assertIn("manifest schema 3", " ".join(rejected["reasons"]))
 
     def test_private_initializer_refuses_public_tree_and_creates_no_repository(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -885,7 +979,7 @@ class ReleaseTests(unittest.TestCase):
     @staticmethod
     def public_release_manifest(task_ids: list[str]) -> dict[str, object]:
         return {
-            "schema_version": 2,
+            "schema_version": 3,
             "corpus_id": "private-corpus",
             "corpus_version": "1.0.0",
             "corpus_digest": "d" * 64,
@@ -893,7 +987,11 @@ class ReleaseTests(unittest.TestCase):
             "task_count": len(task_ids),
             "required_protocol_schema_version": 2,
             "reporting": {"report_schema_version": 1},
+            "release_tasks": task_ids,
             "active_tasks": task_ids,
+            "active_task_count": len(task_ids),
+            "activation_eligible": True,
+            "release_state": "active",
             "task_digests": {
                 task_id: hashlib.sha256(task_id.encode()).hexdigest()
                 for task_id in task_ids
@@ -907,8 +1005,12 @@ class ReleaseTests(unittest.TestCase):
         *, task_ids: list[str], task_count_restricted: bool = True
     ) -> dict[str, object]:
         adapter = get_trusted_adapter("codex-json-bwrap")
+        opaque_tasks = sorted(
+            hashlib.sha256(hashlib.sha256(task_id.encode()).hexdigest().encode("ascii")).hexdigest()
+            for task_id in task_ids
+        )
         return {
-            "schema_version": 2,
+            "schema_version": 3,
             "corpus_id": "private-corpus",
             "corpus_version": "1.0.0",
             "corpus_digest": "d" * 64,
@@ -916,10 +1018,11 @@ class ReleaseTests(unittest.TestCase):
             "task_count": len(task_ids),
             "required_protocol_schema_version": 2,
             "reporting": {"report_schema_version": 1},
-            "active_tasks": sorted(
-                hashlib.sha256(hashlib.sha256(task_id.encode()).hexdigest().encode("ascii")).hexdigest()
-                for task_id in task_ids
-            ),
+            "release_tasks": opaque_tasks,
+            "active_tasks": opaque_tasks,
+            "active_task_count": len(task_ids),
+            "activation_eligible": True,
+            "release_state": "active",
             "task_digests": {},
             "task_count_restricted": task_count_restricted,
             "trusted_isolation": {
@@ -1149,7 +1252,60 @@ class ReleaseTests(unittest.TestCase):
             "schema_version = 1\ndeprecations = []\n"
         )
         (root / "corpus" / "task-lifecycle.toml").write_text(
-            "schema_version = 1\nquarantined_tasks = []\n"
+            'schema_version = 2\n\n[[tasks]]\ntask_id = "task-a"\nstate = "active"\n'
+        )
+        identity = identify_corpus(root / "tasks", root / "corpus.toml")
+        calibration_record = {
+            "task_id": "task-a",
+            "task_digest": identity.task_digests["task-a"],
+            "corpus_id": identity.id,
+            "corpus_version": identity.version,
+            "corpus_digest": identity.digest,
+            "configurations": [
+                {
+                    "configuration_id": f"{index + 10:064x}",
+                    "valid_observation_count": 1,
+                    "run_ids": [f"run-{index}"],
+                    "study_artifact_sha256": [f"{index + 1:064x}"],
+                    "solve_rate": 0.5,
+                    "timeout_rate": 0.0,
+                    "invalid_attempt_count": 0,
+                    "incomplete_attempt_count": 0,
+                    "invalid_attempt_rate": 0.0,
+                }
+                for index in range(3)
+            ],
+            "discrimination": {
+                "method": "point-biserial-leave-one-task-out",
+                "method_version": "1",
+                "sampling_unit": "valid-task-observation",
+                "n": 3,
+                "configuration_count": 3,
+                "estimate": None,
+                "unavailable_reason": "insufficient-sample-size",
+                "leave_one_task_out_statistic": "sum-normalized-task-scores",
+            },
+            "author_difficulty": "easy",
+            "empirical_difficulty": "mixed",
+            "review": {
+                "decision": "approve",
+                "reviewer": "fixture-reviewer",
+                "date": "2026-09-19",
+                "rationale": "Synthetic fixture evidence reviewed.",
+                "accepted_alternatives_status": "reviewed-no-issue",
+                "evaluator_dispute_status": "reviewed-no-issue",
+            },
+        }
+        (root / "corpus" / "task-calibrations.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "corpus_id": identity.id,
+                    "corpus_version": identity.version,
+                    "corpus_digest": identity.digest,
+                    "records": [calibration_record],
+                }
+            )
         )
         notes = root / "docs" / "releases"
         notes.mkdir(parents=True)
