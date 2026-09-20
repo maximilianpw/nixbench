@@ -67,23 +67,24 @@ class ReleaseTests(unittest.TestCase):
                 )
             )
 
-            loaded = load_verified_health_evidence(report_path, corpus_root=root)
-            self.assertEqual(loaded[0]["task_id"], "task-a")
+            with patch.dict(os.environ, {"CI": ""}):
+                loaded = load_verified_health_evidence(report_path, corpus_root=root)
+                self.assertEqual(loaded[0]["task_id"], "task-a")
 
-            payload = json.loads(report_path.read_text())
-            payload["release_provenance"]["release_tool_sha256"] = "0" * 64
-            report_path.write_text(json.dumps(payload))
-            with self.assertRaisesRegex(ValueError, "stale or unverifiable"):
-                load_verified_health_evidence(report_path, corpus_root=root)
+                payload = json.loads(report_path.read_text())
+                payload["release_provenance"]["release_tool_sha256"] = "0" * 64
+                report_path.write_text(json.dumps(payload))
+                with self.assertRaisesRegex(ValueError, "stale or unverifiable"):
+                    load_verified_health_evidence(report_path, corpus_root=root)
 
-            payload = json.loads(report_path.read_text())
-            payload["release_provenance"] = health_report_provenance(
-                provisional["corpus"]["digest"], [self.healthy_evidence()]
-            )
-            payload["release_evidence"][0]["reference_full_score"] = False
-            report_path.write_text(json.dumps(payload))
-            with self.assertRaisesRegex(ValueError, "stale or unverifiable"):
-                load_verified_health_evidence(report_path, corpus_root=root)
+                payload = json.loads(report_path.read_text())
+                payload["release_provenance"] = health_report_provenance(
+                    provisional["corpus"]["digest"], [self.healthy_evidence()]
+                )
+                payload["release_evidence"][0]["reference_full_score"] = False
+                report_path.write_text(json.dumps(payload))
+                with self.assertRaisesRegex(ValueError, "stale or unverifiable"):
+                    load_verified_health_evidence(report_path, corpus_root=root)
 
             with patch.dict(os.environ, {"CI": "true"}):
                 with self.assertRaisesRegex(ValueError, "forbidden in release CI"):
