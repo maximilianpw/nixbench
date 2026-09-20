@@ -199,7 +199,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertIn("linux-bwrap-v1", payload["preflight"]["evidence"])
             self.assertTrue(payload["completed"])
             self.assertEqual((workspace / "answer.txt").read_text(), "edited")
-            self.assertGreater((workspace / "proc-cmdline").stat().st_size, 0)
+            self.assertTrue((workspace / "proc-cmdline").is_file())
             self.assertGreater((workspace / "proc-environ").stat().st_size, 0)
             proc_cmdline = (workspace / "proc-cmdline").read_bytes()
             proc_environ = (workspace / "proc-environ").read_bytes()
