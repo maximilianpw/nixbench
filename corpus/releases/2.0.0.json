@@ -87,7 +87,7 @@
   },
   "previous_version": null,
   "release_date": "2026-09-19",
-  "release_gate_result_digest": "cd42980d12adc3f8573d1df4d2093338285a3a912a13eb63ef2d9ab2de9de7b2",
+  "release_gate_result_digest": "14adb94714da76bb1de6d0cbb88502f888d17dc3745f449dcbd68e038d505894",
   "release_state": "active",
   "release_tasks": [
     "container-native-vs-oci",
